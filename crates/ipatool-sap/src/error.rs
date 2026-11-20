@@ -13,6 +13,12 @@ pub enum Error {
     },
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Http(#[from] reqwest::Error),
+    #[error(transparent)]
+    Zip(#[from] zip::result::ZipError),
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
 }
 
 impl Error {
