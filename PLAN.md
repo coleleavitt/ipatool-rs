@@ -181,8 +181,12 @@ parity check for the commands it touches.
         OpenStep text); Go's nil-context checks have no equivalent. Untested: the real
         `ModernAdi` provisioning calls against Apple, and the root download itself (only its
         validation and redirect rule are unit tested).
-  - [ ] Store AMD headers: `StoreAmd` trait and `UnavailableStoreAmd`; the real
-        implementation needs the phase-5 Store emulator.
+  - [x] Store AMD headers: `EmulatorStoreAmd` (`store_amd.go`) loads the assets, opens modern
+        ADI with the saved identity and database, runs `AMSAnisette`'s type-2 provider in the
+        Store emulator with `com.apple.adid` XPC answered by modern ADI, and returns the headers
+        with the updated state; `auth login` uses it. It runs on its own thread (the guests are
+        not `Send`; a cold asset cache uses blocking HTTP). Checked against Go on a copy of a
+        real `anisette-v4` state (see phase 5); nothing is sent to Apple.
 - [x] SAP signer and action signing. The signer is ported in phase 3 (live setup + sign
       checked by `cargo test -p ipatool-sap signs_after_live_setup -- --ignored`). Login creates
       it from the bag's SAP configuration and the machine ID and closes it after login. Go
@@ -210,6 +214,31 @@ parity check for the commands it touches.
 ### Phase 5 — Store engine emulator
 
 - [ ] Objective-C runtime bridge, Swift metadata, async tasks, network bridge.
+  - [x] Runtime core (`ipatool_store::emulator`): `runtime.go`, `memory.go`, `metadata.go`,
+        `profile_pages.go`, `bridge.go`, `swift.go`, `dictionary.go`, `async.go`,
+        `callbacks.go`, `hashing.go`, `compression.go`, `notifications.go`, `delegate.go`,
+        `accounts.go`, `session.go`, `auth.go`, `bag.go`, `anisette.go`. Guest state lives in
+        the Unicorn data; Go's bridge panics are errors that the step hook records as the guest
+        fault with Go's text. Go's tests are ported (memory grouping and guard, metadata cache,
+        page batching, padding execution, the omitted-page strict check).
+        Oracle: `scripts/store-amd-oracle.sh <state copy> <out>` runs Go's emulator with fixed
+        time, counter randomness and a call-stub trace, with real modern ADI, and Go's
+        `StoreAMDHeaders`. `IPATOOL_STORE_AMD_ORACLE=<out> IPATOOL_TEST_SAP_CACHE=1 cargo test
+        -p ipatool-store store_amd_oracle` replays the recorded XPC replies and matches the
+        headers, every call stub in order and the heap size byte for byte;
+        `IPATOOL_STORE_AMD_STATE=<state copy> IPATOOL_STORE_AMD_ORACLE=<out> cargo test -p
+        ipatool-appstore store_amd_matches_go` runs `EmulatorStoreAmd` and matches Go's header
+        names, lengths, encoding and state changes. The record holds ADI messages derived from
+        the account: keep it private and out of the repository.
+        Differences: Go's randomized map iteration (Invoke field order, observers, profile
+        lookups) is fixed to source or sorted order; no `context.Context`
+        (`swift_task_isCancelled` is 0); guest strings are UTF-8 (invalid bytes become U+FFFD;
+        `strlen`/`strptime` use the raw bytes); dates print in UTC for `%@`; profile constants
+        accept property writes (Go's nil map panics); `Runtime` has no `Close` (drop frees it).
+        `emulator/network.rs` is a stand-in with `requestWithURL:` until `p5-network` lands.
+        Untested against Go: bridge services the Store AMD flow does not reach (they run with
+        the request engine through `Execute`), `inflate` in the guest, Swift dictionary
+        bridging and the strict guard's guest-side hooks.
 - [x] Profile: `ipatool_store::profile` embeds Go's three zstd artifacts (extracted by
       `scripts/extract-store-profile.py`), checks Go's sizes, digests and page index, and
       decodes the metadata; re-encoding it gives the same JSON values. `profilegen` is phase 9.

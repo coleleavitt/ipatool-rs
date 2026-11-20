@@ -38,6 +38,8 @@ mod runtime;
 mod session;
 mod swift;
 mod terms_adapter;
+#[cfg(test)]
+mod tests;
 mod value;
 
 use std::fmt::Display;

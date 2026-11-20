@@ -7,6 +7,14 @@ use std::fmt::Write as _;
 use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+#[cfg(test)]
+thread_local! {
+    /// The wall time the bridge reads on this thread, for the Go oracle comparison.
+    pub(crate) static TEST_NOW: std::cell::Cell<Option<Date>> = const { std::cell::Cell::new(None) };
+    /// A counter that replaces host randomness on this thread, for the Go oracle comparison.
+    pub(crate) static TEST_RANDOM: std::cell::Cell<Option<u8>> = const { std::cell::Cell::new(None) };
+}
+
 /// Go's `time.Time` as the bridge uses it: an instant with nanosecond precision.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Date {
@@ -25,6 +33,10 @@ impl Date {
 
     #[must_use]
     pub fn now() -> Self {
+        #[cfg(test)]
+        if let Some(now) = TEST_NOW.get() {
+            return now;
+        }
         match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(elapsed) => Self {
                 seconds: i64::try_from(elapsed.as_secs()).unwrap_or(i64::MAX),

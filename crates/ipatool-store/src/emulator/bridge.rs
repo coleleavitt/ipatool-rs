@@ -101,6 +101,15 @@ fn preference(uc: &Uc, application: u64, key: u64) -> Result<u64> {
 
 pub(crate) fn random_bytes<const N: usize>() -> Result<[u8; N]> {
     let mut bytes = [0u8; N];
+    #[cfg(test)]
+    if let Some(mut counter) = super::value::TEST_RANDOM.get() {
+        for byte in &mut bytes {
+            *byte = counter;
+            counter = counter.wrapping_add(1);
+        }
+        super::value::TEST_RANDOM.set(Some(counter));
+        return Ok(bytes);
+    }
     getrandom::fill(&mut bytes).map_err(|error| super::Error::msg(error.to_string()))?;
     Ok(bytes)
 }

@@ -21,7 +21,7 @@ use ipatool_sap::machine::ModernAdi;
 pub use anisette::anisette_headers;
 pub use http_client::AuthHttp;
 pub use state::{AnisetteState, decode_anisette_state};
-pub use store_amd::{StoreAmd, UnavailableStoreAmd, provisioned_store_amd_state};
+pub use store_amd::{EmulatorStoreAmd, StoreAmd, provisioned_store_amd_state};
 pub use store_provisioning::provision_store_anisette;
 
 use crate::{Error, Result};

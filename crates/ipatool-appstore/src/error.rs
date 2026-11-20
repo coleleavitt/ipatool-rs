@@ -44,6 +44,8 @@ pub enum Error {
     Invalid(String),
     #[error("{context}: {source}")]
     Context { context: String, source: Box<Error> },
+    #[error(transparent)]
+    Emulator(#[from] ipatool_store::emulator::Error),
     /// Go's `errors.Join`.
     #[error("{}", join_messages(.0))]
     Joined(Vec<Error>),
