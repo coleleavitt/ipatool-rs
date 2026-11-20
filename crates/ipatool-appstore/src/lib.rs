@@ -10,15 +10,65 @@ mod bag;
 mod catalog;
 mod client;
 mod cookies;
+#[allow(dead_code, reason = "placeholder until the phase6-ios merge")]
+mod download;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by Client::download after the phase6-ios merge"
+    )
+)]
+mod download_macos;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by Client::download after the phase6-ios merge"
+    )
+)]
+mod download_package;
 mod error;
 mod login;
 mod login_storefront;
 pub mod machine;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by Client::download after the phase6-ios merge"
+    )
+)]
+mod macos_preflight_metadata;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by Client::download after the phase6-ios merge"
+    )
+)]
+mod macos_version_lookup;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by Client::download after the phase6-ios merge"
+    )
+)]
+mod macos_version_metadata;
 mod native_login;
 mod platform;
 mod store;
 pub mod storeauth;
 mod storefront;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by Client::download after the phase6-ios merge"
+    )
+)]
+mod xar;
 
 use ipatool_store::plist_body;
 

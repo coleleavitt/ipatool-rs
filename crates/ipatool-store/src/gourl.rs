@@ -245,6 +245,36 @@ pub(crate) fn query_unescape(s: &str) -> Result<String, String> {
     unescape(s, Encoding::QueryComponent)
 }
 
+/// Go's `url.ParseQuery`: every value per key, and the first error (parsing goes on after
+/// one, as in Go).
+#[must_use]
+pub fn parse_query(
+    query: &str,
+) -> (
+    std::collections::BTreeMap<String, Vec<String>>,
+    Option<String>,
+) {
+    let mut values = std::collections::BTreeMap::<String, Vec<String>>::new();
+    let mut first_error = None;
+    for pair in query.split('&') {
+        if pair.contains(';') {
+            first_error = Some("invalid semicolon separator in query".to_owned());
+            continue;
+        }
+        if pair.is_empty() {
+            continue;
+        }
+        let (key, value) = pair.split_once('=').unwrap_or((pair, ""));
+        match (query_unescape(key), query_unescape(value)) {
+            (Ok(key), Ok(value)) => values.entry(key).or_default().push(value),
+            (Err(err), _) | (_, Err(err)) => {
+                first_error.get_or_insert(err);
+            }
+        }
+    }
+    (values, first_error)
+}
+
 /// Go's `url.PathUnescape`.
 pub(crate) fn path_unescape(s: &str) -> Result<String, String> {
     unescape(s, Encoding::PathSegment)
