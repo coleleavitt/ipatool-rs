@@ -32,6 +32,8 @@ mod error;
 mod login;
 mod login_storefront;
 pub mod machine;
+#[cfg(test)]
+mod macos_oracle_tests;
 #[cfg_attr(
     not(test),
     expect(

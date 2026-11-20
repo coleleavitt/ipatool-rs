@@ -66,6 +66,34 @@ impl std::error::Error for Error {}
 
 type Result<T> = std::result::Result<T, Error>;
 
+/// A [`Reader::read_file`] failure in Go's `File.Open` or in the read after it.
+#[derive(Debug)]
+pub(crate) enum ReadError {
+    Open(Error),
+    Read(Error),
+}
+
+impl fmt::Display for ReadError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Open(err) | Self::Read(err) => err.fmt(f),
+        }
+    }
+}
+
+/// `encoding/xml`'s syntax error text for a `roxmltree` failure.
+pub(crate) fn xml_syntax_error(err: &roxmltree::Error) -> String {
+    let message = match err {
+        roxmltree::Error::UnexpectedEndOfStream => "unexpected EOF".to_owned(),
+        other => {
+            let text = other.to_string();
+            text.rsplit_once(" at ")
+                .map_or(text.clone(), |(message, _)| message.to_owned())
+        }
+    };
+    format!("XML syntax error on line {}: {message}", err.pos().row)
+}
+
 /// Go's `io.ReaderAt`: a short read is `io.EOF`.
 pub(crate) trait ReadAt {
     fn read_at(&self, buf: &mut [u8], offset: u64) -> io::Result<usize>;
@@ -216,6 +244,7 @@ impl<R: ReadAt> Reader<R> {
         }
         let mut compressed_toc = vec![0; usize::try_from(toc_length).map_err(|_| Error::Eof)?];
         read_exact_at(&source, &mut compressed_toc, u64::from(HEADER_SIZE))?;
+        zlib_header(&compressed_toc)?;
         let mut toc = Vec::new();
         flate2::read::ZlibDecoder::new(compressed_toc.as_slice())
             .read_to_end(&mut toc)
@@ -266,24 +295,29 @@ impl<R: ReadAt> Reader<R> {
         sum == checksum.sum
     }
 
-    /// Go's `File.Open` read to the end: the extracted contents.
-    pub(crate) fn read_file(&self, file: &File) -> Result<Vec<u8>> {
+    /// Go's `File.Open` read to the end: the extracted contents. The error says whether
+    /// Go's `Open` (encoding, zlib header) or the read failed.
+    pub(crate) fn read_file(&self, file: &File) -> std::result::Result<Vec<u8>, ReadError> {
         let mut raw = Vec::new();
-        self.copy_section(file, |chunk| raw.extend_from_slice(chunk))?;
+        self.copy_section(file, |chunk| raw.extend_from_slice(chunk))
+            .map_err(ReadError::Read)?;
         let mut data = Vec::new();
         match file.encoding_mimetype.as_str() {
             "application/octet-stream" => return Ok(raw),
             "application/x-gzip" => {
+                zlib_header(&raw).map_err(ReadError::Open)?;
                 flate2::read::ZlibDecoder::new(raw.as_slice())
                     .read_to_end(&mut data)
-                    .map_err(|err| zlib_error(&err))?;
+                    .map_err(|err| ReadError::Read(zlib_error(&err)))?;
             }
             "application/x-bzip2" => {
                 bzip2::read::BzDecoder::new(raw.as_slice())
                     .read_to_end(&mut data)
-                    .map_err(|err| Error::Decode(format!("bzip2 data invalid: {err}")))?;
+                    .map_err(|err| {
+                        ReadError::Read(Error::Decode(format!("bzip2 data invalid: {err}")))
+                    })?;
             }
-            _ => return Err(Error::FileEncodingUnsupported),
+            _ => return Err(ReadError::Open(Error::FileEncodingUnsupported)),
         }
         Ok(data)
     }
@@ -347,6 +381,27 @@ fn read_section_full(
         count if count < size => Err(Error::UnexpectedEof),
         _ => Ok(buffer),
     }
+}
+
+/// The header checks `zlib.NewReader` makes before any data is read.
+fn zlib_header(data: &[u8]) -> Result<()> {
+    let [cmf, flg, ..] = *data else {
+        return Err(Error::UnexpectedEof);
+    };
+    let header = u16::from(cmf) << 8 | u16::from(flg);
+    if cmf & 0x0f != 8 || cmf >> 4 > 7 || header % 31 != 0 {
+        return Err(Error::Decode("zlib: invalid header".to_owned()));
+    }
+    if flg & 0x20 != 0 {
+        // A preset dictionary; Go has none to offer, so only Adler-32 of nothing (1) passes.
+        let Some(checksum) = data.get(2..6) else {
+            return Err(Error::UnexpectedEof);
+        };
+        if checksum != [0, 0, 0, 1] {
+            return Err(Error::Decode("zlib: invalid dictionary".to_owned()));
+        }
+    }
+    Ok(())
 }
 
 fn zlib_error(err: &io::Error) -> Error {
@@ -547,7 +602,7 @@ impl Toc {
                 ..roxmltree::ParsingOptions::default()
             },
         )
-        .map_err(|err| Error::Decode(format!("XML syntax error: {err}")))?;
+        .map_err(|err| Error::Decode(xml_syntax_error(&err)))?;
         let root = document.root_element();
         if root.tag_name().name() != "xar" {
             return Err(Error::Decode(format!(

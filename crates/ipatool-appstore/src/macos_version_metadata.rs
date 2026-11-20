@@ -30,7 +30,7 @@ pub(crate) fn xml_document(data: &[u8]) -> Result<roxmltree::Document<'_>> {
             ..roxmltree::ParsingOptions::default()
         },
     )
-    .map_err(|err| Error::Invalid(format!("XML syntax error: {err}")))
+    .map_err(|err| Error::Invalid(xar::xml_syntax_error(&err)))
 }
 
 /// Go's `readVersionMetadataFromMacPackage`. `download(url, path)` is Go's `downloadFile`.
@@ -83,10 +83,9 @@ pub(crate) fn package_version_metadata<R: ReadAt>(
         .filter(|file| go_path::base(&file.name) == "PackageInfo")
     {
         let data = archive.read_file(file).map_err(|err| {
-            let action = if matches!(err, xar::Error::FileEncodingUnsupported) {
-                "open"
-            } else {
-                "read"
+            let action = match err {
+                xar::ReadError::Open(_) => "open",
+                xar::ReadError::Read(_) => "read",
             };
             Error::Invalid(format!("failed to {action} PackageInfo: {err}"))
         })?;

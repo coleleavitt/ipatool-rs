@@ -1,0 +1,3656 @@
+{
+ "metadata": [
+  {
+   "kind": "preflight",
+   "name": "good",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIaAAAAAXicrJFNjuIwEIX3c4rI+4wdh4QBVYrNaE7AHKDiVIjV+UF2gaBP30ogi2562bun0qvn56/gcBv65Moh+mmsVPbbqIRHNzV+PFXq//Ff+kcd8BfcKCDI5BBcx+4tXoYkyr3nSsWOMoUwtW1kQQP6qSD6d0ZrQC8C9LqI4AKT+GlMxQ+zxeapyVKzOVq7L/J9VoD+bIHW95z4plLzU3I/M84T0IuEkQbGvz5K8PVl3gK9jKAhIYSex5N0mG9z0E+91rVf+y6mR+EVw/pROp9775ZWenLCkkYJTIPSCBRc56/cpN/TaQtblo3b1LuiNDVlW2psTVSWG+vMjtmYMi+p2IJ+CULgmwRy8gPhr0kI+sFIzzwR9HJiPV/7IwAA//91ybOGorwlHylYe1MfLZXV72B26E20mKs8aW5zdGFsbGVyLWd1aS1zY3JpcHQ+PHByb2R1Y3QgaWQ9ImNvbS5leGFtcGxlLm1hYyIgdmVyc2lvbj0iNC4yIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciPjxyZWxvY2F0ZT48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "displayVersion": "4.2",
+   "releaseDate": 1341568473
+  },
+  {
+   "kind": "preflight",
+   "name": "good with bundle",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIaAAAAAXicrJFNjuIwEIX3c4rI+4wdh4QBVYrNaE7AHKDiVIjV+UF2gaBP30ogi2562bun0qvn56/gcBv65Moh+mmsVPbbqIRHNzV+PFXq//Ff+kcd8BfcKCDI5BBcx+4tXoYkyr3nSsWOMoUwtW1kQQP6qSD6d0ZrQC8C9LqI4AKT+GlMxQ+zxeapyVKzOVq7L/J9VoD+bIHW95z4plLzU3I/M84T0IuEkQbGvz5K8PVl3gK9jKAhIYSex5N0mG9z0E+91rVf+y6mR+EVw/pROp9775ZWenLCkkYJTIPSCBRc56/cpN/TaQtblo3b1LuiNDVlW2psTVSWG+vMjtmYMi+p2IJ+CULgmwRy8gPhr0kI+sFIzzwR9HJiPV/7IwAA//91ybOGorwlHylYe1MfLZXV72B26E20mKs8aW5zdGFsbGVyLWd1aS1zY3JpcHQ+PHByb2R1Y3QgaWQ9ImNvbS5leGFtcGxlLm1hYyIgdmVyc2lvbj0iNC4yIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciPjxyZWxvY2F0ZT48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "com.example.mac",
+   "displayVersion": "4.2",
+   "releaseDate": 1341568473
+  },
+  {
+   "kind": "preflight",
+   "name": "wrong bundle",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIaAAAAAXicrJFNjuIwEIX3c4rI+4wdh4QBVYrNaE7AHKDiVIjV+UF2gaBP30ogi2562bun0qvn56/gcBv65Moh+mmsVPbbqIRHNzV+PFXq//Ff+kcd8BfcKCDI5BBcx+4tXoYkyr3nSsWOMoUwtW1kQQP6qSD6d0ZrQC8C9LqI4AKT+GlMxQ+zxeapyVKzOVq7L/J9VoD+bIHW95z4plLzU3I/M84T0IuEkQbGvz5K8PVl3gK9jKAhIYSex5N0mG9z0E+91rVf+y6mR+EVw/pROp9775ZWenLCkkYJTIPSCBRc56/cpN/TaQtblo3b1LuiNDVlW2psTVSWG+vMjtmYMi+p2IJ+CULgmwRy8gPhr0kI+sFIzzwR9HJiPV/7IwAA//91ybOGorwlHylYe1MfLZXV72B26E20mKs8aW5zdGFsbGVyLWd1aS1zY3JpcHQ+PHByb2R1Y3QgaWQ9ImNvbS5leGFtcGxlLm1hYyIgdmVyc2lvbj0iNC4yIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciPjxyZWxvY2F0ZT48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "com.other.mac",
+   "error": "macOS preflight package does not contain a unique product for the requested bundle"
+  },
+  {
+   "kind": "preflight",
+   "name": "missing version",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFNjuJADIX3c4qo9hnnD4VBjtmM5gTMAUyVQ0qdH1RlEPTpWwlk0U0ve/dkPb969Rn3t6FPrhKin8bG5L8zk8hoJ+fHU2P+H/6lW7OnX3jjQKiTJbSd2Ld4GZKo914aEzvODeHUtlGUMoSnwujfhYoMYREI6yKhDcLqpzFVP8yWokyzPM2qQ1HsNuUu3yB8tmDre0m8a8z8lN7PQvMEYZE48iD010cN/niZtxCWETpWJuxlPGlHZZ0hPPVat/jadzE9Cq8Y1o/y+dx7u7SCyapoGjUIDwYIOdjOX8Wl39PZbiz/aQsRl9kjV7bNy6pkV0tZ1/XW5pXjY1VxgfASRCg3DWz1B8JfkwjhwQhmnoSwnBjma38EAAD//yKmtQri6dqrj9AZpX8yV/PYEDXkuoGeGzxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSIiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIvPjwvcmVsb2NhdGU+PC9wa2ctcmVmPgo8cGtnLXJlZiBpZD0iY29tLnVucmVsYXRlZC5wa2ciIHZlcnNpb249IjkuOS45LjAuMS4xNzAwMDAwMDAwIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+PC9pbnN0YWxsZXItZ3VpLXNjcmlwdD4=",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a display version"
+  },
+  {
+   "kind": "preflight",
+   "name": "blank version",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIaAAAAAXicrJFNbsIwEIX3PUXkferY+SGgybCpegJ6AMeZEKv5QfaAoKevEsiipcvunkZvnp+/gf116KML+eCmsRLqNRERjXZq3HisxMfhPS7FHl/gajwCTxbBdmQ/w3mIAt96qkTojBIIU9sGYkxAPhQE90WoE5CLALkuIlhPht00xuyG2aLTOFFxkh203uXpTuUgf1qgdT1FrqnE/BTfToTzBOQiYTQD4ZsL7F19nrdALiNoDBuEnsYjd5huNMiHXuvq330X073wimH9qDmdemeXVnKyTBwH9mQGIRGMt527UBP/TaeoTUFZquu2ztOcNqW2aa5Uvd0WKivLJtvasmhVBvIpCIGu7I3lfwh/TkKQd0Zy5okglxPL+drfAQAA//8Tq7KiR6ztlSVEXBr9ie4KqPI/X+30PHY8aW5zdGFsbGVyLWd1aS1zY3JpcHQ+PHByb2R1Y3QgaWQ9ImNvbS5leGFtcGxlLm1hYyIgdmVyc2lvbj0iICAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIvPjwvcmVsb2NhdGU+PC9wa2ctcmVmPgo8cGtnLXJlZiBpZD0iY29tLnVucmVsYXRlZC5wa2ciIHZlcnNpb249IjkuOS45LjAuMS4xNzAwMDAwMDAwIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+PC9pbnN0YWxsZXItZ3VpLXNjcmlwdD4=",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a display version"
+  },
+  {
+   "kind": "preflight",
+   "name": "missing timestamp",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFNbuMwDIX3cwpDe49kyw6SgGY2gzlBegCapmOh/gkkJUh6+sJOvGjTZXcPxOPT00c43IY+uYoPbhorlf01KpGRp8aNp0q9Hf+nW3XAP3AjjxAnRuBO+D1chiTEey+VCh1lCmFq2yARDeinguA+BHMDehGg10UE9kLRTWMa3TBbcpuaLDXFMc/3pd1nJeivFmhdL4lrKjU/Fe9nwXkCepEw0iD4z4XoXX2Zt0AvI2goEkIv4yl2aK0F/dRr3fx738X0KLxiWD9K53PveGmlJ44S0xC90KA0Annu3FWa9Gc6ZPOW6nq34e3OFNzY1pRs2o3dFpY3wpRTwWVNoF+CEOQWPXH8hfDXJAT9YKRnngh6ObGer/0ZAAD//wkCtPpvYSZL8R1z0ZekDfk6NHaqa2EXazxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSI0LjIiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIvPjwvcmVsb2NhdGU+PC9wa2ctcmVmPgo8cGtnLXJlZiBpZD0iY29tLnVucmVsYXRlZC5wa2ciIHZlcnNpb249IjkuOS45LjAuMS4xNzAwMDAwMDAwIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSIiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a build timestamp for the requested bundle"
+  },
+  {
+   "kind": "preflight",
+   "name": "dotted",
+   "input": "eGFyIQAcAAEAAAAAAAABIAAAAAAAAAIaAAAAAXicrFHNbvIwELx/TxH5ns+OQwhFm+VS9QnoA5j1hljND4oXBH36KoEcWnqsfBmtZsezM7C7dm1y4TGGoa9U9t+ohHsafOiPlXrfv6UbtcN/cHUjggyEQA3TRzx3SZRby5WKjcsUwlDXkQUN6AeCGD4ZrQE9A9DLIgKN7CQMfSqhmyg2T02WmtXe2m2Rb7MC9HcK1KHlJPhKTV/J7cQ4TUDPEHrXMb6GKGM4nKct0PMIvBOH0HJ/lAbzVQ76gRe79qffmXQ3vMSwHOpOpzbQ7EoPJCxplJFdpzSCG6kJF/bp7+n4Ym1fCmfzA5nNxpraU0G8LslkpfXGl2SnV4J+EkLgq4yO5A/En5UQ9D0jPeWJoOeK9dT2VwAAAP//YoWzgi93xFvrKKFncAUOmCQsZJdODsYUPGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IGlkPSJjb20uZXhhbXBsZS5tYWMiIHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a supported build timestamp"
+  },
+  {
+   "kind": "preflight",
+   "name": "different",
+   "input": "eGFyIQAcAAEAAAAAAAABIAAAAAAAAAIaAAAAAXicrJFNboMwEIX3PQXyntpACCgaJpuqJ0gPMDZDsMpPhCdR0tNXkLBo02V3T6M3z8/fwP7ad9GFp+DHoVLJq1ERD26s/XCs1MfhPS7VHl/gShOCjA7Btew+w7mPgtw6rlRoKVEIY9MEFjSgHwqC/2JMDehFgF4XEdzEJH4cYvH9bEmz2CSx2RzSdJdnuyQH/dMCje848nWl5qfkdmKcJ6AXCQP1jG8+yOTted4CvYygJiGEjoejtJgVGeiHXuumv/supnvhFcP6UTqdOu+WVnp0whIHmZh6pRFocq2/cB3/TaewlJebxlibGi6pKCw1W5dRZvNtbbLSWJuQ2TjQT0EIfJWJnPxD+HMSgr4z0jNPBL2cWM/X/g4AAP//45a0iP9NCEPTBCgqbgqBY34RrQTPfURePGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IGlkPSJjb20uZXhhbXBsZS5tYWMiIHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4zLjAuMC4xLjEzNDE1Njg0NzMiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4zLjAuMC4xLjEzNDE1Njg0NzMiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a supported build timestamp"
+  },
+  {
+   "kind": "preflight",
+   "name": "letters",
+   "input": "eGFyIQAcAAEAAAAAAAABIwAAAAAAAAIaAAAAAXicrJHNbqswEIX39ymQ99wxEEiIhsnm6j5B+gDGHoJVfiI8iZI+fQUJizZddnc0OnN8/A0ebn0XXXkKfhwqlfzVKuLBjs4Pp0q9Hf/HO3WgP3gzE6GMltC2bN/DpY+C3DuuVGhNogjHpgkspBGeCoP/YEo1wiIQ1kVCO7ERPw6x+H62pFmsk1hvjmm6z7N9kiN8tWDjO468q9T8lNzPTPMEYZE4mJ7pnw8y+foybyEsI3RGDGHHw0layrYZwlOvddPvfRfTo/CKYf2oOZ87b5dWMFphiYNMbHoFhGayrb+yi3+mo7OsdKVzTZHvdM1uU+qiTCxva9Nsim2Z1k7nZZEivAQR8k0mY+UXwl+TCOHBCGaehLCcGOZrfwYAAP//ZRazaGF7sin9b7PFYZQALIpvKOkgOG6sPGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IGlkPSJjb20uZXhhbXBsZS5tYWMiIHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLmFiY2RlZmdoaWoiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLmFiY2RlZmdoaWoiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "error": "macOS preflight package contains an invalid installer version"
+  },
+  {
+   "kind": "preflight",
+   "name": "zero",
+   "input": "eGFyIQAcAAEAAAAAAAABIwAAAAAAAAIaAAAAAXicrJHNbqswEIX39ymQ91wbCAlEw2RzdZ8gfQAzDMEqP5E9iZI+fQUJizZddnc0OnN8/A0cbkMfXdkHN42VSv4aFfFIU+PGU6Xejv/jQh3wD9ysR5CJEKhjeg+XIQpy77lSobOJQpjaNrCgAf1UENwHY2pALwL0uohAnq24aYzFDbMlzWKTxGZzTNN9nu2THPRXC7Su58g1lZqfkvuZcZ6AXiSMdmD854J4V1/mLdDLCBorFqHn8SQdZrsM9FOvddPvfRfTo/CKYf2oPZ97R0srPZGwxEE820FpBOupc1du4p/pmA3RlpI2z3d1Q601ZMwuL/NiU9Z5a+y2qIuSkxL0SxAC38Rbkl8If01C0A9GeuaJoJcT6/nanwEAAP//i06ztJPu74wMLqiidNzpxu7leZmYTN39PGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IGlkPSJjb20uZXhhbXBsZS5tYWMiIHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjAwMDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjAwMDAwMDAwMDAiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "error": "macOS preflight package contains an invalid build timestamp"
+  },
+  {
+   "kind": "preflight",
+   "name": "three part display",
+   "input": "eGFyIQAcAAEAAAAAAAABHwAAAAAAAAIaAAAAAXicrJFLbsMwDET3PYWhvSvZjvMDzWyKniA9gELRsVB/AokJkp6+sBMv2nTZ3YAYjkaPsLt2bXLhEP3QVyp7NSrhngbn+2OlPvbv6Vrt8AWuNiDIQAjUMH3Gc5dEubVcqdjYTCEMdR1Z0IB+KIj+izE3oCcBel5EoMBW/NCn4rvRkhepyVKz2Of5tiy2WQn6pwVq33LiXaXGp+R2YhwnoCcJve0Y33yU4A/ncQv0NAJnxSK03B+lwWJVgn7ouW7+u+9kuheeMcwftadT62lqpQcSljRKYNspjWADNf7CLv2bzmJtiFztLG+ctYdl6azLVxsq1wVlxrja5Eui2oB+CkLgqwRL8g/hz0kI+s5IjzwR9HRiPV77OwAA//9/qLXGJw0kNQeMK/72OLvZyALuV4hre4I8aW5zdGFsbGVyLWd1aS1zY3JpcHQ+PHByb2R1Y3QgaWQ9ImNvbS5leGFtcGxlLm1hYyIgdmVyc2lvbj0iNC4yLjEiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIvPjwvcmVsb2NhdGU+PC9wa2ctcmVmPgo8cGtnLXJlZiBpZD0iY29tLnVucmVsYXRlZC5wa2ciIHZlcnNpb249IjkuOS45LjAuMS4xNzAwMDAwMDAwIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4xLjAuMS4xMzQxNTY4NDczIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4xLjAuMS4xMzQxNTY4NDczIi8+PC9pbnN0YWxsZXItZ3VpLXNjcmlwdD4=",
+   "bundle": "",
+   "displayVersion": "4.2.1",
+   "releaseDate": 1341568473
+  },
+  {
+   "kind": "preflight",
+   "name": "four part display",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFNbuswDIT37xSG9n60pTg2AprZFD1BegBVpmKh/gksJkh6+sJOvGjTZXcDYjgafcT9te+SC08xjEOt8v+ZSnhwYxOGY63eDq9ppfb0D692IpTREbqW3Uc890mUW8e1iq3NFeHofWShDOGhMIZPJp0hLAJhXSR0E1sJ45BK6GeLNmmWp9nmoPWuMLu8QPhuQR86TkJTq/kpuZ2Y5gnCInGwPdNLiDKF9/O8hbCMsLFiCTsejtKSKUuEh17r6p99F9O98Iph/ag9nbrgllYwOmFJo0xsewWEdnJtuHCT/k5HG196W269sbqoGue1KawxZWPKjasKXW0b502uEZ6CCPkqk3XyB+HPSYRwZwQzT0JYTgzztb8CAAD//2Xks1hkSiMi4bcIYhY9K3T0PJcmgXK+9zxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSI0LjIuMS4zIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciPjxyZWxvY2F0ZT48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMS4wLjEuMTM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMS4wLjEuMTM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a supported build timestamp"
+  },
+  {
+   "kind": "preflight",
+   "name": "one part display",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFLbsMwDET3PYWhvUvLn/xAM5uiJ0gPIMt0LNSfQGKCpKcv7MSLNl12NyCGo9Ej7q99F13YBzcOpdKviYp4sGPthmOpPg7v8Ubt6QWvxhPKaAlty/YznPsoyK3jUoXWaEU4Nk1goQThoTC4L6Y0QZgFwrJIaD0bceMQi+snS5rFiY6T/JCmuyLb6QLhpwUb13Hk6lJNT8ntxDRNEGaJg+mZ3lwQ76rztIUwj7A2Ygg7Ho7SUrbWCA+91E1/951N98ILhuWj5nTqnJ1bwWiFJQ7i2fQKCI23rbtwHf9Np9a2TooiqXLOM52um9XG5NVmm7FeZdumararpqi1QXgKIuSreGPlH8KfkwjhzggmnoQwnxima38HAAD//3DSs6jUAKgmQEy42Dt6TyZK/yoniNR++DxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSI0Ii8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciPjxyZWxvY2F0ZT48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjAuMC4wLjEuMTM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjAuMC4wLjEuMTM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "displayVersion": "4",
+   "releaseDate": 1341568473
+  },
+  {
+   "kind": "preflight",
+   "name": "signed timestamp",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIaAAAAAXicrJHNbuowEIX39yki73PtJEAATYbN1X0C+gDOZEys5gfZA4I+fZVAFi1ddnc0OnN8/A0cbn2XXDlEPw6Vyv4alfBAY+OHU6Xejv/TrTrgH7jZgCAjIVDL9B4vfRLl3nGlYmszhTA6F1nQgH4qiP6DMTegZwF6WUSgwFb8OKTi+8mSF6nJUrM65vl+XeyzNeivFnC+48Q3lZqekvuZcZqAniUMtmf856MEX1+mLdDzCBorFqHj4SQtFmUB+qmXuvn3vrPpUXjBsHzUns+dp7mVHklY0iiBba80gg3U+is36c90TFlyvSZTrrY1ZTtnGuc2ZW7roiTnmJod5U29qUG/BCHwTYIl+YXw1yQE/WCkJ54Iej6xnq79GQAA//9mUrXuBy+as7aG4+TZxPM+qRAY7+zx0xQ8aW5zdGFsbGVyLWd1aS1zY3JpcHQ+PHByb2R1Y3QgaWQ9ImNvbS5leGFtcGxlLm1hYyIgdmVyc2lvbj0iNC4yIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciPjxyZWxvY2F0ZT48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuKzM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuKzM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "error": "macOS preflight package contains an invalid installer version"
+  },
+  {
+   "kind": "preflight",
+   "name": "unrelated",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFNjuIwEIX3c4rI+0zFDiEjVCk2ozkBcwBjV4jV+UF2gaBP30ogi2562bun0qvn569wfxv67MoxhWlslP5dqIxHN/kwnhr1//Av/6P29AtvNhLK5Ahdx+4tXYYsyb3nRqXOakU4tW1ioQLhqTCFdyZTICwCYV0kdJGthGnMJQyzxZR5ofNiczBmV5U7XSF8tmAbes6Cb9T8lNzPTPMEYZE42oHpb0gSw/EybyEsI/RWLGHP40k6KmuN8NRrXfO172J6FF4xrB+153Mf3NIKJicseZLIdlBAaKPrwpV9/j2dym8d+62vTV22x01pfeUMl5qPrakKLqz2Vd3qFuEliJBvEq2THwh/TSKEByOYeRLCcmKYr/0RAAD//xk1tQiIuVeIrK4zNGazEJoLr+mkJzEhbDxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSI0LjIiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5vdGhlci5tYWMiLz48L3JlbG9jYXRlPjwvcGtnLXJlZj4KPHBrZy1yZWYgaWQ9ImNvbS51bnJlbGF0ZWQucGtnIiB2ZXJzaW9uPSI5LjkuOS4wLjEuMTcwMDAwMDAwMCIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIiB2ZXJzaW9uPSI0LjIuMC4wLjEuMTM0MTU2ODQ3MyIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a build timestamp for the requested bundle"
+  },
+  {
+   "kind": "preflight",
+   "name": "conflicting",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFNjuJADIX3c4qo9hknKQgDcsxmNCdgDlA4Dil1flCVQdCnbyWQRTe97N2T9fzq1Wfc3/ouuUqIfhwqk//OTCIDj7UfTpX5f/iX/jF7+oU3Fwh1ZEJuhd/ipU+i3jupTGxdbgjHpomilCE8FUb/LlRkCLNAWBYJOYhTPw6p+n6yFDbN8jRbHYpit7a7fI3w2YKN7yTxdWWmp/R+FpomCLPEwfVCf33U4I+XaQthHmHt1BF2Mpy0JbuxCE+91C2+9p1Nj8ILhuWj7nzuPM+tYGQVTaMGcb0BQhe49Vep0+/pWLfK17bhsmQuueZCeFMey9qyMFvrbFFuV8d8i/ASRCg3DY71B8JfkwjhwQgmnoQwnxima38EAAD///oWtLRPE96llEgXqtdkIkafADVfDGWikTxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSI0LjIiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIvPjwvcmVsb2NhdGU+PC9wa2ctcmVmPgo8cGtnLXJlZiBpZD0iY29tLnVucmVsYXRlZC5wa2ciIHZlcnNpb249IjkuOS45LjAuMS4xNzAwMDAwMDAwIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDc0Ii8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+PC9pbnN0YWxsZXItZ3VpLXNjcmlwdD4=",
+   "bundle": "",
+   "error": "macOS preflight package contains conflicting build timestamps"
+  },
+  {
+   "kind": "preflight",
+   "name": "ambiguous",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIaAAAAAXicrJFNbsIwEIX3PUXkfTp2QkJAk2FT9QT0AMaZEKv5QfGAoKevEsiipcvunkZvnp+/wd21a6MLj8EPfanMq1YR926ofH8s1cf+PS7Ujl7wakdCGRyha9h9hnMXBbm1XKrQWKMIh7oOLKQRHgqD/2JKNMIsEJZFQjeyFT/0sfhusiRprE2sV/sk2Wbp1mQIPy1Y+5YjX5VqekpuJ6ZpgjBL7G3H9OaDjP5wnrYQ5hFWVixhy/1RGlqZHOGhl7rJ776z6V54wbB81J5OrXdzKxicsMRBRradAkI7usZfuIr/plNsCm3yjPNKb4pVUhyKLNV5mq2t5tqsOS1MrTdJivAURMhXGa2Tfwh/TiKEOyOYeBLCfGKYrv0dAAD//1HtsSAdew57BUVoEM76SDjRCLPrg1SkCzxpbnN0YWxsZXItZ3VpLXNjcmlwdD48cHJvZHVjdCBpZD0iY29tLmV4YW1wbGUubWFjIiB2ZXJzaW9uPSI0LjIiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyI+PHJlbG9jYXRlPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIvPjwvcmVsb2NhdGU+PC9wa2ctcmVmPgo8cGtnLXJlZiBpZD0iY29tLnVucmVsYXRlZC5wa2ciIHZlcnNpb249IjkuOS45LjAuMS4xNzAwMDAwMDAwIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+Cjxwa2ctcmVmIGlkPSJjb20uZXhhbXBsZS5wa2ciIHZlcnNpb249IjQuMi4wLjAuMS4xMzQxNTY4NDczIi8+PHByb2R1Y3QgaWQ9ImNvbS5vdGhlci5tYWMiIHZlcnNpb249IjQuMiIvPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a unique product for the requested bundle"
+  },
+  {
+   "kind": "preflight",
+   "name": "no product id",
+   "input": "eGFyIQAcAAEAAAAAAAABIAAAAAAAAAIaAAAAAXicrJFLbsMwDET3PYWhvUvZjvMDzWyKniA9gCJTsVB/AokJkp6+sBMv2nTZ3YAYjkaPuLt2bXLhEP3QVyp71Srh3g6174+V+ti/p2u1oxe8mkAogyW0DdvPeO6SKLeWKxUbkynCwbnIQhrhoTD6L6ZcI0wCYV4ktIGN+KFPxXejJS9SnaV6sc/zbVlssxLhpwWdbznxdaXGp+R2YhonCJPE3nRMbz5K8IfzuIUwjbA2Yghb7o/SUFHmCA89181/951M98Izhvmj5nRqvZ1awWCFJY0S2HQKCE2wjb9wnf5NRx8KvbRc5JldaptpvdzomjdsamOcc4t16exhla0QnoII+SrBWPmH8OckQrgzgpEnIUwnhvHa3wEAAP//z2q0mD/lgOvAPe30iVbMhGv1DIZufuFzPGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjEzNDE1Njg0NzMiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjEzNDE1Njg0NzMiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "error": "macOS preflight package does not contain a unique product for the requested bundle"
+  },
+  {
+   "kind": "preflight",
+   "name": "malformed",
+   "input": "eGFyIQAcAAEAAAAAAAABIAAAAAAAAAIWAAAAAXicrJFPbvIwEMX33yki7/M5TggENBk2VU9AD2DGE2I1f5A9IOjpq6Rk0dJld0+jmefn34P9re+SK4fox6FW5n+mEh5odH441ert8JpWao//4GYDgoyEQC3Te7z0SZR7x7WKrTUKYWyayIIZ6IeC6D8Y8wz0LEAvhwgU2Iofh1R8P63kRZqZNFsd8nxXFjtTgv6+Ao3vOPGuVtNTcj8zThPQs4TB9owvPkrwx8t0BXoegbNiEToeTtKiAf1QS9j8Z1qzhF0QLJ+053PnaU6kRxKWNEpg2yuNYAO1/sou/Z0MrZwrqCLnKrehbbnOCufWm8aQqzaFK5utWVXHfAv6yQiBbxIsyR+YPzsh6C8+emKJoOd69dT0ZwAAAP//uYGzvuvntBCxGgoFL7omIToZ322qfvrSPA==",
+   "bundle": "",
+   "error": "failed to parse Mac preflight Distribution: XML syntax error on line 1: unexpected EOF"
+  },
+  {
+   "kind": "preflight",
+   "name": "other root",
+   "input": "eGFyIQAcAAEAAAAAAAABIQAAAAAAAAIYAAAAAXicrJFNbuMwDIX3cwpDew8txR47Ac1sBj1BegBVpmOh/gksJkh6+kJOvGjTZXcPxOPT00fcX4c+ufAc/DTWSv/NVMKjmxo/Hmv1enhJK7WnP3i1M6FMjtB17N7DeUiC3HquVeisVoRT2wYWyhAeCoP/YDIZwiIQ1kVCN7MVP42p+CFazCbNdJrlB2N2xWanC4SvFmx9z4lvahWfktuJKU4QFomjHZj++yCzfzvHLYRlhI0VS9jzeJSOtEZ4yLWt+V43eu51VwjrN+3p1Hu3dILJCUsaZGY7KCC0s+v8hZv0ZzYV57wtzD/rtNmWRWW3VWtYN2Wbt3lZlUXeVpyVDuEpiJCvMlsnvxD+nEQId0IQaRLCcmCIt/4MAAD//xhjsr44WqUcc/T37e9YkBnK0dr72M+Fqjxwa2ctaW5mby8+",
+   "bundle": "",
+   "error": "failed to parse Mac preflight Distribution: expected element type \u003cinstaller-gui-script\u003e but have \u003cpkg-info\u003e"
+  },
+  {
+   "kind": "preflight",
+   "name": "prolog and comments",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIaAAAAAXicrJFLbuNADET3cwqh9xrqY+tjUPRmMCdwDkC3KKsRfQw1bdg5fSDZWiTOMrsCUayufsT9re+Cq0zejUNl4r+RCWSwY+2GU2XeDv/DwuzpD954ItTREtpW7Lu/9IHXeyeV8S3HhnBsGi9KEcJToXcfQkmEsAiEdZHQTsLqxiFU18+WJA2jOIw2hyTZbdNdvEX4asHGdRK4ujLzU3o/C80ThEXiwL3QP+d1csfLvIWwjLBmZcJOhpO2tElzhKde6ybf+y6mR+EVw/pRPp87Z5dWMFoVDb1Owr0BQp5s665Shz/TkbQsC7ZllqZFfszjmm3eZHy0aRJnNecZJ2XBUY7wEkQoN53Y6i+EvyYRwoMRzDwJYTkxzNf+DAAA//+Ir7O+bMHZyqvuNBGwjZjFVd9aAQ/sb/k8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJ1dGYtOCIgc3RhbmRhbG9uZT0ibm8iPz48IS0tIGMgLS0+PGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IGlkPSJjb20uZXhhbXBsZS5tYWMiIHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjEzNDE1Njg0NzMiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjEzNDE1Njg0NzMiLz48L2luc3RhbGxlci1ndWktc2NyaXB0Pg==",
+   "bundle": "",
+   "displayVersion": "4.2",
+   "releaseDate": 1341568473
+  },
+  {
+   "kind": "preflight",
+   "name": "nested product ignored",
+   "input": "eGFyIQAcAAEAAAAAAAABIAAAAAAAAAIaAAAAAXicrJFNbsIwEIX3PUXkfTqOE8BCk2FT9QT0AMaZEKv5QfGAoKevEsiipcvunkZvnp+/wd21a5MLjzEMfamyV60S7v1Qhf5Yqo/9e2rVjl7w6kZCGTyhb9h/xnOXRLm1XKrYuEwRDnUdWUgjPBTG8MVkNMIsEJZFQj+ykzD0qYRuspg81Vmqi70x21W+zVYIPy1Yh5aTUJVqekpuJ6ZpgjBL7F3H9BaijOFwnrYQ5hFWThxhy/1RGiryFcJDL3XN776z6V54wbB81J1ObfBzKxi8sKRRRnadAkI3+iZcuEr/pqO93RS2Knh9yAu2ZpMZbaw9uNy62nBWe22s02uEpyBCvsrovPxD+HMSIdwZwcSTEOYTw3Tt7wAAAP//Fray1HD1ecd0/nwjjcIuiC2AkRrz+iB9PGluc3RhbGxlci1ndWktc2NyaXB0Pjxwcm9kdWN0IGlkPSJjb20uZXhhbXBsZS5tYWMiIHZlcnNpb249IjQuMiIvPgo8cGtnLXJlZiBpZD0iY29tLmV4YW1wbGUucGtnIj48cmVsb2NhdGU+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIi8+PC9yZWxvY2F0ZT48L3BrZy1yZWY+Cjxwa2ctcmVmIGlkPSJjb20udW5yZWxhdGVkLnBrZyIgdmVyc2lvbj0iOS45LjkuMC4xLjE3MDAwMDAwMDAiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjEzNDE1Njg0NzMiLz4KPHBrZy1yZWYgaWQ9ImNvbS5leGFtcGxlLnBrZyIgdmVyc2lvbj0iNC4yLjAuMC4xLjEzNDE1Njg0NzMiLz48Y2hvaWNlcz48cHJvZHVjdCBpZD0iY29tLm90aGVyLm1hYyIgdmVyc2lvbj0iNC4yIi8+PC9jaG9pY2VzPjwvaW5zdGFsbGVyLWd1aS1zY3JpcHQ+",
+   "bundle": "",
+   "displayVersion": "4.2",
+   "releaseDate": 1341568473
+  },
+  {
+   "kind": "package",
+   "name": "matching",
+   "input": "eGFyIQAcAAEAAAAAAAABXgAAAAAAAAONAAAAAXicrJM/i9wwEMX7fAqj3tE//9EeY10XSJfi0qSbSKO1ONtabOXYzacP9p4h3IYkHNs9pJnHzPsx8Hgeh+KF5iWmqWPyo2AFTS75OB079vXpU2nYo/0AZ5wt5OQsuJ7c8/JjLJZ8GahjS4+SWUghLJStAP6qYIk/ySoBfBPA90YLIQ5URN+xtTFfTmTXF+CbhAlHsl/QPeORPk8hAd9eYMxxXA1VXYq2VNWTMA/aPFTqG/DrH3jMaGGg6Zh7axrgr3KfTr0db625jrcvva+Fp9MQHeaYJp5cplwueSYcGbeAs+vjC/nyz1lUjlopdXMgf1BUBRMCoRDKm1oKIUnLoEPdKOA3RhbonGd0+Q7mt04W+DUhvub9Gwf1Fw6XIaF/LwMpbxhI0byBsBbdHUKttNP6u3OyrdBo1WhFwquDq2o0qmnIVI5E698F4f/N/w2Bb1fF1wP7FQAA//8sPixxkUt89b/D+WjZjDjZnaliV/EfPck8cGtnLWluZm8+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMS4yLjEiLz48L3BrZy1pbmZvPmFwcCBwYXlsb2Fk",
+   "bundle": "com.example.mac",
+   "displayVersion": "1.2.1",
+   "releaseDate": 1753346322
+  },
+  {
+   "kind": "package",
+   "name": "id only",
+   "input": "eGFyIQAcAAEAAAAAAAABXgAAAAAAAAONAAAAAXicrJM/i9wwEMX7fAqj3tE//9EeY10XSJfi0qSbSKO1ONtabOXYzacP9p4h3IYkHNs9pJnHzPsx8Hgeh+KF5iWmqWPyo2AFTS75OB079vXpU2nYo/0AZ5wt5OQsuJ7c8/JjLJZ8GahjS4+SWUghLJStAP6qYIk/ySoBfBPA90YLIQ5URN+xtTFfTmTXF+CbhAlHsl/QPeORPk8hAd9eYMxxXA1VXYq2VNWTMA/aPFTqG/DrH3jMaGGg6Zh7axrgr3KfTr0db625jrcvva+Fp9MQHeaYJp5cplwueSYcGbeAs+vjC/nyz1lUjlopdXMgf1BUBRMCoRDKm1oKIUnLoEPdKOA3RhbonGd0+Q7mt04W+DUhvub9Gwf1Fw6XIaF/LwMpbxhI0byBsBbdHUKttNP6u3OyrdBo1WhFwquDq2o0qmnIVI5E698F4f/N/w2Bb1fF1wP7FQAA//8sPixxkUt89b/D+WjZjDjZnaliV/EfPck8cGtnLWluZm8+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMS4yLjEiLz48L3BrZy1pbmZvPmFwcCBwYXlsb2Fk",
+   "bundle": "",
+   "displayVersion": "1.2.1",
+   "releaseDate": 1753346322
+  },
+  {
+   "kind": "package",
+   "name": "wrong bundle",
+   "input": "eGFyIQAcAAEAAAAAAAABXgAAAAAAAAONAAAAAXicrJM/i9wwEMX7fAqj3tE//9EeY10XSJfi0qSbSKO1ONtabOXYzacP9p4h3IYkHNs9pJnHzPsx8Hgeh+KF5iWmqWPyo2AFTS75OB079vXpU2nYo/0AZ5wt5OQsuJ7c8/JjLJZ8GahjS4+SWUghLJStAP6qYIk/ySoBfBPA90YLIQ5URN+xtTFfTmTXF+CbhAlHsl/QPeORPk8hAd9eYMxxXA1VXYq2VNWTMA/aPFTqG/DrH3jMaGGg6Zh7axrgr3KfTr0db625jrcvva+Fp9MQHeaYJp5cplwueSYcGbeAs+vjC/nyz1lUjlopdXMgf1BUBRMCoRDKm1oKIUnLoEPdKOA3RhbonGd0+Q7mt04W+DUhvub9Gwf1Fw6XIaF/LwMpbxhI0byBsBbdHUKttNP6u3OyrdBo1WhFwquDq2o0qmnIVI5E698F4f/N/w2Bb1fF1wP7FQAA//8sPixxkUt89b/D+WjZjDjZnaliV/EfPck8cGtnLWluZm8+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMS4yLjEiLz48L3BrZy1pbmZvPmFwcCBwYXlsb2Fk",
+   "bundle": "com.other.mac",
+   "error": "macOS package does not contain metadata for the requested bundle"
+  },
+  {
+   "kind": "package",
+   "name": "missing version",
+   "input": "eGFyIQAcAAEAAAAAAAABXQAAAAAAAAOMAAAAAXictJNPi9swEMXv/RRBd1d/bMXKMtHeCr31sL30NhmNY7G2FWx1Sfrpi501lE1pS+jeHiPNY+b9GHg8993mhccppmEv9EclNjxQCnE47sXXp0+FE4/+A5xx9JATeaCW6Xn63m+mfOl4L6YWtfCQmmbi7BXIVwVT/MHeKJCLALk2emhix5sY9mJuzJcT+7kCcpEwYM/+C9IzHvnz0CSQSwX6HPvZ0NhC1YWpnpR7KN1DZb6BvL5BwIweOh6OufVWg3yV63Tm7Xjzn+t469LrWng6dZEwxzTIRJlzMeWRsRfSA47UxhcOxe+zCDusLGrVhBqNaYy2fLBUH3ZKmZ0mOlToLJMDeWPkgc95RMr/wfzWyYO8JiTnvH/hYP7A4dIlDPcy0LcMav2GgX4PBtaUVJYHIl1X6EqzLQ2rYHZUWXRmu2VXEas63MXg383/zkAuRyXn+/oZAAD//wFVLT6x+5VSNNTMbnIJLlnFI+R/s1DmNTxwa2ctaW5mbz48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiLz48L3BrZy1pbmZvPmFwcCBwYXlsb2Fk",
+   "bundle": "com.example.mac",
+   "error": "macOS package does not contain a display version"
+  },
+  {
+   "kind": "package",
+   "name": "missing timestamp",
+   "input": "eGFyIQAcAAEAAAAAAAABTAAAAAAAAANlAAAAAXicrJPPiuMwDMbv+xTB967/JWkKintb2Nsedh9Aa8uNaRKXxFPaefohaQNDO8yUoSd9COlD3w8E21PXZkcaxhD7msmfgmXU2+hCv6vZv7+/VhXbmh9wwsFAitaAbcjux5cuG9O5pZqNDUpmIHo/UjIC+FXBGF7JKAF8FsCXRQM+tJQFV7NpMZ0PZKYO8FlCjx2ZP2j3uKPfvY/A5w50KUyFX6vDhAZa6nepMVUJ/CqXS9TtKdPM5ZQl4BIBD4c2WEwh9jzaRGk1poGwY9wADrYJR3Krj3PnltZS6nJDbqMo95X3hEIoVxVSCElaeu2LUgG/MzJApzSgTU8wv3cywC+E+MT2HXP1CfNzG9E9wlvKO95SlDfAp6GnAy+Utlr/t1auc6y0KrUi4dTG5gVWqiypyi2JtfsW8MfNvwbO52/h0+O8BQAA//9oryPb93rqJPnOKB+Cr7Cm0gBqEWVSjV88cGtnLWluZm8+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMS4yLjEiLz48L3BrZy1pbmZvPmFwcCBwYXlsb2Fk",
+   "bundle": "com.example.mac",
+   "error": "macOS package does not contain a payload timestamp"
+  },
+  {
+   "kind": "package",
+   "name": "epoch timestamp",
+   "input": "eGFyIQAcAAEAAAAAAAABXAAAAAAAAAONAAAAAXicrJNNi9wwDIbv/RXB99Rf+SyK91borYftpTfVlidmk3hI3GWmv74ks4EyU9plGPDhRZZeJD0Ink7jkL3SvIQ4dUx+FCyjyUYXpkPHvj1/zhv2ZD7ACWcDKVoDtif7svwcsyWdB+rY0qNkBqL3CyUjgL8pWMIvMkoA3wTwvdCADwNlwXVsLUznI5k1AnyTMOFI5ivaFzzQl8lH4FsExhRGMrKtRS5kLuSzEJ+29x345Q8cJjQw0HRIvWkq4G9y705dt7fmXNrbh97HwuNxCBZTiBOPNlHKlzQTjowbwNn24ZVc/vddFJZqKXXVkmsVFb7xnlAI5ZpSCiFJS699WSngN0YG6JRmtOkB5rdOBvhlQ3zd9x8c1D84nIeI7l4GUt4wkKK6grAmPRxCqbTV+oe1si6w0arSioRTrS1KbFRVUVNYErW7C8L7zf8PgW9XxdcD+x0AAP//ueksOTFeyallZVO1SvHtkUZBcZoDxEKRPHBrZy1pbmZvPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEuMi4xIi8+PC9wa2ctaW5mbz5hcHAgcGF5bG9hZA==",
+   "bundle": "com.example.mac",
+   "error": "macOS package does not contain a payload timestamp"
+  },
+  {
+   "kind": "package",
+   "name": "ambiguous",
+   "input": "eGFyIQAcAAEAAAAAAAABXgAAAAAAAAOPAAAAAXictJNPj9QwDMXvfIpR7iVp0j/pypO9IXHjsFy4uY47E23bjNqwmuHTo3a2EqII0ApuT078ZL+fDI/XoT+88DSHOB5F/l6JA48UfRhPR/H56UNmxaN7B1ecHKRIDujM9Dx/HQ5zuvV8FPMZc+Egdt3MySmQrwrm8I2dViBXAXJrdNCFng/BH8XSmG4XdksF5CphxIHdJ6RnPPHHsYsg1woMKQyLoS4zVWe6eFL2wdiHQn8BeX8Djwkd9Dye0tnleQnyVW/j6Z/nWz/dB9zW3hbDy6UPhCnEUUZKnLI5TYyDkA5wonN4YZ/9Og2jWmtbY6muVG3QV2XTcFFQa5u2rbEhQ52qFYHcGTnga5qQ0j8w3zs5kPeM5JL4DyT0b0jc+oj+7RR2EHJT7ij8BwilNmRMS5TXBVqjK6NZed1QUaLVVcW2IFa1fxOEvzf/MwS53pVcTux7AAAA//+H7C1HHN5+fyZeBGVjBqIvRzuqX2FcDTU8cGtnLWluZm8+PGJ1bmRsZSBpZD0iYSIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEiLz48YnVuZGxlIGlkPSJiIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMiIvPjwvcGtnLWluZm8+YXBwIHBheWxvYWQ=",
+   "bundle": "",
+   "error": "macOS package contains multiple matching bundles"
+  },
+  {
+   "kind": "package",
+   "name": "filtered ambiguous",
+   "input": "eGFyIQAcAAEAAAAAAAABXgAAAAAAAAOPAAAAAXictJNPj9QwDMXvfIpR7iVp0j/pypO9IXHjsFy4uY47E23bjNqwmuHTo3a2EqII0ApuT078ZL+fDI/XoT+88DSHOB5F/l6JA48UfRhPR/H56UNmxaN7B1ecHKRIDujM9Dx/HQ5zuvV8FPMZc+Egdt3MySmQrwrm8I2dViBXAXJrdNCFng/BH8XSmG4XdksF5CphxIHdJ6RnPPHHsYsg1woMKQyLoS4zVWe6eFL2wdiHQn8BeX8Djwkd9Dye0tnleQnyVW/j6Z/nWz/dB9zW3hbDy6UPhCnEUUZKnLI5TYyDkA5wonN4YZ/9Og2jWmtbY6muVG3QV2XTcFFQa5u2rbEhQ52qFYHcGTnga5qQ0j8w3zs5kPeM5JL4DyT0b0jc+oj+7RR2EHJT7ij8BwilNmRMS5TXBVqjK6NZed1QUaLVVcW2IFa1fxOEvzf/MwS53pVcTux7AAAA//+H7C1HHN5+fyZeBGVjBqIvRzuqX2FcDTU8cGtnLWluZm8+PGJ1bmRsZSBpZD0iYSIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEiLz48YnVuZGxlIGlkPSJiIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMiIvPjwvcGtnLWluZm8+YXBwIHBheWxvYWQ=",
+   "bundle": "b",
+   "displayVersion": "2",
+   "releaseDate": 1753346322
+  },
+  {
+   "kind": "package",
+   "name": "nested bundles ignored",
+   "input": "eGFyIQAcAAEAAAAAAAABXQAAAAAAAAOPAAAAAXictJNPb9swDMXv+xSB7p7+ObJaMOptwG47dJfdWIpOhNpWYGtFsk8/2KmBoRm2IVhvD5T4QL4fCA+nvtu88DilPOyE/qjEhgfKMQ37nfj6+Kny4iF8gBOOAUqmAHRgep6+95upnDveiemAWgTIbTtxCQrkq4Ip/eBgFMhFgFwbA7Sp402KOzE3lvORw1wBuUgYsOfwBekZ9/x5aDPIpQJ9Sf1saLaVaipTPyp/b/19bb6BvLxBxIIBOh725RC0cyBf9TqeeTvf8uky4Lr2uhgej10iLCkPMlPhUk1lZOyFDIAjHdILx+r3aWxbr5VtHNeutXdeKTSWnlqPpJxnrBuz9T5GB/LKKACfyohU/oP5tVMAeclIzon/QsL8gcS5yxhvpqCvIGjv3lLQ7wHBWLL2iUg3NXprnDWsormjeoveOMe+JlZNvA3CP5v/HYJc7krOJ/YzAAD//zTZLJdFMV62MAYj4VRg2GTePmCw504OzDxwa2ctaW5mbz48cGF5bG9hZD48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiIENGQnVuZGxlU2hvcnRWZXJzaW9uU3RyaW5nPSI5Ii8+PC9wYXlsb2FkPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEuMi4xIi8+PC9wa2ctaW5mbz5hcHAgcGF5bG9hZA==",
+   "bundle": "",
+   "displayVersion": "1.2.1",
+   "releaseDate": 1753346322
+  },
+  {
+   "kind": "package",
+   "name": "invalid",
+   "input": "eGFyIQAcAAEAAAAAAAABWQAAAAAAAAOKAAAAAXictJNPa9wwEMXv/RSL7q7++Y82jJVbobce0ktvysx4LWJbi62G3X76YieGkoS2hPb2kJjHm/dj4PYyDodHnpeYplboj0oceMJEcTq14uvdp8KJW/8BLmH2kBN6wJ7xYfk+HpZ8HbgVSx+08JC6buHsFchnBUv8wd4okJsAuQ966OLAh0itWAfz9cx+fQG5SZjCyP5LwIdw4s9Tl0BuLzDmOK6GpipUU5jyTrkb625K8w3k0x9QyMHDwNMp916DfFZ7OPMynd7D7SvvS4XzeYgYckyTTJg5F0ueOYxCeggz9vGRqXi7CSyJLDokctTgsaqVJaqbTiO5xlLVHXXp7s0R5CsjD3zJc8D8D8xfO3mQT/3Ite1fKJjfULgOKdC7CbyBQL9E8D8YVMaitfeIuimDs6a2hhWZI5ZVcKau2ZXIqqF3Mfh78z8zkNtJyfW6fgYAAP///dktH1S3673hiJfcKFjPWOXulrhzfet9PGFwcCBwYXlsb2Fk",
+   "bundle": "com.example.mac",
+   "error": "failed to parse PackageInfo: XML syntax error on line 1: unexpected EOF"
+  },
+  {
+   "kind": "package",
+   "name": "component directory",
+   "input": "eGFyIQAcAAEAAAAAAAABpQAAAAAAAAVfAAAAAXic7JRPj5swEMXv/RQRd8f/gPVGE++tUm89pJfeZs2YWAGMwF2R/fQVZFG72apNVz1W8mEwfk/D7+GBh6ltNk80jCF2+0xuRbahzsUqdPU++3L4yEz2YD/AhIOFFJ0FNxCmEDuWQktWCZUzIZlQB6F3It+JAvjrI+CO5E7jt3YzpnND+2w8oswsRO9HSlYAf6lgDM+zI/ClAL4KLfjQ0CZU+2wWpnNPtgoDuRSHM/DlGTpsybrYbmnCtm9o259q4MvuD7la5fPOK+VndCes6VPn46qqMKGFhro6Ha0xwF/KtXN13fp85tL6inD9ZOz7JrgFCp9Y/Rz6jFvAwR3DE1Xs14Sc8xoLlBrLUjqt0BvthTTF46Mnk5MWKMlIB/yNkQWa0oAu/QPzt04W+IUNnzH+hFf/Bu+5iVitaNv15ymYuGMqPwiz02aXq6/AL++u6Jc30C9voR9dosTGNBC2N2SQO7qTUpf3VN0ryr3xnlAIVZlCCiFJS699Uap3ZXC7+Z8zuI4i/9so5ks8r4MQu2X9j+K9USxzks8j83sAAAD//7h6yjWnSZMe5FKZzPAuRHwtabDPS+K/UXicsinITtfNzEvLt7NJKs1LyUlVyEyxVUrOz9VLrUjMLchJ1ctNTFZScHZzAssGZ+QXlYSlFhVn5ucFlxRl5qXbKhnqGekZKunb2ejDzQIEAAD//yZ1HYQ8cGtnLWluZm8+PGJ1bmRsZSBpZD0iY29tLmV4YW1wbGUubWFjIiBDRkJ1bmRsZVNob3J0VmVyc2lvblN0cmluZz0iMS4yLjEiLz48L3BrZy1pbmZvPg==",
+   "bundle": "",
+   "displayVersion": "1.2.1",
+   "releaseDate": 1753346322
+  }
+ ],
+ "offers": [
+  {
+   "name": "mac",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "version": "876660716"
+  },
+  {
+   "name": "mac",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "version": "876660716"
+  },
+  {
+   "name": "mac",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "mac",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "single quotes",
+   "body": "\u003chtml\u003e\u003cscript type=\"application/json\" id='serialized-server-data'\u003e  [{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}] \u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "version": "876660716"
+  },
+  {
+   "name": "single quotes",
+   "body": "\u003chtml\u003e\u003cscript type=\"application/json\" id='serialized-server-data'\u003e  [{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}] \u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "version": "876660716"
+  },
+  {
+   "name": "single quotes",
+   "body": "\u003chtml\u003e\u003cscript type=\"application/json\" id='serialized-server-data'\u003e  [{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}] \u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "single quotes",
+   "body": "\u003chtml\u003e\u003cscript type=\"application/json\" id='serialized-server-data'\u003e  [{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}] \u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "nested",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"data\":[{\"x\":{\"y\":[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}]}}]}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "version": "876660716"
+  },
+  {
+   "name": "nested",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"data\":[{\"x\":{\"y\":[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}]}}]}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "version": "876660716"
+  },
+  {
+   "name": "nested",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"data\":[{\"x\":{\"y\":[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}]}}]}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "nested",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"data\":[{\"x\":{\"y\":[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}]}}]}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "conflict",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=1\"}}]\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "macOS purchase configurations contain conflicting external version ids"
+  },
+  {
+   "name": "conflict",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=1\"}}]\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "macOS purchase configurations contain conflicting external version ids"
+  },
+  {
+   "name": "conflict",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=1\"}}]\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "conflict",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e[{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}},{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=1\"}}]\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "escaped params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026app%45xtVrsId=876660716\u0026x=a+b\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "version": "876660716"
+  },
+  {
+   "name": "escaped params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026app%45xtVrsId=876660716\u0026x=a+b\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "version": "876660716"
+  },
+  {
+   "name": "escaped params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026app%45xtVrsId=876660716\u0026x=a+b\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "escaped params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026app%45xtVrsId=876660716\u0026x=a+b\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "semicolon params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552;x=1\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "semicolon params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552;x=1\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "semicolon params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552;x=1\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "semicolon params",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552;x=1\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "bad escape",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026x=%zz\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "bad escape",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026x=%zz\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "bad escape",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026x=%zz\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "bad escape",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026x=%zz\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "repeated key first wins",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=5\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "version": "5"
+  },
+  {
+   "name": "repeated key first wins",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=5\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "version": "5"
+  },
+  {
+   "name": "repeated key first wins",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=5\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "repeated key first wins",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=5\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "zero version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=0\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "zero version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=0\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "zero version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=0\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "zero version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=0\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "signed version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=+876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "signed version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=+876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "signed version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=+876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "signed version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=+876660716\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "huge version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=99999999999999999999\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "huge version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=99999999999999999999\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "huge version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=99999999999999999999\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "huge version",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[\"mac\",\"phone\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=99999999999999999999\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "numeric platforms",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[1,\"mac\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "version": "876660716"
+  },
+  {
+   "name": "numeric platforms",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[1,\"mac\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "version": "876660716"
+  },
+  {
+   "name": "numeric platforms",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[1,\"mac\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "numeric platforms",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\"purchaseConfiguration\":{\"bundleId\":\"com.nebula.karing\",\"appPlatforms\":[1,\"mac\"],\"buyParams\":\"salableAdamId=6472431552\u0026appExtVrsId=876660716\"}}\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "macOS purchase configuration has no external version id for the requested app"
+  },
+  {
+   "name": "missing",
+   "body": "\u003chtml\u003e\u003c/html\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "serialized server data was not found"
+  },
+  {
+   "name": "missing",
+   "body": "\u003chtml\u003e\u003c/html\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "serialized server data was not found"
+  },
+  {
+   "name": "missing",
+   "body": "\u003chtml\u003e\u003c/html\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "serialized server data was not found"
+  },
+  {
+   "name": "missing",
+   "body": "\u003chtml\u003e\u003c/html\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "serialized server data was not found"
+  },
+  {
+   "name": "no script",
+   "body": "\u003cdiv id=\"serialized-server-data\"\u003e{}\u003c/div\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "serialized server data script was not found"
+  },
+  {
+   "name": "no script",
+   "body": "\u003cdiv id=\"serialized-server-data\"\u003e{}\u003c/div\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "serialized server data script was not found"
+  },
+  {
+   "name": "no script",
+   "body": "\u003cdiv id=\"serialized-server-data\"\u003e{}\u003c/div\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "serialized server data script was not found"
+  },
+  {
+   "name": "no script",
+   "body": "\u003cdiv id=\"serialized-server-data\"\u003e{}\u003c/div\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "serialized server data script was not found"
+  },
+  {
+   "name": "malformed",
+   "body": "\u003cscript id=\"serialized-server-data\"",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "serialized server data script is malformed"
+  },
+  {
+   "name": "malformed",
+   "body": "\u003cscript id=\"serialized-server-data\"",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "serialized server data script is malformed"
+  },
+  {
+   "name": "malformed",
+   "body": "\u003cscript id=\"serialized-server-data\"",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "serialized server data script is malformed"
+  },
+  {
+   "name": "malformed",
+   "body": "\u003cscript id=\"serialized-server-data\"",
+   "appId": 1,
+   "bundleId": "",
+   "error": "serialized server data script is malformed"
+  },
+  {
+   "name": "not closed",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{}",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "serialized server data script is not closed"
+  },
+  {
+   "name": "not closed",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{}",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "serialized server data script is not closed"
+  },
+  {
+   "name": "not closed",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{}",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "serialized server data script is not closed"
+  },
+  {
+   "name": "not closed",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{}",
+   "appId": 1,
+   "bundleId": "",
+   "error": "serialized server data script is not closed"
+  },
+  {
+   "name": "invalid json",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "invalid json",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "invalid json",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "invalid json",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e{\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "empty",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "com.nebula.karing",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "empty",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "empty",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e\u003c/script\u003e",
+   "appId": 6472431552,
+   "bundleId": "other",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  },
+  {
+   "name": "empty",
+   "body": "\u003cscript id=\"serialized-server-data\"\u003e\u003c/script\u003e",
+   "appId": 1,
+   "bundleId": "",
+   "error": "failed to decode Mac product page: unexpected end of JSON input"
+  }
+ ],
+ "platforms": [
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": null,
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": null,
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": null,
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": null,
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": null,
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": null,
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": null,
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": null,
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": null,
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "error": "download response contains conflicting package metadata"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "error": "download response does not contain mobile sinf data"
+  },
+  {
+   "platform": "macos",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "macos"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": null,
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "iphone",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ],
+   "result": "iphone"
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {},
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "MacOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "ios"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app",
+    "software-platform": "IOS"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "mac-os-app"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "product-type": "ios-app",
+    "software-platform": "macos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": null
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": "ZHA="
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": "c2luZg==",
+     "dpInfo": null
+    },
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  },
+  {
+   "platform": "",
+   "metadata": {
+    "software-platform": "watchos"
+   },
+   "sinfs": [
+    {
+     "data": null,
+     "dpInfo": null
+    }
+   ]
+  }
+ ],
+ "xar": [
+  {
+   "name": "plain file",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxuYXBwIHBheWxvYWQ=",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "md5 archive",
+   "input": "eGFyIQAcAAEAAAAAAAABFQAAAAAAAAIAAAAAAnicnJHBbsIwDIbve4oq985xSwEh19x23oE9QEgMRGsb1HoI9vRTO3pA7LTblyj2l9+m7bVtsov0Q0xdbfDVmkw6n0LsjrX52L3la7PlF7q6nkmTZ/K9OI2pyzW2woUtFrnF3BY7W27sYmMrgscn5E/iP4evNhv01kht2lAZpnQ4DKJsCe5EQ/wWxiXBBARzHdMhNpLFUBs0THo7C483BBNS51rhd3drkgsE04mCU8fUSHfUEyMS3HHWjppHL87eOf78XXc+N9FPgSB5Fc0H7cW1Bphc70/xIiH/M+N6VZZSYbUsEVdVtQ8Y9nYt4hHLsLcFwVM9k1y1d17/3/O5ARP8zgPGsTHBtEgYd/oTAAD//2zpqoCHVTirrHD2/8XexPa6NriQYXBwIHBheWxvYWQ=",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "md5 header sha1 toc",
+   "input": "eGFyIQAcAAEAAAAAAAAAlgAAAAAAAACyAAAAAnicVM5BDoIwEAXQvacg3ddOEY0hw7DzBHgAUgdphDbpVIOe3kh04e4t/s//2C7zVDw4iY+hUXYLquDg4sWHa6PO3UkfVUsbXPpEmKMjdIn77GPQ2c9MJZSVBquh7GBXQ1XDHs1/BN3I7ib3uZD8nLhRMvZWEcZhEM4EaL5C8S8me0CzAs2vSGjWafN58Q4AAP//1hc59XaNw3BoqSHbyigtZa8tec0=",
+   "error": "xar: header and toc checksum type mismatch",
+   "files": []
+  },
+  {
+   "name": "sha1 header md5 toc",
+   "input": "eGFyIQAcAAEAAAAAAAAAlQAAAAAAAACxAAAAAXicVI5ProIwEIf37xSk+74ZEBJDhmHnCfAApAzaSNukrQY9vYHowt23+P35qF/dUjwkJht8p8p/VIV4EybrL506Dyd9VD3/0TpGphwMk4kyZhu8ztYJV1jVGkuN1YCHFusWG4LfCJmrmFu6uyLl5yKdclOjmMI8J8mMBB+iZF/bIMEOBN8eE+zPsEm8AwAA//+XjDmJaeGKaBSsR9nyeQv0Z2m93DO8oBs=",
+   "error": "xar: header and toc checksum type mismatch",
+   "files": []
+  },
+  {
+   "name": "no checksum kind",
+   "input": "eGFyIQAcAAEAAAAAAAAAlAAAAAAAAACyAAAAAHicVI5NDoIwEIX3noJ0XzsgJoY8hp0nwAOQOkgjtAmtBj29gejC3bd4Px+aZRqzp8zRBV+rfE8qE2/D1flbrS7tWZ9Uwzss3cxIwTLsLF1ywevkJuGCilJTrqlo6VBRWdER5j8CO4i9x8eUxfQapVZx6HLFCH0fJTHBfAnRvddFmA1gfkWG2a7NavEJAAD//9V9OfBXyU68nwL13EJIJy1hnenjI7vEkQ==",
+   "error": "xar: unsupported checksum type",
+   "files": []
+  },
+  {
+   "name": "unknown checksum kind",
+   "input": "eGFyIQAcAAEAAAAAAAAAlAAAAAAAAACyAAAAB3icVI5NDoIwEIX3noJ0XzsgJoY8hp0nwAOQOkgjtAmtBj29gejC3bd4Px+aZRqzp8zRBV+rfE8qE2/D1flbrS7tWZ9Uwzss3cxIwTLsLF1ywevkJuGCilJTrqlo6VBRWdER5j8CO4i9x8eUxfQapVZx6HLFCH0fJTHBfAnRvddFmA1gfkWG2a7NavEJAAD//9V9OfBXyU68nwL13EJIJy1hnenjI7vEkQ==",
+   "error": "xar: unsupported checksum type",
+   "files": []
+  },
+  {
+   "name": "empty toc",
+   "input": "eGFyIQAcAAEAAAAAAAAAlAAAAAAAAACyAAAAAXicVI5NDoIwEIX3noJ0XzsgJoY8hp0nwAOQOkgjtAmtBj29gejC3bd4Px+aZRqzp8zRBV+rfE8qE2/D1flbrS7tWZ9Uwzss3cxIwTLsLF1ywevkJuGCilJTrqlo6VBRWdER5j8CO4i9x8eUxfQapVZx6HLFCH0fJTHBfAnRvddFmA1gfkWG2a7NavEJAAD//9V9OfBXyU68nwL13EJIJy1hnenjI7vEkQ==",
+   "files": []
+  },
+  {
+   "name": "gzip entry",
+   "input": "eGFyIQAcAAEAAAAAAAABGwAAAAAAAAIRAAAAAXicrJG/boNADMb3PgW6nfoOkghFxtkqdeuQPoBz+OAU/gmuEcnTV5AwtOnY7ZNl/z77Mx6mpo4uMoy+a3NlXrWKpLVd4dsyV5/HtzhTB3rBiQfC0FlCOwgH37Vx8I1QopNNrE2sk6NO93qz11uEny1oK7Hn8auJxnCtJVdjxUYRds6NEkgjPBSO/jYTERaBsA4SOl9L5ItczYPh2gvNFYRFYsuN0AfbM5fy3roOYalgwYEJa2nLUFGWITzkap389p577t5rBuvO3Pe1t8tVMMXlzfcKCHmwlb9IEf99orUu5S2blHc7Y9OEXZY6bbLt6eQk20iq2UhmLMITiFCmMLAN/wB/JhHCPRuYYySE5bMwP/k7AAD//2d1sPRcTangnPQbsTOTVENUfrf64l23NnicsinITtfNzEvLt7NJKs1LyUlVyEyxVUrOz9VLrUjMLchJ1ctNTFZScHZzAssGZ+QXlYSlFhVn5ucFlxRl5qXbKhnqGekZKunb2ejDzQIEAAD//yZ1HYQ=",
+   "files": [
+    {
+     "id": 1,
+     "name": "PackageInfo",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "PHBrZy1pbmZvPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEuMi4xIi8+PC9wa2ctaW5mbz4="
+    }
+   ]
+  },
+  {
+   "name": "bzip2 entry",
+   "input": "eGFyIQAcAAEAAAAAAAABHwAAAAAAAAIUAAAAAXicrJHBbrswDMbv/6dAufNPIKxjlXFvk3bboXuA1HFKVAgIsor26SdoOWzdcbdPlv377M+wm9omOfMw+i5UIvuvRMKBOuvDsRIf+9e0FDv8B5MZEGJHCDSwib4LafQtY67yIlVZqvK90ltVbNUTyO8tQDXTafxskzFeGq7EWJtMIHTOjRxRgbwrGP11JoJcBMh1EMH5hhNvKzEPxkvPOFdALhKCaRnfDZ3Mkd+C60AuFbAmGoSGwzHWmGUFyLtevfOf5kvTzX1NYd3a9H3jablLTunh6vtcSAQzUO3PbNPfr+SsYFtqXehcl9pY50jbDdFGlwelmSh7ce7ZapAPIASe4mAo/gH8kYQgb/HIOUkEuTxXzn/+CgAA///2WbGd7Z96jdzaM6Jl1K7WppF/Kpx5RgJCWmg5MUFZJlNZwG5DjwAACJ+AUAOoBxkACQA/795AIABURAgxNNBpiMhsg1ED1GRtRk0HqaaaC4PJgiGJcWLaslFF0g83tlR3x8HIhNSQrEwvo0FBEJHPFj0EDzCH6ChSU+2bByRYXF3JFOFCQwG5Djw=",
+   "files": [
+    {
+     "id": 1,
+     "name": "PackageInfo",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "PHBrZy1pbmZvPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjMuMSIvPjwvcGtnLWluZm8+"
+    }
+   ]
+  },
+  {
+   "name": "corrupt gzip entry",
+   "input": "eGFyIQAcAAEAAAAAAAABHgAAAAAAAAIRAAAAAXicrJHBjqMwDIbv+xQod9ZJoF1aGfe20t720HmAKDgQFQKCTEX79CNoOcx0jnP7Zdnfb//G09y1yZXHyfehFOq3FAkH21c+1KV4O/9NC3GiXzibkTD2ltCObKLvQxp9x6SlzlOpUqnPMjvK/Ch3CJ9b0DZsL9N7l0zx1nIppsYoQdg7N3EkifBUOPn7QkRYBcI2SOh8y4mvSrEMxtvAtFQQVonBdEz/jb2Ymv8F1yOsFaxMNIQthzo2VOwRnnKz1l+9l56H95bBtrMZhtbb9SqY0/ruBwGEZrSNv3KVfn9ibvmPUtn+wNVBc+4K59hIqatip6RUnCmXud1eI7yACHmOo7HxB+CvJEJ4ZANLjISwfhaWJ38EAAD//80Mr5RAMkjDqNmVsOu4FJSJfGSh72E+Ezxwa2ctaW5mbz48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiIENGQnVuZGxlU2hvcnRWZXJzaW9uU3RyaW5nPSIxLjIuMSIvPjwvcGtnLWluZm8+",
+   "files": [
+    {
+     "id": 1,
+     "name": "PackageInfo",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "openError": "zlib: invalid header"
+    }
+   ]
+  },
+  {
+   "name": "unsupported encoding",
+   "input": "eGFyIQAcAAEAAAAAAAABGAAAAAAAAAILAAAAAXicrJE9coNADIX7nILZnmhZsE08Qu5Sp3AOoAjZ7IQfD2w82KfPgE2ROGW6tzvS9/Qk3I1NHZ21H3zXFiZ5tibSVrrSt8fCvO9f49zs6AlH7glDJ4TSKwfftXHwjZKzLottElu3t+nWZlu7QvhZglKpfA5fTTSES62FGSpODGF3OAwayCLcFQ7+OhERZoGwNBIefK2RLwszNYbLSWn6QZglttwovfGl7rhEmF9YcmDCWttjqChJEO5ysXW/faeam++Sf5mXT6fay5wIxni8GiDkXip/1jL+O9zKpZKmHyLJJuM8devUqS3di2Qrzt16rXkmajclwgOIUMfQs4R/gD+SCOG2GZgWSAjzTWE673cAAAD//yAPrOCdR4/e+m7zzc6mKUpmXVLuMye0i2FwcCBwYXlsb2Fk",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "openError": "xar: unsupported file encoding"
+    }
+   ]
+  },
+  {
+   "name": "wrong file checksum",
+   "input": "eGFyIQAcAAEAAAAAAAABAwAAAAAAAAITAAAAAXicrJExbvMwDIX3/xSGdv+U3RQoAprZOndID0DIdCzUlgKJDZKevpATD206dKimJ4H8nh6Ju/M8VSdJ2cfQmea/NZUEF3sfDp153T/XT2ZH//DMiVCjI3RJWH0MtfpZqLXtprZNbdu9fdjazdY+InwtQTeKe8vvc5X1Mkln8siNIYzDkEXJItwUZv9RiAiLQFgbCQc/SeX7zpRGvRyFygvCIjHwLPTClylyj7DcsGdlwknCQUdqGoSbXG3b776l5uq75l//y8fj5N2SCKJT0TprEp4NEHJyoz9JX/8ccvjlQbgDEcpZEzv9A/g9iRCuE4IySEJYdgtlzZ8BAAD//wCUuuvjX3Dq+GvfFc9eGjPKuzwrJAwsHmFwcCBwYXlsb2Fk",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": false,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "md5 file checksum",
+   "input": "eGFyIQAcAAEAAAAAAAABIgAAAAAAAAIRAAAAAXicpJHNbqtADIX39ynQ7LkeBkhoZJxN1V2lLtIHcI0TRuUngmmU9OkrSFg0WXZ3ZmR/x8fG7bltopMOo++70iT/rYm0k77y3aE077uXuDBb+odnHghDL4QyKAffd3HwrZKzLottElu3s+nGZhubI/wuQalVPsevNhrDpdHSjDUnhrDf70cNZBFuCkf/PRERZoGwNBLufaORr0ozNYbLUWn6QZgldtwqvfGl6blCmF9YcWDCRrtDqClJEG5ysXX3vlPN1XfJv8zLx2PjZU4EvQQN8RgG5dYAIQ9S+5NW8X3I1+fcUO5SSdMPkWSdcZG6VerUVu5JspwLt1ppkYnadYXwwCHUcxhYwt/ZjyBCuO4HpjUSwnxZmI78EwAA//9sz67TaYUQtFr0YNzODgX1Af++fGaRQ2FhcHAgcGF5bG9hZA==",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": false,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "truncated heap",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxuYXBwIA==",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": false,
+     "content": "YXBwIA=="
+    }
+   ]
+  },
+  {
+   "name": "offset past heap",
+   "input": "eGFyIQAcAAEAAAAAAAABHwAAAAAAAAIVAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO9IR7i7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrEtrP3pPFXdnJcElon5dGq9zDvBIFFjGuKo3Bkg5FEaf9Y6/X3Nlcslz99Esk3BZe7WuVNbuycpVly69VrLQtRuaoQHEKFe4sgS/wD+SCKEW0YwRUkI83VhOvRXAAAA//8857CDXtPagwte1T/auRnXC01j/zZVfWVhcHAgcGF5bG9hZA==",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": false
+    }
+   ]
+  },
+  {
+   "name": "nested directories",
+   "input": "eGFyIQAcAAEAAAAAAAACAgAAAAAAAAZxAAAAAXic7JVBb5w+EMXv/0+BuP4FHhvDsqtZ51apt6pKL7m59rDrLmAE3mi3n74CQtLNNmlT5dgTD3veWLyfBuPNqamje+oH59ttzFOII2qNt67dbeMvtx+SMr5R/+FJ9wqDNwpNTzo43ybBNaQECJkAT0DcQrYBuYEc2WUJmj2Zw3BsoiGca9rGw17zWKGvqoGCAmQPCgf3feyIbBLIFqPCytUUObuNR2M4d6Ss68kE35+RTe/Y6oaU8U1KJ910NaXdYYdsWn2yi8U+rlw4P2lz0Dv62FZ+cTXLF+YJrBIhb6HcZOVGijtk8x423pKCQkpkk8SjsyoHjmwUuHNWRQIiZKPC40C9Mn48eZJoddAKa2p3Ya/KAtmDXLIRz8MZa+ZwFkhLqLrramem2Jk3gUIyhJ50EzOFujd7d082+TUJaWjFeVasya4FyaqsKtIAwpY5B+CU8Sqr8kIgu2qkkE6h1ya8Q/PrTgrZnBAbcf2EMXsF47n22v4W4f8gNgCPHM1LdWl+h2zevaTF+RUtDsUzXGPRu+PKRWay7KsxfCV1mYkiEwRWrI3MdSmKgkppCFb2r3D9efM34JKvD22ass80+GNvaLia2PxF1NSmddf7b4vl3zC9aZguH495r5e8h3NTu/ZwEfm8MMf93Hh6AjX+QmfXcsh0c7DxEvkRAAD//y2MIdPoZ+bxDW8Hcpk1monYBNTJtFA9+zxwa2ctaW5mbz48YnVuZGxlIGlkPSJjb20uZXhhbXBsZS5tYWMiIENGQnVuZGxlU2hvcnRWZXJzaW9uU3RyaW5nPSIxLjIuMSIvPjwvcGtnLWluZm8+YXBwIHBheWxvYWQ=",
+   "files": [
+    {
+     "id": 2,
+     "name": "com.example.pkg/PackageInfo",
+     "mtime": 1753346322,
+     "mode": 644,
+     "uid": 501,
+     "gid": 20,
+     "verify": true,
+     "content": "PHBrZy1pbmZvPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEuMi4xIi8+PC9wa2ctaW5mbz4="
+    },
+    {
+     "id": 3,
+     "name": "com.example.pkg/Payload",
+     "mtime": 1753339122,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    },
+    {
+     "id": 5,
+     "name": "Resources/en.lproj",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "PHBrZy1pbmZvPjxidW5kbGUgaWQ9ImNvbS5leGFtcGxlLm1hYyIgQ0ZCdW5kbGVTaG9ydFZlcnNpb25TdHJpbmc9IjEuMi4xIi8+PC9wa2ctaW5mbz4="
+    }
+   ]
+  },
+  {
+   "name": "duplicate ids",
+   "input": "eGFyIQAcAAEAAAAAAAABJgAAAAAAAANoAAAAAXic7JNPTvNADMX33ymi2efzZJK2oXJcwYITlAMMjtuMyJ8qMVXL6VHSZgFlgRBLVnmK7Pfm/STj5tTU0VH6IXRtYZL/1kTScleGdl+Yp+1jnJsN/cOT7wm1Y0LuxWvo2lhDI+Ssy2KbxNZtbbq22douED6OIFfCL8NrEw16rqUwQ+UTQ9jtdoMoWYSrwiG8jY4Ik0CYFwl3oZYolIUZF/V8EBr/IEwSW98I3SNMXyy9esJa2r1WlCQIVzkHus+J48wlcW4+v9QfDnXgqQt0rKLxoL34xgCh77kKRynjr+stXMpp+sycrDKfp26ZOrGlu+Ns4XO3XEqesdhViXBjRCgn7T3rL5jfOhHChRCMCL+F9uEP7Y/QwnQwMN7OewAAAP//vk4hUEWk4RUVpTFPn/nLUJMIPltdBZWWYXBwIHBheWxvYWQ=",
+   "files": [
+    {
+     "id": 1,
+     "name": "B",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "repeated name element",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAIbAAAAAXicrFFLbuswDNy/Uxja+1GWncQvoBm8LnqC9AAqzcRC/QksNkh6+sJOvGjTZVcaCuQMOYO7S9cmZxljGPrKZH+tSaTnoQ79sTIv++e0NDv6gxc/EurAhDyK1zD0qYZOyFlXpDZLrdvbfGuLrV0hfG1BboTf4nuXRL22UpnY+MwQDodDFCWLcEcYw8fEiDADhGWQ8BBaSUJdmWlQryeh6Qdhhtj7Tug/wvzeqqelqr16wlb6ozaUZQh3uMi77/pTz01/8WHZ259ObeD5MhhYRdOoo/jOAKEfuQlnqdOfj125nPP8lTnbFL7M3Tp3Ymv3j4uVL916LWXBYjc1wgMRoVx09Ky/QP7IRAg3h2AylBDmjGGK+zMAAP//ATOyP378WTPU+fI5ikoX/puK8t4sq9xAYXBwIHBheWxvYWQ=",
+   "files": [
+    {
+     "id": 1,
+     "name": "B",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "uppercase checksum style",
+   "input": "eGFyIQAcAAEAAAAAAAABIwAAAAAAAAITAAAAAXicrJFNTsNADIX3nCKaffBkkrahclyxQSyRKAcwjtuMyE+VDFXL6VHSZkG7ZfdmZH/Pz8bNqamjo/aD79rCJI/WRNpKV/p2X5iP7Uucmw094Il7wtAJofTKwXdtHHyj5KzLYpvE1m1turbZ2i4Q/pagVCpfw3cTDeFca2GGihND2O12gwayCFeFg/8ZiQiTQJgbCXe+1siXhRkbw/mgNP4gTBJbbpTe+Fx3XCJMLyw5MGGt7T5UlCQIVznbulvfsebiO+ef5+XDofYyJYJOgoZ4CL1yY4CQe6n8Ucv4NuT763NiaOFSSdNPkWSVcZ66ZerUlu5JsgXnbrnUPBO1qxLhDkSop9CzhH+A35MI4bIhGBdJCNNtYTzzbwAAAP//wqmvYYpqxbgcgJ7MbxkRzTShxp5lRJI9YXBwIHBheWxvYWQ=",
+   "files": [
+    {
+     "id": 1,
+     "name": "Payload",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "missing data",
+   "input": "eGFyIQAcAAEAAAAAAAAAsQAAAAAAAADlAAAAAXicVI5BTsMwEEX3nCLyPswkFAlV39MdJygHsNwJtYhtFBuUcnpkCxZdzdPM/K+H0x7X4Vu3EnKyZnpkM2jy+RLSuzVv59fxxZzkAbvbBDV7gd/U1ZDTWENUmXk+jDyNPJ/56ciHIz+D7l/gr+o/ylccSr2tak25uskI8rIUrcKgP0IJP60R1AH0HxQsYdUhXKxpwXr7VGkbUEckF1V2UJ+gdhJQt6Um/hsAAP//H6lLFjU0NNG5x3pYX0Xuxe97KndDB9nd",
+   "error": "xar: file has no data",
+   "files": []
+  },
+  {
+   "name": "directory with data errors ignored",
+   "input": "eGFyIQAcAAEAAAAAAAAAzgAAAAAAAAEsAAAAAXicZI/BTsQwDETvfEWVe3BaFgmtpt4bX7B8QJS4NKJNUBJWbb8etcABOHkszbNncFnmqblJLiHFXrX3RjUSXfIhvvbq5fqsn9SF77DYzKjJMVwWW0OKuoZZuDPdSZtWm+5qHs7mdDaPoN8WuFHcW/mYm1LXSXpVRtsqRhqGIpUN6FuhhG2/CDoE6AdkDGGSJvhe7WBd34V9yOJqyivo2BHtLOxBx4S31TJsdmO4idd/I7jsFG8b6J+DQV8s7T8ZdJSmvf9nAAAA///012U7vfKURMUBKuq81XYIXcBJsnHer0w=",
+   "files": []
+  },
+  {
+   "name": "bad id",
+   "input": "eGFyIQAcAAEAAAAAAAABGAAAAAAAAAIOAAAAAXicrJFNUsMwDIX3nCLjvZHjpG3oKOqOE5QDGEVtPORvYtNJOT2TtFlAWbLyG4/0PT0JD1PbJBcZg++7UqXPRiXScV/57lyqt+OrLtSBnnByI2HsmZBHcdH3nY6+FbLG5tqk2tijyfYm35sNws8S5Fr4I3y2SYjXRkoVapcqwv50ChLJINwVBv81ExEWgbA2Ep58I4mvSqXnzngdhOYvhEVi51qhCWF5sXLRETbSnWNNaYpwl6uj/W0519ws1+jrqG4YGs9LGOg5StQhjuJaBYRu5NpfpNJ/59vYjLPsnTnd5a7I7DazYir7wvnGFXa7lSJnMbsK4QFEKFMcHcd/gD+SCOG2IZhXSAjLWWG+8HcAAAD//x6Frfx/LnxszuZcxdl+COzKmATxtTodyGFwcCBwYXlsb2Fk",
+   "error": "strconv.ParseUint: parsing \"-1\": invalid syntax",
+   "files": []
+  },
+  {
+   "name": "plus id",
+   "input": "eGFyIQAcAAEAAAAAAAABGwAAAAAAAAIOAAAAAXicrJFNbuMwDIX3cwpD24GHsuwknoBmdnOCzAFUmomF+iew2MDp6Qs78aJNl13pQSC/x0fiYera5CpjDENfmeyPNYn0PNShP1fm//FfWpoD/cLJj4Q6MCGP4jUMfaqhE3LWFanNUuuONt/bYm83CJ9LkBvh1/jWJVFvrVQmNj4zhMPpFEXJIjwUxvA+ExEWgbA2Ep5CK0moK/N77tTbRWj+Qlgk9r4TmhCWF2uvnrCV/qwNZRnCQ66O7qvlXHO3XKOvo/rLpQ28hIGBVTSNOorvDBD6kZtwlTr9Pt/G5ZznL8zZrvBl7ra5E1u7v1xsfOm2WykLFrurEZ5AhDLp6Fl/AP5MIoT7hmBeISEsZ4X5wh8BAAD//xvJrfpuP6HkcfDvLR8DAZ8+ePiGx9EckWFwcCBwYXlsb2Fk",
+   "error": "strconv.ParseUint: parsing \"+1\": invalid syntax",
+   "files": []
+  },
+  {
+   "name": "bad hex",
+   "input": "eGFyIQAcAAEAAAAAAAAA+AAAAAAAAAHBAAAAAXicfJHBbsMgEETv/QqLO13splIVrTe3fkH6AQhvYlQbLNhGjr++wokPbaqeGKEZhqfBwzwO1YVT9jG0qn42quLgYufDuVUfx3f9pg70hLNNhBIdoUtsxcegxY9MjWl22tTaNEfzsje7vXlF+GlB17P7zF9jleU6cKtyb2tFGE+nzEIG4a4w+6W8iLAKhC1IePIDV75rVQnKdWIqNwirxGBHphlhPbGzYgkHDmfpqa4R7nIrbH43Fs+tcSPffmqnafBuZYHohEVnSWxHBYQ2ud5fuNN/4y0LwoOFkGdJ1sm/sUcPIdyooGATwroElFG+AwAA//9ARpqh+Mpn9z9woYvmd+U62zizzpC2Y3RhcHAgcGF5bG9hZA==",
+   "error": "encoding/hex: invalid byte: U+007A 'z'",
+   "files": []
+  },
+  {
+   "name": "odd hex",
+   "input": "eGFyIQAcAAEAAAAAAAAA+AAAAAAAAAHDAAAAAXicfJHBTsMwEETvfEXku1knFAlVm+2NLygfYJxNY5HYkb1UKV+PnDYHKOLkkTXj8dPgYZnG6swp+xhaVT8aVXFwsfPh1Kq346t+UQd6wMUmQomO0CW24mPQ4iemxjQ7bWptmqN52pvd3jwj/LSgG9h95M+pynIZuVV5sLUijH2fWcgg3BRm/1VeRFgFwhYk7P3Ile9aVYJymZnKDcIqMdiJaUFYT+ysWMKRw0kGqmuEm9wKm9+NxXNt3Mi3n9p5Hr1bWSA6YdFZEttJAaFNbvBn7vTfePbdIdx5CHmRZJ38n7s3EcKVCwo4IaxbQJnlOwAA//9dm5sFxQt5wVzgZ59bOxhS2i6fnzzaKUVhcHAgcGF5bG9hZA==",
+   "error": "encoding/hex: odd length hex string",
+   "files": []
+  },
+  {
+   "name": "odd hex with bad last byte",
+   "input": "eGFyIQAcAAEAAAAAAAAA+gAAAAAAAAHDAAAAAXicfJHBbvMgEITv/1NY3PkXu6lURevNrU+QPgDF6xjVBgu2kZOnr3DiQ5uqJ0ZohuHT4GGZxurMKfsYWlX/N6ri4GLnw6lVb8dX/aIO9A8XmwglOkKX2IqPQYufmBrT7LSptWmO5mlvdnvzjPDdgm5g95E/pyrLZeRW5cHWijD2fWYhg3BXmP21vIiwCoQtSNj7kSvftaoE5TIzlRuEVWKwE9OCsJ7YWbGEI4eTDFTXCHe5FTY/G4vn1riRbz+18zx6t7JAdMKisyS2kwJCm9zgz9zp3/Hs+xXhwUPIiyTr5O/co4kQblxQwAlh3QLKLF8BAAD//2tDmzNJzDQLTJxPal6qvjuPBXJk2vhEQGFwcCBwYXlsb2Fk",
+   "error": "encoding/hex: invalid byte: U+007A 'z'",
+   "files": []
+  },
+  {
+   "name": "unknown file checksum style",
+   "input": "eGFyIQAcAAEAAAAAAAABHAAAAAAAAAIPAAAAAXicrJFNbuMwDIX3cwpDew9lyUk8Ac3s5gTpAVSaiYX6J5DUwOnpCzvxosm2Kz0I5Pf4SDxMfZddJUQ/DrUq/mqVycBj44dzrd6O//NKHegPTi4QppEJOYhLfhzy5Hsho02Z6yLX5qjtXpd7vUH4WYLcCn/Ezz6L6dZJrWLrCkU4nk5REmmEh8Lov2YiwiIQ1kbCk+8k802t5sZ0uwjNPwiLxMH1QhPC8mLjkiPsZDinlooC4SFXQ/PsONfcHdfk66Tucuk8L1lg5CQpjymI6xUQusCtv0qTP8fjwNYo2hjL1r4zF7vSVdZsrRHdmH9cblxltlupSha9axBeSIQypeA4/Qb9FUUI9x3BvERCWO4K84m/AwAA///iC64vb9sZzlV5FLDs5FWvGdR8SjtY4ZphcHAgcGF5bG9hZA==",
+   "error": "xar: unsupported checksum type",
+   "files": []
+  },
+  {
+   "name": "bad uid",
+   "input": "eGFyIQAcAAEAAAAAAAABHgAAAAAAAAIZAAAAAXicrFHLkuIwDLzvV6R8z8pxAmQpRdz2C9gP8MqCuCYPKjZUmK+fciCHGeY4J7VdUrfUjYe577KbTMGPQ6OK31plMvDo/HBu1L/j37xWB/qFs50I48iEPImNfhzy6Hsho02V6yLX5qjLva72eoPwuQW5FX4L1z4L8d5Jo0JrC0U4nk5BImmEJ8Lg3xMjwgIQ1kHCk+8k865RaTDeL0LpB2GBONheaEZYKl69S49U0NloCTsZzrGlokB4wlXcfFVPPQ/11YV1a3u5dJ6Xu2DkKDEPcRLbKyC0E7f+Ji7//tSNKbks/zMXu8rWpdmWRrQzf7ja2Npst1JXLHrnEF6ICGWOk+X4A+SvTITwcAiSnYSwJAwp7I8AAAD//xB0se5l+rA294cPhaXBpY951aYI4DP79mFwcCBwYXlsb2Fk",
+   "error": "strconv.ParseInt: parsing \"x\": invalid syntax",
+   "files": []
+  },
+  {
+   "name": "blank uid",
+   "input": "eGFyIQAcAAEAAAAAAAABIAAAAAAAAAIaAAAAAXicrJFNkuIwDIX3c4qU9xk5ToAMpYjdnIA5gEcWxNX5oWJDhT59lwNZdNPLXumVS/qe9YSHue+ym0zBj0Ojit9aZTLw6PxwbtS/49+8Vgf6hbOdCOPIhDyJjX4c8uh7IaNNlesi1+aoy72u9nqD8LkFuRV+C9c+C/HeSaNCawtFOJ5OQSJphKfC4N8TEWERCOsg4cl3knnXqDQY7xeh9IKwSBxsLzQjLBWv3lGWIaSKzkZL2Mlwji0VBcJTru7mq33qedivMazftpdL53lZDEaOEvMQJ7G9AkI7cetv4vLvd92YksvyP3Oxq2xdmm1pRDvzh6uNrc12K3XFoncO4QVEKHOcLMcfgL+SCOGREKQ8CWE5MaRrfwQAAP//EMqxtgLF9jaJPEm1sPKwJLarzBaFgaAyYXBwIHBheWxvYWQ=",
+   "error": "strconv.ParseInt: parsing \"\": invalid syntax",
+   "files": []
+  },
+  {
+   "name": "empty uid",
+   "input": "eGFyIQAcAAEAAAAAAAABHgAAAAAAAAIYAAAAAXicrJFNbuswDIT37xSG9n6UZSdxA5rZ9QTpAVSKiYX6D5YSOD19YSdetOmyG2kgkN+IQzxMbZNcZQy+7yqV/dcqkY5757tzpd6Or2mpDvQPJzsSxp4JeRQbfd+l0bdCRpsi1VmqzVHne13s9QbhewlyLfwRLm0S4q2RSoXaZoqwP52CRNIID4XBf85EhEUgrI2EJ99I4l2l5sZ4G4TmF4RFYmdboQlhufHiHSEsp7PREjbSnWNNWYbwkKu3+Wk+19zN1xDWT9thaDwvY0HPUWIa4ii2VUBoR679VVz6+6Qbk3OevzNnu8KWudnmRrQzL1xsbGm2WykLFr1zCE8gQpniaDn+AfyZRAj3hGBOkxCWBcO8668AAAD//zLPsXaaEKKPKlsg3Jz5AaSH0Cyy6IAStmFwcCBwYXlsb2Fk",
+   "files": [
+    {
+     "id": 1,
+     "name": "x",
+     "mtime": 0,
+     "mode": 0,
+     "uid": 0,
+     "gid": 0,
+     "verify": true,
+     "content": "YXBwIHBheWxvYWQ="
+    }
+   ]
+  },
+  {
+   "name": "bad mtime",
+   "input": "eGFyIQAcAAEAAAAAAAABKwAAAAAAAAIvAAAAAXicrJLNcqswDIX39ykY731lDCRcRii7+wTpA7hCCZ7yk8FuhvTpO5CwaNNlVz5jS2eOPgsPc98lV5mCH4dapX+NSmTgsfHDuVYvx/+6VAf6g7ObCOPIhDyJi34cdPS9kDU21ybVxh5NVpm8MgXC1xLkVvgtvPdJiLdOahValyrC8XQKEskgPBQG/7E4IqwCYWskPPlOEt/UammMt4vQcoOwShxcLzQjrCf2W7BCm722eWLKKiur3CLcn7Bx0RF2MpxjS2mK8JBbJPs901Jzz7Sx2WZxl0vneZ0WRo4SdYiTuF4BoZu49Vdp9M8ACptxlr0yp/vclZndZVZMY/9xXrjS7nZS5ixm3yA8GRHKHCfH8RfMn50I4U4IFsiEsP47LCvwGQAA//+fXrbndkzAl5C3ap0iwx8QQmkSW9aW3PthcHAgcGF5bG9hZA==",
+   "error": "parsing time \"2025-07-24 08:38:42\" as \"2006-01-02T15:04:05Z07:00\": cannot parse \" 08:38:42\" as \"T\"",
+   "files": []
+  },
+  {
+   "name": "bad data length",
+   "input": "eGFyIQAcAAEAAAAAAAAAwAAAAAAAAAEFAAAAAXicVI9BTsQwDEX3nKLKvjgtg4RGv54dJxgOEKXuNKJNUGNQh9OjhLJg5Sfb70sfl31dmi/ZckhxMN2jNY1En8YQb4N5u762L+bCD9jdxtDkGX4TpyHFVsMq3Nv+1Nqutf3VPp3t6WyfQf9f4Gfx7/lzbbLeFxlMnl1nGGmasihb0EHI4bskgiqA/kTGFBZpwjiYIur9Q7hsQBUR3Sq8g+rE6NQxFok3nbnbQQeCfi9UVAbVNlSK/QQAAP//SvlWPWAPGM88fm4Axii2gDOfOnYos8ru",
+   "error": "strconv.ParseInt: parsing \"1x\": invalid syntax",
+   "files": []
+  },
+  {
+   "name": "not xar",
+   "input": "bm90IHhhcg==",
+   "error": "EOF",
+   "files": []
+  },
+  {
+   "name": "empty",
+   "input": "",
+   "error": "EOF",
+   "files": []
+  },
+  {
+   "name": "bad magic",
+   "input": "AGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxuYXBwIHBheWxvYWQ=",
+   "error": "xar: bad magic",
+   "files": []
+  },
+  {
+   "name": "bad version",
+   "input": "eGFyIQAcAAIAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxuYXBwIHBheWxvYWQ=",
+   "error": "xar: bad version",
+   "files": []
+  },
+  {
+   "name": "bad header size",
+   "input": "eGFyIQAdAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxuYXBwIHBheWxvYWQ=",
+   "error": "xar: bad header size",
+   "files": []
+  },
+  {
+   "name": "toc checksum mismatch",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxvYXBwIHBheWxvYWQ=",
+   "error": "xar: checksum mismatch",
+   "files": []
+  },
+  {
+   "name": "short toc checksum",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4",
+   "error": "unexpected EOF",
+   "files": []
+  },
+  {
+   "name": "toc length past end",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAXicrJG9cupADIX7+w==",
+   "error": "EOF",
+   "files": []
+  },
+  {
+   "name": "corrupt zlib",
+   "input": "eGFyIQAcAAEAAAAAAAABHQAAAAAAAAITAAAAAYecrJG9cupADIX7+xSe7X21XhtwGFl0qVOQB1BkgXfiH8a7YSBPn7HBRULKdGd3pO/oSLi7dG1y1jH4oa9M9t+aRHsZat8fK/O6f05Ls6N/eOGRMA5CKKNy9EOfRt8pOeuK1GapdXubb22xtSuE7yUojcp7+OiSEK+tViY0nBnC4XAIGski3BUG/zkREWaBsDQSHnyria8rMzXG60lp+kGYJfbcKb3wtR24RphfWHNkwlb7Y2woyxDucrF1P32nmpvvkn+Zl0+n1sucCAaJGtMQR+XOACGP0viz1unvIVculzx/E8k2BZe5W+dObe2epFhx6dZrLQtRu6kRHkCEeokjS/wD+COJEG4bgmmRhDDfFqYzfwUAAP//KpiwIQ3CBZVs5OP05++vIqp93fS4txxuYXBwIHBheWxvYWQ=",
+   "error": "zlib: invalid header",
+   "files": []
+  },
+  {
+   "name": "other root element",
+   "input": "eGFyIQAcAAEAAAAAAAAAHwAAAAAAAAAZAAAAAXicskksSs7ILEu1synJT9a3s9GH8QEBAAD//3OTCNeGini3hplo7VcGpKFkipavsTByww==",
+   "error": "expected element type \u003cxar\u003e but have \u003carchive\u003e",
+   "files": []
+  },
+  {
+   "name": "malformed toc",
+   "input": "eGFyIQAcAAEAAAAAAAAAFgAAAAAAAAAKAAAAAXicsqlILLKzKclPtgMEAAD//xOBA4b138QJznZ1y0gQriOzW9M/VfygYw==",
+   "error": "XML syntax error on line 1: unexpected EOF",
+   "files": []
+  }
+ ]
+}

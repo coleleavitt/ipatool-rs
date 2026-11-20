@@ -85,10 +85,9 @@ pub(crate) fn preflight_version_metadata<R: ReadAt>(
         return Err(invalid("macOS preflight Distribution checksum mismatch"));
     }
     let data = archive.read_file(distribution).map_err(|err| {
-        let action = if matches!(err, xar::Error::FileEncodingUnsupported) {
-            "open"
-        } else {
-            "read"
+        let action = match err {
+            xar::ReadError::Open(_) => "open",
+            xar::ReadError::Read(_) => "read",
         };
         Error::Invalid(format!(
             "failed to {action} Mac preflight Distribution: {err}"
