@@ -68,6 +68,26 @@ pub enum Error {
     Sap(#[from] ipatool_sap::Error),
     #[error(transparent)]
     Keychain(#[from] ipatool_keychain::Error),
+    /// Go's `ErrPasswordTokenExpired`.
+    #[error("password token is expired")]
+    PasswordTokenExpired,
+    /// Go's `ErrLicenseAlreadyExists`.
+    #[error("license already exists")]
+    LicenseAlreadyExists,
+    /// Go's `ErrSubscriptionRequired`.
+    #[error("subscription required")]
+    SubscriptionRequired,
+    /// Go's `ErrTemporarilyUnavailable`.
+    #[error("item is temporarily unavailable")]
+    TemporarilyUnavailable,
+    /// Go's `ErrLicenseRequired`.
+    #[error("license is required")]
+    LicenseRequired,
+    #[error("{context}: {source}")]
+    Io {
+        context: String,
+        source: std::io::Error,
+    },
 }
 
 impl Error {
@@ -100,6 +120,51 @@ impl Error {
     #[must_use]
     pub fn is_invalid_auth_code(&self) -> bool {
         self.any(&|error| matches!(error, Self::InvalidAuthCode(_)))
+    }
+
+    /// `errors.Is(err, ErrPasswordTokenExpired)`.
+    #[must_use]
+    pub fn is_password_token_expired(&self) -> bool {
+        self.any(&|error| matches!(error, Self::PasswordTokenExpired))
+    }
+
+    /// `errors.Is(err, ErrLicenseAlreadyExists)`.
+    #[must_use]
+    pub fn is_license_already_exists(&self) -> bool {
+        self.any(&|error| matches!(error, Self::LicenseAlreadyExists))
+    }
+
+    /// `errors.Is(err, ErrLicenseRequired)`.
+    #[must_use]
+    pub fn is_license_required(&self) -> bool {
+        self.any(&|error| matches!(error, Self::LicenseRequired))
+    }
+
+    /// `errors.Is` for a Go sentinel this port keeps as text (`errors.New` values).
+    pub(crate) fn has_message(&self, text: &str) -> bool {
+        self.any(&|error| match error {
+            Self::Store { message, .. } | Self::Invalid(message) => message == text,
+            _ => false,
+        })
+    }
+
+    /// `errors.As(err, &*http.UnexpectedResponseError)`.
+    pub(crate) fn unexpected_response(&self) -> Option<&UnexpectedResponseError> {
+        match self {
+            Self::UnexpectedResponse(error) => Some(error),
+            Self::Context { source, .. } | Self::AuthRedirect { source, .. } => {
+                source.unexpected_response()
+            }
+            Self::Joined(errors) => errors.iter().find_map(Self::unexpected_response),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn io(context: impl Into<String>, source: std::io::Error) -> Self {
+        Self::Io {
+            context: context.into(),
+            source,
+        }
     }
 
     /// `errors.As(err, &authenticationMachineActionError)`.

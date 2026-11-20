@@ -2,6 +2,7 @@ use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 
 use std::sync::{Arc, Mutex};
 
+use crate::commerce::{EmulatorTransport, StoreTransport};
 use crate::store::STORE_TIMEOUT;
 use crate::storefront::StorefrontCache;
 use crate::{CookieJar, Error, Result};
@@ -23,6 +24,8 @@ pub struct Client {
     pub(crate) auth: reqwest::Client,
     pub(crate) jar: Option<Arc<CookieJar>>,
     pub(crate) storefronts: Arc<Mutex<StorefrontCache>>,
+    /// Go's Store framework executors (`request`, `purchase`, `transfer`, ...).
+    pub(crate) commerce: Arc<dyn StoreTransport>,
 }
 
 impl Client {
@@ -63,13 +66,22 @@ impl Client {
         if let Some(jar) = &jar {
             auth = auth.cookie_provider(Arc::clone(jar));
         }
+        let commerce = Arc::new(EmulatorTransport::new(jar.clone()));
         Ok(Self {
             http,
             store,
             auth: auth.build()?,
             jar,
             storefronts: Arc::default(),
+            commerce,
         })
+    }
+
+    /// The same client with other Store executors, so tests run without the emulator.
+    #[must_use]
+    pub fn with_store_transport(mut self, transport: Arc<dyn StoreTransport>) -> Self {
+        self.commerce = transport;
+        self
     }
 
     pub(crate) async fn get_bytes(

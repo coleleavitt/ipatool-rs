@@ -1,5 +1,6 @@
 //! `ipatool` command line interface (Rust port of the Go `cmd` package).
 
+mod commerce;
 mod login;
 mod output;
 mod prompt;
@@ -62,6 +63,11 @@ enum Command {
         #[command(flatten)]
         store: StoreArgs,
     },
+    /// Obtain a license for the app from the App Store.
+    Purchase(commerce::PurchaseArgs),
+    /// Download iOS, iPadOS, tvOS, watchOS, visionOS, and macOS app packages from the App
+    /// Store.
+    Download(commerce::DownloadArgs),
 }
 
 #[derive(Subcommand)]
@@ -241,6 +247,16 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
                 .catalog_version_history(app.id, &country, store.platform)
                 .await?;
             out.info(json!({ "app": app, "count": versions.len(), "versions": versions }));
+        }
+        Command::Purchase(args) => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            commerce::purchase(args, &session, out).await?;
+        }
+        Command::Download(args) => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            commerce::download(args, &session, !cli.non_interactive, out).await?;
         }
     }
     Ok(())

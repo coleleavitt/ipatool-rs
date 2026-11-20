@@ -9,16 +9,29 @@ mod auth_http;
 mod bag;
 mod catalog;
 mod client;
+mod commerce;
 mod cookies;
+mod download;
+mod download_file;
+mod download_macos;
+mod download_package;
+mod download_product;
+mod download_types;
 mod error;
 mod login;
 mod login_storefront;
 pub mod machine;
+mod macos_version_lookup;
 mod native_login;
 mod platform;
+mod purchase;
+mod replicate_sinf;
+mod session;
 mod store;
 pub mod storeauth;
 mod storefront;
+mod version_lookup;
+mod zipfile;
 
 use ipatool_store::plist_body;
 
@@ -27,8 +40,17 @@ pub use app::App;
 pub use bag::{SapConfig, UrlBag};
 pub use catalog::{CatalogVersion, CountryCode, LookupQuery};
 pub use client::Client;
+pub use commerce::{CommerceRequest, Payload, StoreResponse, StoreResult, StoreTransport};
 pub use cookies::{CookieJar, CookieJarError};
+pub use download_types::{
+    DownloadInput, DownloadItem, DownloadOutput, DownloadProduct, DownloadResult, Progress,
+    ProgressHandle, Sinf,
+};
 pub use error::{Error, MachineAction, Result, TransportError, UnexpectedResponseError};
+pub use ipatool_store::backend::ResponseFormat;
+pub use ipatool_store::emulator::Value;
+pub use ipatool_store::http::{Header, HttpRequest, HttpResponse};
 pub use login::{LoginInput, LoginOutput};
 pub use platform::Platform;
+pub use session::StoreSession;
 pub use storefront::storefront_identifier;
