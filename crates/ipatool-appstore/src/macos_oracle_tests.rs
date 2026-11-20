@@ -217,8 +217,7 @@ fn mac_offer_selection_matches_go() {
             bundle_id: case.bundle_id.clone(),
             name: String::new(),
             version: String::new(),
-            price: 0.0,
-            platforms: Vec::new(),
+            ..App::default()
         };
         let name = format!("{} {} {:?}", case.name, case.app_id, case.bundle_id);
         match macos_external_version_id(case.body.as_bytes(), &app) {

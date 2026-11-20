@@ -98,9 +98,9 @@ pub(crate) struct LoginResult {
     password_token: String,
 }
 
-/// What login needs from the outside world. Tests replace it as Go's tests replace the
-/// machine, bag client, login client, signer factory and retry sleep.
-pub(crate) trait LoginBackend {
+/// What a SAP-signed flow (login, purchase history) needs from the outside world. Tests
+/// replace it as Go's tests replace the machine, bag client and signer factory.
+pub(crate) trait SapBackend {
     type Signer: ActionSigner;
     fn mac_address(&self) -> Result<String>;
     async fn sap_config(&self, client: &Client, guid: &str) -> Result<SapConfig>;
@@ -111,6 +111,10 @@ pub(crate) trait LoginBackend {
         config: &SapConfig,
         machine_id: &[u8],
     ) -> Result<Self::Signer>;
+}
+
+/// What login needs beyond [`SapBackend`]; tests replace the login client and retry sleep.
+pub(crate) trait LoginBackend: SapBackend {
     async fn send(
         &self,
         client: &Client,
@@ -120,9 +124,9 @@ pub(crate) trait LoginBackend {
     async fn sleep(&self, delay: Duration);
 }
 
-struct Live;
+pub(crate) struct Live;
 
-impl LoginBackend for Live {
+impl SapBackend for Live {
     type Signer = Signer;
 
     fn mac_address(&self) -> Result<String> {
@@ -150,7 +154,9 @@ impl LoginBackend for Live {
         .await
         .map_err(|err| Error::from(err).context("create SAP signer"))
     }
+}
 
+impl LoginBackend for Live {
     async fn send(
         &self,
         client: &Client,
@@ -884,4 +890,4 @@ fn canonical_header_key(name: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

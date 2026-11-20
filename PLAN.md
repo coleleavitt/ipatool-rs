@@ -350,8 +350,39 @@ parity check for the commands it touches.
 
 - [ ] `list-versions`, `get-version-metadata` (partial-zip `Info.plist` read with read-ahead).
 - [ ] `--with-metadata` catalog-first + cache + concurrency (fork feature).
-- [ ] `list-purchases` (owned apps).
-- [ ] Account read once per command (fork fix).
+- [x] `list-purchases` (owned apps), branch `phase7-purchases`. `owned_apps.rs` ports
+      `appstore_owned_apps.go`: the Configurator purchase history (DAAP `login`, signed
+      `update`, signed `databases/<revision>/items` on `pd.itunes.apple.com`) for storefront
+      `,34` then `,13`, the DMAP walker and parser, the platform mask, the merge by ID (all
+      platforms, latest date, `unknown` dropped when another platform is known), the stable
+      newest-first sort and the page. Requests go through the Store `request` executor with
+      Go's headers; the SAP signer from the bag config signs each body before the request
+      moves to the guest thread (`CommerceRequest::signature`; the signer is not `Send`, and
+      the guest signs the raw body unchanged). `App` gained `purchaseDate` (printed only when
+      set, RFC 3339 UTC, before `platforms`, as zerolog). The machine, bag and signer seam of
+      login is now `SapBackend` (login keeps `LoginBackend: SapBackend`). CLI
+      `list-purchases` has Go's flags (`-l/--max-results` 10, `-p/--page` 1, `--platform`,
+      checked before the account is read), two attempts with one login after an expired
+      token, and prints `count`, `totalCount`, `page`, `apps`. Go's `appstore_owned_apps_test.go`
+      and `cmd/purchases_test.go` are ported (`owned_apps/tests.rs`, `commerce/tests.rs`).
+      Found live: Apple's purchase history answers HTTP 411 to the bodiless login `POST`
+      without `Content-Length`; the Store transport now sends `Content-Length: 0` for empty
+      `POST`/`PUT`/`PATCH`, as Go's `net/http` does (`backend.rs`, with a test).
+      Live (read-only): `list-purchases -l 100 --format json` and `--platform macos -p 2 -l 5`
+      print the same JSON as the Go binary byte for byte except `time` (734 apps owned);
+      `--platform watchos`, `-p 0`, `-l 101` and `--platform unknown` give Go's errors.
+      Differences: `X-Apple-I-TimeZone` follows Go's `time.Local` name rules for `TZ` but
+      does not check that a named zone loads (Go falls back to `UTC`); `X-Apple-TZ` is 0 when
+      the local offset cannot be read; a signer error is reported by the guest with the
+      signer's text only. Text mode keeps this port's field order without colors (Go's
+      console writer sorts fields; open question 3). Untested live: the expired-token
+      re-login (fake store only), DAAP `mstt` errors, and a Mac storefront failure.
+- [x] Account read once per command (fork fix `aee638e`) for `purchase` and `list-purchases`
+      (`download` already did): the account is read before the attempts and the account
+      from the re-login is reused. `list-versions` and `get-version-metadata` (branch
+      `phase7-versions`) need the same: call `account_info` once before the retry loop and
+      replace the account with the login result on the token-expired retry.
+- [x] Error lines carry `"success": false`, as Go's `Execute` logs them (all commands).
 
 ### Phase 8 — MCP
 

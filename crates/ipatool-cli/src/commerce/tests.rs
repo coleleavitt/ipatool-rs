@@ -1,4 +1,5 @@
-//! Ports of `cmd/download_test.go` and `cmd/purchase_test.go` with a scripted store.
+//! Ports of `cmd/download_test.go`, `cmd/purchase_test.go` and `cmd/purchases_test.go` with a
+//! scripted store.
 
 #![allow(
     clippy::unused_async_trait_impl,
@@ -23,6 +24,7 @@ enum Call {
     Purchase(i64, Option<Platform>, String),
     Download(i64, String, Option<Platform>, String, String),
     Replicate(usize, PathBuf),
+    OwnedApps(OwnedAppsInput),
 }
 
 #[derive(Default)]
@@ -34,6 +36,7 @@ struct Fake {
     purchases: RefCell<VecDeque<AppResult<()>>>,
     downloads: RefCell<VecDeque<AppResult<DownloadOutput>>>,
     replicate_error: RefCell<Option<Error>>,
+    owned: RefCell<VecDeque<AppResult<OwnedAppsOutput>>>,
 }
 
 impl Fake {
@@ -133,6 +136,14 @@ impl Store for Fake {
             .borrow_mut()
             .push(Call::Replicate(sinfs.len(), package));
         self.replicate_error.borrow_mut().take().map_or(Ok(()), Err)
+    }
+
+    async fn owned_apps(&self, input: OwnedAppsInput) -> AppResult<OwnedAppsOutput> {
+        self.calls.borrow_mut().push(Call::OwnedApps(input));
+        self.owned
+            .borrow_mut()
+            .pop_front()
+            .unwrap_or_else(|| Ok(OwnedAppsOutput::default()))
     }
 
     async fn list_versions(
@@ -594,7 +605,6 @@ async fn purchases_by_app_id_or_bundle() {
 async fn purchase_logs_in_again_once_after_an_expired_token() {
     let fake = Fake::default();
     fake.account("old", "143441");
-    fake.account("old", "143441");
     fake.logins.borrow_mut().push_back(Account {
         password_token: "new".to_owned(),
         ..Account::default()
@@ -614,7 +624,6 @@ async fn purchase_logs_in_again_once_after_an_expired_token() {
         [
             Call::AccountInfo,
             Call::Purchase(42, None, "old".to_owned()),
-            Call::AccountInfo,
             Call::Login("old".to_owned()),
             Call::Purchase(42, None, "new".to_owned()),
         ]
@@ -624,7 +633,6 @@ async fn purchase_logs_in_again_once_after_an_expired_token() {
 #[tokio::test]
 async fn purchase_logs_in_again_when_the_lookup_finds_an_expired_token() {
     let fake = Fake::default();
-    fake.account("old", "143441");
     fake.account("old", "143441");
     fake.logins.borrow_mut().push_back(Account {
         password_token: "new".to_owned(),
@@ -646,11 +654,178 @@ async fn purchase_logs_in_again_when_the_lookup_finds_an_expired_token() {
         [
             Call::AccountInfo,
             lookup("old"),
-            Call::AccountInfo,
             Call::Login("old".to_owned()),
             lookup("new"),
             Call::Purchase(7, None, "new".to_owned()),
         ]
+    );
+}
+
+#[tokio::test]
+async fn purchase_reads_the_account_once_and_reuses_the_refreshed_account_on_retry() {
+    let fake = Fake::default();
+    fake.account("stored", "143441");
+    fake.logins.borrow_mut().push_back(Account {
+        email: "user@example.com".to_owned(),
+        password_token: "refreshed-token".to_owned(),
+        store_front: "143441".to_owned(),
+        ..Account::default()
+    });
+    fake.purchases
+        .borrow_mut()
+        .push_back(Err(Error::PasswordTokenExpired));
+    fake.purchases.borrow_mut().push_back(Ok(()));
+    purchase(&purchase_args(123_456_789, "", None), &fake, &out())
+        .await
+        .unwrap();
+    assert_eq!(
+        fake.calls(),
+        [
+            Call::AccountInfo,
+            Call::Purchase(123_456_789, None, "stored".to_owned()),
+            Call::Login("stored".to_owned()),
+            Call::Purchase(123_456_789, None, "refreshed-token".to_owned()),
+        ]
+    );
+}
+
+fn list_args(page: i64, max_results: i64, platform: &str) -> ListPurchasesArgs {
+    ListPurchasesArgs {
+        max_results,
+        page,
+        platform: platform.to_owned(),
+    }
+}
+
+fn owned_input(token: &str, platform: Option<Platform>) -> OwnedAppsInput {
+    OwnedAppsInput {
+        account: Account {
+            email: "user@example.com".to_owned(),
+            password: "secret".to_owned(),
+            password_token: token.to_owned(),
+            store_front: "143441".to_owned(),
+            ..Account::default()
+        },
+        page: 1,
+        limit: DEFAULT_OWNED_APPS_LIMIT,
+        platform,
+    }
+}
+
+#[tokio::test]
+async fn list_purchases_passes_the_platform_filter_to_owned_apps() {
+    for (value, expected) in [
+        ("", None),
+        ("ios", Some(Platform::IPhone)),
+        ("ipados", Some(Platform::IPad)),
+        ("tvos", Some(Platform::AppleTv)),
+        ("visionos", Some(Platform::VisionOs)),
+        ("macos", Some(Platform::MacOs)),
+    ] {
+        let fake = Fake::default();
+        fake.account("t", "143441");
+        list_purchases(
+            &list_args(1, DEFAULT_OWNED_APPS_LIMIT, value),
+            &fake,
+            &out(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            fake.calls(),
+            [
+                Call::AccountInfo,
+                Call::OwnedApps(owned_input("t", expected))
+            ],
+            "{value:?}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn list_purchases_rejects_invalid_flags_before_accessing_the_account() {
+    for (args, text) in [
+        (list_args(1, 10, "invalid"), r#"invalid platform "invalid""#),
+        (list_args(1, 10, "unknown"), r#"invalid platform "unknown""#),
+        (list_args(1, 10, "UNKNOWN"), r#"invalid platform "UNKNOWN""#),
+        (list_args(0, 10, ""), "page must be greater than 0"),
+        (list_args(1, 0, ""), "max results must be greater than 0"),
+        (list_args(1, 101, ""), "max results must not exceed 100"),
+    ] {
+        let fake = Fake::default();
+        let error = list_purchases(&args, &fake, &out()).await.unwrap_err();
+        assert_eq!(error.to_string(), text);
+        assert!(fake.calls().is_empty());
+    }
+}
+
+#[tokio::test]
+async fn list_purchases_logs_in_again_once_after_an_expired_token() {
+    let fake = Fake::default();
+    fake.account("old", "143441");
+    let refreshed = owned_input("new", None).account;
+    fake.logins.borrow_mut().push_back(refreshed.clone());
+    fake.owned
+        .borrow_mut()
+        .push_back(Err(Error::PasswordTokenExpired));
+    list_purchases(&list_args(1, 10, ""), &fake, &out())
+        .await
+        .unwrap();
+    assert_eq!(
+        fake.calls(),
+        [
+            Call::AccountInfo,
+            Call::OwnedApps(owned_input("old", None)),
+            Call::Login("old".to_owned()),
+            Call::OwnedApps(owned_input("new", None)),
+        ]
+    );
+
+    let fake = Fake::default();
+    fake.account("old", "143441");
+    fake.logins.borrow_mut().push_back(refreshed);
+    for _ in 0..2 {
+        fake.owned
+            .borrow_mut()
+            .push_back(Err(Error::PasswordTokenExpired));
+    }
+    let error = list_purchases(&list_args(1, 10, ""), &fake, &out())
+        .await
+        .unwrap_err();
+    assert_eq!(error.to_string(), "password token is expired");
+    assert_eq!(fake.calls().len(), 4);
+}
+
+#[test]
+fn list_purchases_uses_the_go_flags_and_is_registered_on_the_root_command() {
+    use clap::Parser;
+
+    let crate::Cli { command, .. } =
+        crate::Cli::try_parse_from(["ipatool", "list-purchases"]).unwrap();
+    let crate::Command::ListPurchases(args) = command else {
+        panic!("list-purchases parses");
+    };
+    assert_eq!(
+        (args.page, args.max_results, args.platform.as_str()),
+        (1, 10, "")
+    );
+    let crate::Cli { command, .. } = crate::Cli::try_parse_from([
+        "ipatool",
+        "list-purchases",
+        "-p",
+        "2",
+        "-l",
+        "-1",
+        "--platform",
+        "macos",
+    ])
+    .unwrap();
+    let crate::Command::ListPurchases(args) = command else {
+        panic!("list-purchases parses");
+    };
+    assert_eq!(
+        (args.page, args.max_results, args.platform.as_str()),
+        (2, -1, "macos")
     );
 }
 

@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
+use time::OffsetDateTime;
 
 use crate::Platform;
 
-/// An app as returned by the iTunes search and lookup APIs.
+/// An app as returned by the iTunes search and lookup APIs and the purchase history.
 #[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct App {
     pub id: i64,
@@ -12,6 +13,13 @@ pub struct App {
     pub version: String,
     #[serde(serialize_with = "go_float")]
     pub price: f64,
+    /// Set by the purchase history only; Go's zero time is `None` and is not printed.
+    #[serde(
+        rename = "purchaseDate",
+        with = "time::serde::rfc3339::option",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub purchase_date: Option<OffsetDateTime>,
     pub platforms: Vec<Platform>,
 }
 
@@ -85,6 +93,7 @@ impl From<ItunesApp> for App {
             name: item.track_name,
             version: item.version,
             price: item.price,
+            purchase_date: None,
             platforms,
         }
     }
@@ -102,6 +111,7 @@ mod tests {
             name: String::new(),
             version: String::new(),
             price: 0.0,
+            purchase_date: None,
             platforms: vec![],
         };
         assert!(
@@ -114,6 +124,25 @@ mod tests {
             serde_json::to_string(&app)
                 .unwrap()
                 .contains(r#""price":2.99,"#)
+        );
+    }
+
+    #[test]
+    fn purchase_date_serializes_like_zerolog() {
+        let mut app = App {
+            id: 1,
+            ..App::default()
+        };
+        assert!(
+            !serde_json::to_string(&app)
+                .unwrap()
+                .contains("purchaseDate")
+        );
+        app.purchase_date = Some(OffsetDateTime::from_unix_timestamp(1_700_000_000).unwrap());
+        assert!(
+            serde_json::to_string(&app)
+                .unwrap()
+                .contains(r#""price":0,"purchaseDate":"2023-11-14T22:13:20Z","platforms":[]"#)
         );
     }
 }

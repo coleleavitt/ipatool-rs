@@ -18,7 +18,8 @@ const TEST_POD: &str = "42";
 const AUTH: &str = "https://buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/authenticate";
 const AUTH_PATH: &str = "/WebObjects/MZFinance.woa/wa/authenticate";
 
-fn valid_sap_config() -> SapConfig {
+/// Go's `validSAPConfig`, shared with the purchase-history tests.
+pub(crate) fn valid_sap_config() -> SapConfig {
     SapConfig {
         auth_endpoint: format!("{AUTH}/"),
         setup_url: "https://fpinit.example.com/v1/signSapSetup/legacy".to_owned(),
@@ -86,7 +87,7 @@ impl Fake {
 }
 
 #[allow(clippy::unused_async_trait_impl, reason = "the fake answers at once")]
-impl LoginBackend for Fake {
+impl SapBackend for Fake {
     type Signer = FakeSigner;
 
     fn mac_address(&self) -> Result<String> {
@@ -111,7 +112,10 @@ impl LoginBackend for Fake {
             None => Ok(FakeSigner(Rc::clone(&self.signer))),
         }
     }
+}
 
+#[allow(clippy::unused_async_trait_impl, reason = "the fake answers at once")]
+impl LoginBackend for Fake {
     async fn send(&self, _: &Client, request: &AuthRequest, signer: &mut FakeSigner) -> Response {
         assert!(
             Rc::ptr_eq(&signer.0, &self.signer),

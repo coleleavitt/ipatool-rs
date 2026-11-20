@@ -18,8 +18,7 @@ pub(crate) fn karing() -> App {
         bundle_id: "com.nebula.karing".to_owned(),
         name: String::new(),
         version: String::new(),
-        price: 0.0,
-        platforms: Vec::new(),
+        ..App::default()
     }
 }
 

@@ -31,6 +31,7 @@ mod macos_preflight_metadata;
 mod macos_version_lookup;
 mod macos_version_metadata;
 mod native_login;
+mod owned_apps;
 mod partial_zip;
 mod platform;
 mod purchase;
@@ -62,6 +63,9 @@ pub use ipatool_store::emulator::Value;
 pub use ipatool_store::http::{Header, HttpRequest, HttpResponse};
 pub use list_versions::ListVersionsOutput;
 pub use login::{LoginInput, LoginOutput};
+pub use owned_apps::{
+    DEFAULT_OWNED_APPS_LIMIT, MAX_OWNED_APPS_LIMIT, OwnedAppsInput, OwnedAppsOutput,
+};
 pub use partial_zip::VersionMetadata;
 pub use platform::Platform;
 pub use session::StoreSession;

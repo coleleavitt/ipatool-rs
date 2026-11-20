@@ -193,6 +193,10 @@ fn send(
     }
     if !body.is_empty() {
         builder = builder.body(body);
+    } else if matches!(method.as_str(), "POST" | "PUT" | "PATCH") {
+        // Go's `shouldSendContentLength` sends `Content-Length: 0` for these methods even
+        // without a body; Apple's purchase history answers 411 without it.
+        builder = builder.header("Content-Length", "0");
     }
     let response = builder.send()?;
     let status = response.status().as_u16();

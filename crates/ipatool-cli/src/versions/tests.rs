@@ -10,7 +10,8 @@ use std::time::Duration;
 
 use clap::Parser;
 use ipatool_appstore::{
-    CatalogVersion, DownloadInput, DownloadOutput, Error, ListVersionsOutput, Sinf,
+    CatalogVersion, DownloadInput, DownloadOutput, Error, ListVersionsOutput, OwnedAppsInput,
+    OwnedAppsOutput, Sinf,
 };
 use time::macros::datetime;
 
@@ -94,6 +95,10 @@ impl Store for Fake {
     }
 
     async fn replicate_sinf(&self, _: Vec<Sinf>, _: PathBuf) -> AppResult<()> {
+        unreachable!("not a version command")
+    }
+
+    async fn owned_apps(&self, _: OwnedAppsInput) -> AppResult<OwnedAppsOutput> {
         unreachable!("not a version command")
     }
 
