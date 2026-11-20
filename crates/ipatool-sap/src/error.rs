@@ -15,6 +15,12 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("{}", join_messages(.0))]
     Joined(Vec<Error>),
+    #[error(transparent)]
+    Http(#[from] reqwest::Error),
+    #[error(transparent)]
+    Zip(#[from] zip::result::ZipError),
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
 }
 
 impl Error {

@@ -136,8 +136,17 @@ parity check for the commands it touches.
       panics); `strings.EqualFold` is approximated by per-character Unicode lowercasing.
       Untested: dyld-info bind/rebase/export-trie and 32/64-bit chained formats (no pinned
       image uses them; ported from go-macho by reading).
-- [ ] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
+- [x] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
       extraction, LZFSE; same pinned files, sizes and SHA-256 digests; same cache directory name.
+      `store.go`/`store_images.go` move to phase 5. Crates: `zip`, `hpke` + `p256` (FCS key),
+      `aes`/`ctr`/`hkdf`/`hmac`, `lzfse` (Apple's reference C decoder, so Go's
+      `padLZFSEStreams` workaround is not needed). Ported from Go dependencies: the sealed-APFS
+      subset of `majd/go-apfs`, the LZVN decoder of `go-compressions/lzfse` (decmpfs streams
+      have no end-of-stream opcode), the `go-macos-pkg` LZBITMAP decoder and the in-cache
+      `File.Export` path of `blacktop/go-macho`. Not ported: the DMG fallback (both pinned
+      images are raw APFS), chained-fixup parsing (unused by `Export`), context cancellation.
+      Verified with `IPATOOL_TEST_SAP_REMOTE=1 cargo test -p ipatool-sap --release`: all seven
+      files byte-identical to the Go cache (about 32 s and 250 MB of range reads).
 - [x] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent, plus
       `internal/sap` protocol/signer (`ipatool_sap::signer`). Guest state lives in the Unicorn
       data (`machine::shims::State`); one code hook dispatches the `ret` stubs, the first
