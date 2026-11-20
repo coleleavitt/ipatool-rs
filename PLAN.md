@@ -327,7 +327,7 @@ parity check for the commands it touches.
       `macos_version_metadata.rs` and `macos_preflight_metadata.rs` (the Mac readers that
       `get-version-metadata` uses in phase 7), and `xar.rs`, a port of go-macho's `pkg/xar`
       reader (v1.1.282). Go's tests are ported; `sendDownloadProduct`'s Mac pinning cases
-      (`externalVersionId`, redownload `appExtVrsId`) wait for the phase-6 session fakes.
+      (`externalVersionId`, redownload `appExtVrsId`) are in `commerce_tests::version_lookup`.
       Oracle: `scripts/macos-package-oracle.sh` records `tests/fixtures/macos-package-oracle.json`
       from Go (43 XAR archives, 33 metadata cases, 72 offer selections, 189 platform
       decisions); `macos_oracle_tests` matches all of them. Live: `download --platform macos`
