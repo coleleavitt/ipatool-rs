@@ -1,6 +1,8 @@
 //! `ipatool` command line interface (Rust port of the Go `cmd` package).
 
+mod login;
 mod output;
+mod prompt;
 mod state;
 
 use std::path::PathBuf;
@@ -63,6 +65,8 @@ enum Command {
 
 #[derive(Subcommand)]
 enum AuthCommand {
+    /// Login to the App Store.
+    Login(login::LoginArgs),
     /// Show current account info.
     Info,
     /// Revoke your App Store credentials.
@@ -145,10 +149,13 @@ async fn open_keychain(cli: &Cli) -> Result<Keychain, BoxError> {
             if !interactive {
                 return Err("keychain passphrase is required when not running in interactive mode; use the \"--keychain-passphrase\" flag".to_owned());
             }
-            rpassword::prompt_password(format!(
-                "enter passphrase to unlock {} (this is separate from your Apple ID password): ",
-                dir.display()
-            ))
+            prompt::read_prompt(
+                &format!(
+                    "enter passphrase to unlock {} (this is separate from your Apple ID password): ",
+                    dir.display()
+                ),
+                true,
+            )
             .map_err(|err| format!("failed to read password: {err}"))
         }),
     })
@@ -185,6 +192,17 @@ async fn revoke(keychain: &Keychain) -> Result<(), BoxError> {
 async fn run_auth(cli: &Cli, command: &AuthCommand, out: &Output) -> Result<(), BoxError> {
     let keychain = open_keychain(cli).await?;
     match command {
+        AuthCommand::Login(args) => {
+            let client = store_client()?;
+            login::run(
+                args.clone(),
+                !cli.non_interactive,
+                out,
+                prompt::read_prompt,
+                async |input| client.login(&input, &keychain, None).await,
+            )
+            .await?;
+        }
         AuthCommand::Info => {
             let account = account_info(&keychain).await?;
             out.info(json!({ "name": account.name, "email": account.email, "success": true }));
