@@ -142,7 +142,8 @@ impl Store for StoreSession<'_> {
     }
 }
 
-/// Go's `purchaseCmd`: two attempts, logging in again after an expired token.
+/// Go's `purchaseCmd`: two attempts; any step failing with an expired password token
+/// logs in again on the second.
 pub(crate) async fn purchase(
     args: &PurchaseArgs,
     store: &impl Store,
@@ -153,35 +154,52 @@ pub(crate) async fn purchase(
     }
     let mut token_expired = false;
     for attempt in 0..2 {
-        let mut account = store.account_info().await?;
-        if token_expired {
-            account = store.login(&account).await?;
-        }
-        let mut app = App {
-            id: args.app_id,
-            ..App::default()
-        };
-        if !args.bundle_identifier.is_empty() {
-            app = store
-                .lookup(&account, &args.bundle_identifier, args.platform)
-                .await?;
-        }
-        match store.purchase(&mut account, &app, args.platform).await {
+        match purchase_attempt(args, store, token_expired).await {
+            Ok(already_owned) => {
+                out.info(json!({ "alreadyOwned": already_owned, "success": true }));
+                return Ok(());
+            }
             Err(error) if error.is_password_token_expired() && attempt == 0 => {
                 token_expired = true;
             }
-            Err(error) if !error.is_license_already_exists() => return Err(error.into()),
-            result => {
-                out.info(json!({ "alreadyOwned": result.is_err(), "success": true }));
-                return Ok(());
-            }
+            Err(error) => return Err(error.into()),
         }
     }
     unreachable!("the second attempt returns")
 }
 
-/// Go's `downloadCmd`: up to three attempts; an expired token logs in again, and with
-/// `--purchase` a missing license is obtained first.
+/// One run of Go's `purchaseCmd` retry callback; `Ok(true)` when the app is already owned.
+async fn purchase_attempt(args: &PurchaseArgs, store: &impl Store, login: bool) -> AppResult<bool> {
+    let mut account = store.account_info().await?;
+    if login {
+        account = store.login(&account).await?;
+    }
+    let mut app = App {
+        id: args.app_id,
+        ..App::default()
+    };
+    if !args.bundle_identifier.is_empty() {
+        app = store
+            .lookup(&account, &args.bundle_identifier, args.platform)
+            .await?;
+    }
+    match store.purchase(&mut account, &app, args.platform).await {
+        Ok(()) => Ok(false),
+        Err(error) if error.is_license_already_exists() => Ok(true),
+        Err(error) => Err(error),
+    }
+}
+
+/// What Go's `downloadCmd` carries from one retry to the next.
+struct DownloadState {
+    account: Account,
+    token_expired: bool,
+    purchase_required: bool,
+    purchased: bool,
+}
+
+/// Go's `downloadCmd`: up to three attempts; any step failing with an expired token logs
+/// in again, and with `--purchase` a missing license is obtained first.
 pub(crate) async fn download(
     args: &DownloadArgs,
     store: &impl Store,
@@ -191,71 +209,90 @@ pub(crate) async fn download(
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
-    let mut account = store.account_info().await?;
-    let (mut token_expired, mut purchase_required, mut purchased) = (false, false, false);
+    let mut state = DownloadState {
+        account: store.account_info().await?,
+        token_expired: false,
+        purchase_required: false,
+        purchased: false,
+    };
     for attempt in 0..3 {
-        if token_expired {
-            account = store.login(&account).await?;
-        }
-        let mut app = App {
-            id: args.app_id,
-            bundle_id: args.bundle_identifier.clone(),
-            ..App::default()
-        };
-        if !args.bundle_identifier.is_empty() {
-            match store
-                .lookup(&account, &args.bundle_identifier, args.platform)
-                .await
-            {
-                Ok(found) => app = found,
-                // Delisted apps may still be downloadable by their numeric ID.
-                Err(ipatool_appstore::Error::AppNotFound) if args.app_id != 0 => {}
-                Err(error) => return Err(error.into()),
-            }
-        }
-        if purchase_required {
-            if let Err(error) = store.purchase(&mut account, &app, args.platform).await
-                && !error.is_license_already_exists()
-            {
-                return Err(error.into());
-            }
-            // Purchasing may persist a server-corrected storefront.
-            account = store.account_info().await?;
-            purchased = true;
-            out.verbose(json!({ "success": true }), "purchase");
-        }
-        let progress =
-            interactive.then(|| Arc::new(ProgressBar::new("downloading")) as ProgressHandle);
-        let result = store
-            .download(DownloadInput {
-                account: account.clone(),
-                app,
-                output_path: args.output.clone(),
-                progress,
-                external_version_id: args.external_version_id.clone(),
-                platform: args.platform,
-            })
-            .await;
-        let error = match result {
+        let error = match download_attempt(args, store, interactive, out, &mut state).await {
             Ok(output) => {
-                replicate_download_sinf(store, args.platform, &output).await?;
                 out.info(json!({
                     "output": output.destination_path.display().to_string(),
-                    "purchased": purchased,
+                    "purchased": state.purchased,
                     "success": true,
                 }));
                 return Ok(());
             }
             Err(error) => error,
         };
-        let last = attempt == 2;
-        token_expired = error.is_password_token_expired();
-        purchase_required = error.is_license_required();
-        if last || !(token_expired || (purchase_required && args.purchase)) {
+        state.token_expired = error.is_password_token_expired();
+        let license_required = error.is_license_required();
+        // Like Go, a pending purchase stays pending until one succeeds.
+        state.purchase_required |= license_required;
+        let retry = state.token_expired || (license_required && args.purchase);
+        if attempt == 2 || !retry {
             return Err(error.into());
         }
     }
     unreachable!("the third attempt returns")
+}
+
+/// One run of Go's `downloadCmd` retry callback.
+async fn download_attempt(
+    args: &DownloadArgs,
+    store: &impl Store,
+    interactive: bool,
+    out: &Output,
+    state: &mut DownloadState,
+) -> AppResult<DownloadOutput> {
+    if state.token_expired {
+        state.account = store.login(&state.account).await?;
+    }
+    let mut app = App {
+        id: args.app_id,
+        bundle_id: args.bundle_identifier.clone(),
+        ..App::default()
+    };
+    if !args.bundle_identifier.is_empty() {
+        match store
+            .lookup(&state.account, &args.bundle_identifier, args.platform)
+            .await
+        {
+            Ok(found) => app = found,
+            // Delisted apps may still be downloadable by their numeric ID.
+            Err(ipatool_appstore::Error::AppNotFound) if args.app_id != 0 => {}
+            Err(error) => return Err(error),
+        }
+    }
+    if state.purchase_required {
+        if let Err(error) = store
+            .purchase(&mut state.account, &app, args.platform)
+            .await
+            && !error.is_license_already_exists()
+        {
+            return Err(error);
+        }
+        // Purchasing may persist a server-corrected storefront.
+        state.account = store.account_info().await?;
+        state.purchase_required = false;
+        state.purchased = true;
+        out.verbose(json!({ "success": true }), "purchase");
+    }
+    let progress = interactive.then(|| Arc::new(ProgressBar::new("downloading")) as ProgressHandle);
+    let output = store
+        .download(DownloadInput {
+            account: state.account.clone(),
+            app,
+            output_path: args.output.clone(),
+            progress,
+            external_version_id: args.external_version_id.clone(),
+            platform: args.platform,
+        })
+        .await?;
+    replicate_download_sinf(store, args.platform, &output).await?;
+    Ok(output)
 }
 
 /// Go's `replicateDownloadSinf`.
@@ -263,14 +300,13 @@ async fn replicate_download_sinf(
     store: &impl Store,
     platform: Option<Platform>,
     output: &DownloadOutput,
-) -> Result<(), BoxError> {
+) -> AppResult<()> {
     if platform == Some(Platform::MacOs) && output.sinfs.is_empty() {
         return Ok(());
     }
     store
         .replicate_sinf(output.sinfs.clone(), output.destination_path.clone())
-        .await?;
-    Ok(())
+        .await
 }
 
 /// A terminal progress bar in the spirit of Go's `progressbar` options: description,

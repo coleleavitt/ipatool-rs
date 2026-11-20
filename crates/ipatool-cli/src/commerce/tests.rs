@@ -412,6 +412,51 @@ async fn keeps_the_pending_purchase_after_refreshing_authentication() {
 }
 
 #[tokio::test]
+async fn logs_in_again_when_the_purchase_finds_an_expired_token() {
+    let fake = Fake::default();
+    fake.account("old", "143441");
+    fake.account("new", "143441");
+    fake.logins.borrow_mut().push_back(Account {
+        password_token: "new".to_owned(),
+        store_front: "143441".to_owned(),
+        ..Account::default()
+    });
+    fake.downloads
+        .borrow_mut()
+        .push_back(Err(Error::LicenseRequired));
+    fake.purchases
+        .borrow_mut()
+        .push_back(Err(Error::PasswordTokenExpired));
+    fake.purchases.borrow_mut().push_back(Ok(()));
+    fake.output(1);
+    run_download(&fake, &download_args(42, "", None, true))
+        .await
+        .unwrap();
+    let download = |token: &str| {
+        Call::Download(
+            42,
+            String::new(),
+            None,
+            token.to_owned(),
+            "143441".to_owned(),
+        )
+    };
+    assert_eq!(
+        fake.calls(),
+        [
+            Call::AccountInfo,
+            download("old"),
+            Call::Purchase(42, None, "old".to_owned()),
+            Call::Login("old".to_owned()),
+            Call::Purchase(42, None, "new".to_owned()),
+            Call::AccountInfo,
+            download("new"),
+            Call::Replicate(1, PathBuf::from("/tmp/app.ipa")),
+        ]
+    );
+}
+
+#[tokio::test]
 async fn stops_after_three_attempts() {
     let fake = Fake::default();
     fake.account("t", "143441");
@@ -544,6 +589,39 @@ async fn purchase_logs_in_again_once_after_an_expired_token() {
             Call::AccountInfo,
             Call::Login("old".to_owned()),
             Call::Purchase(42, None, "new".to_owned()),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn purchase_logs_in_again_when_the_lookup_finds_an_expired_token() {
+    let fake = Fake::default();
+    fake.account("old", "143441");
+    fake.account("old", "143441");
+    fake.logins.borrow_mut().push_back(Account {
+        password_token: "new".to_owned(),
+        ..Account::default()
+    });
+    fake.lookups
+        .borrow_mut()
+        .push_back(Err(Error::PasswordTokenExpired));
+    fake.lookups
+        .borrow_mut()
+        .push_back(Ok(app(7, "com.example.app")));
+    fake.purchases.borrow_mut().push_back(Ok(()));
+    purchase(&purchase_args(0, "com.example.app", None), &fake, &out())
+        .await
+        .unwrap();
+    let lookup = |token: &str| Call::Lookup("com.example.app".to_owned(), None, token.to_owned());
+    assert_eq!(
+        fake.calls(),
+        [
+            Call::AccountInfo,
+            lookup("old"),
+            Call::AccountInfo,
+            Call::Login("old".to_owned()),
+            lookup("new"),
+            Call::Purchase(7, None, "new".to_owned()),
         ]
     );
 }

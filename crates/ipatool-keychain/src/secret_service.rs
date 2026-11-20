@@ -47,7 +47,9 @@ impl SecretServiceKeyring {
             .search_items(HashMap::from([(PROFILE, key)]))
             .await?;
         let item = items.first().ok_or(Error::NotFound)?;
-        item.ensure_unlocked().await?;
+        if item.is_locked().await? {
+            item.unlock().await?;
+        }
         let secret = item.get_secret().await?;
         Ok(serde_json::from_slice::<StoredItem>(&secret)?.data)
     }
@@ -57,7 +59,9 @@ impl SecretServiceKeyring {
             Some(collection) => collection,
             None => self.service.create_collection(&self.name, "").await?,
         };
-        collection.ensure_unlocked().await?;
+        if collection.is_locked().await? {
+            collection.unlock().await?;
+        }
         collection
             .create_item(
                 &item.key,
@@ -78,7 +82,9 @@ impl SecretServiceKeyring {
             .search_items(HashMap::from([(PROFILE, key)]))
             .await?;
         if let Some(item) = items.first() {
-            item.ensure_unlocked().await?;
+            if item.is_locked().await? {
+                item.unlock().await?;
+            }
             item.delete().await?;
         }
         Ok(())
