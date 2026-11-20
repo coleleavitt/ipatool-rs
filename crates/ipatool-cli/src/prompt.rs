@@ -6,7 +6,7 @@ use std::io::{self, BufRead, Read, Write};
 /// Go's `readPrompt`. Errors carry Go's text.
 pub fn read_prompt(prompt: &str, masked: bool) -> Result<String, String> {
     let raw_mode = if masked {
-        Some(RawMode::enable()?)
+        Some(RawMode::enable(io::stdin())?)
     } else {
         None
     };
@@ -116,29 +116,34 @@ pub fn read_masked_input(mut input: impl Read, output: &mut impl Write) -> Resul
     }
 }
 
-/// `term.MakeRaw` on stdin, restored on drop.
+/// `term.MakeRaw` on a terminal (stdin for prompts), restored on drop.
 #[cfg(unix)]
-struct RawMode(rustix::termios::Termios);
+struct RawMode<F: std::os::fd::AsFd> {
+    terminal: F,
+    original: rustix::termios::Termios,
+}
 
 #[cfg(unix)]
-impl RawMode {
-    fn enable() -> Result<Self, String> {
+impl<F: std::os::fd::AsFd> RawMode<F> {
+    fn enable(terminal: F) -> Result<Self, String> {
         use rustix::termios::{OptionalActions, tcgetattr, tcsetattr};
-        let stdin = io::stdin();
         let configure = |err: rustix::io::Errno| format!("failed to configure terminal: {err}");
-        let original = tcgetattr(&stdin).map_err(configure)?;
+        let original = tcgetattr(&terminal).map_err(configure)?;
         let mut raw = original.clone();
         raw.make_raw();
-        tcsetattr(&stdin, OptionalActions::Now, &raw).map_err(configure)?;
-        Ok(Self(original))
+        tcsetattr(&terminal, OptionalActions::Now, &raw).map_err(configure)?;
+        Ok(Self { terminal, original })
     }
 }
 
 #[cfg(unix)]
-impl Drop for RawMode {
+impl<F: std::os::fd::AsFd> Drop for RawMode<F> {
     fn drop(&mut self) {
-        let _ =
-            rustix::termios::tcsetattr(io::stdin(), rustix::termios::OptionalActions::Now, &self.0);
+        let _ = rustix::termios::tcsetattr(
+            &self.terminal,
+            rustix::termios::OptionalActions::Now,
+            &self.original,
+        );
     }
 }
 
@@ -147,7 +152,7 @@ struct RawMode;
 
 #[cfg(not(unix))]
 impl RawMode {
-    fn enable() -> Result<Self, String> {
+    fn enable(_terminal: io::Stdin) -> Result<Self, String> {
         Err("failed to configure terminal: masked input is not ported to this platform".to_owned())
     }
 }
@@ -209,6 +214,40 @@ mod tests {
         assert_eq!(
             read_line(&mut &b"partial"[..]).unwrap_err(),
             "failed to read input: EOF"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn makes_the_terminal_raw_and_restores_it() {
+        use rustix::fs::{Mode, OFlags, open};
+        use rustix::pty::{OpenptFlags, grantpt, openpt, ptsname, unlockpt};
+        use rustix::termios::{LocalModes, tcgetattr};
+
+        let controller = openpt(OpenptFlags::RDWR | OpenptFlags::NOCTTY).unwrap();
+        grantpt(&controller).unwrap();
+        unlockpt(&controller).unwrap();
+        let name = ptsname(&controller, Vec::new()).unwrap();
+        let terminal = open(
+            name.as_c_str(),
+            OFlags::RDWR | OFlags::NOCTTY,
+            Mode::empty(),
+        )
+        .unwrap();
+        let cooked = LocalModes::ICANON | LocalModes::ECHO;
+        assert!(tcgetattr(&terminal).unwrap().local_modes.contains(cooked));
+        {
+            let _raw = RawMode::enable(&terminal).unwrap();
+            assert!(!tcgetattr(&terminal).unwrap().local_modes.intersects(cooked));
+        }
+        assert!(tcgetattr(&terminal).unwrap().local_modes.contains(cooked));
+
+        let file = tempfile::tempfile().unwrap();
+        assert!(
+            RawMode::enable(&file)
+                .err()
+                .unwrap()
+                .starts_with("failed to configure terminal: ")
         );
     }
 }

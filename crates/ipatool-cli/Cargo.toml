@@ -22,6 +22,7 @@ time = { workspace = true, features = ["local-offset"] }
 tokio.workspace = true
 
 [dev-dependencies]
+rustix = { version = "1", features = ["fs", "pty", "termios"] }
 tempfile = "3"
 
 [lints]
