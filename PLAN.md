@@ -138,14 +138,30 @@ parity check for the commands it touches.
       image uses them; ported from go-macho by reading).
 - [ ] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
       extraction, LZFSE; same pinned files, sizes and SHA-256 digests; same cache directory name.
-- [ ] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent.
+- [x] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent, plus
+      `internal/sap` protocol/signer (`ipatool_sap::signer`). Guest state lives in the Unicorn
+      data (`machine::shims::State`); one code hook dispatches the `ret` stubs, the first
+      service failure wins and stops the guest, as in Go. Oracle: `scripts/machine-oracle.sh`
+      runs Go in a temporary export with deterministic randomness and time (and Go's
+      map-ordered registration of five data symbols fixed to source order) through SAP
+      initialize, setup with Apple's live certificate and reply, three signs, teardown,
+      kbsync and modern ADI open + OTP; `IPATOOL_TEST_SAP_CACHE=1 cargo test -p ipatool-sap
+      matches_go_machine` replays the recorded Apple messages and matches every byte.
+      Differences: no `context.Context` (Go's nil/canceled-context checks have no Rust
+      equivalent); `StoreAgent::decrypt` returns the byte count only on success;
+      `Signer::new` is async and not `Send` (the guest is single-threaded).
+      Untested against Go: modern ADI provisioning, keybag import, XPC exchange and
+      StoreAgent decryption (need live Apple provisioning data or a purchased `.pkg`).
 - [ ] Oracle: a Go test harness (`xtask`) that records inputs/outputs of each guest call
       from the Go implementation; Rust must produce identical bytes for the same inputs.
+      Done as scripts for `machimage` and `machine`; `assets` and `xtask` remain.
 
 ### Phase 4 — authentication
 
 - [ ] Anisette provisioning and Store AMD state (with the skip-unchanged-write fix).
-- [ ] SAP signer and action signing.
+- [ ] SAP signer and action signing. The signer is ported in phase 3 (live setup + sign
+      checked by `cargo test -p ipatool-sap signs_after_live_setup -- --ignored`); wiring
+      into the App Store client remains.
 - [ ] Legacy and native login, 2FA prompt, `5005` handling and re-prompt, retries.
 - [ ] `auth login` end to end with a real account (manual, opt-in).
 

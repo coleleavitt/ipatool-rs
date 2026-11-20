@@ -1070,13 +1070,20 @@ dependencies = [
 name = "ipatool-sap"
 version = "0.1.0"
 dependencies = [
+ "aes",
+ "base64",
+ "getrandom 0.3.4",
  "object",
+ "plist",
+ "reqwest",
  "serde",
  "serde_json",
  "sha2",
  "tempfile",
  "thiserror",
+ "tokio",
  "unicorn-engine",
+ "url",
 ]
 
 [[package]]

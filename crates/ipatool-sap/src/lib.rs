@@ -8,5 +8,8 @@ pub mod assets;
 pub mod engine;
 pub mod error;
 pub mod machimage;
+pub mod machine;
+mod protocol;
+pub mod signer;
 
 pub use error::{Error, Result};
