@@ -17,6 +17,8 @@ mod auth;
 mod bag;
 mod bridge;
 mod callbacks;
+pub mod client;
+pub mod codec;
 mod compression;
 mod delegate;
 mod dictionary;
@@ -27,6 +29,7 @@ mod metadata;
 mod network;
 mod notifications;
 mod profile_pages;
+mod purchase_adapter;
 mod runtime;
 #[allow(
     dead_code,
@@ -34,13 +37,16 @@ mod runtime;
 )]
 mod session;
 mod swift;
+mod terms_adapter;
 mod value;
 
 use std::fmt::Display;
 
+pub use client::{Request, Signer};
+pub(crate) use network::valid_method;
 pub use runtime::Runtime;
 pub(crate) use runtime::{After, Guest, Object, Uc, method_key};
-pub use value::{Date, Payload, Value};
+pub use value::{Date, Payload, Value, go_float};
 
 /// Go's `FrameworkError`: an `NSError` the Store framework finished a request with.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -87,6 +93,9 @@ pub enum Error {
     Sap(#[from] ipatool_sap::Error),
     #[error("{}", .0.iter().map(ToString::to_string).collect::<Vec<_>>().join("\n"))]
     Joined(Vec<Error>),
+    /// The Store transport's own error, which `Execute` returns unwrapped.
+    #[error(transparent)]
+    Transport(crate::http::BoxError),
 }
 
 impl Error {
@@ -110,7 +119,7 @@ impl Error {
             Self::Framework(error) => Some(error),
             Self::Context { source, .. } => source.framework(),
             Self::Joined(errors) => errors.iter().find_map(Self::framework),
-            Self::Message(_) | Self::Sap(_) => None,
+            Self::Message(_) | Self::Sap(_) | Self::Transport(_) => None,
         }
     }
 }

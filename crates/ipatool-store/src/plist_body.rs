@@ -16,7 +16,8 @@ static HTML_TAG: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?is)<[^>]*>").expect("valid regex"));
 
 /// Go's `normalizeXMLPlistBody`: the innermost `<dict>` Apple sent, or the trimmed body.
-pub(crate) fn normalize(body: &[u8]) -> Vec<u8> {
+#[must_use]
+pub fn normalize(body: &[u8]) -> Vec<u8> {
     let mut normalized = body.trim_ascii();
     if normalized.is_empty() {
         return Vec::new();
@@ -42,7 +43,8 @@ pub(crate) fn normalize(body: &[u8]) -> Vec<u8> {
 }
 
 /// Go's `looksLikePropertyList`: keeps HTML error pages away from the plist parser.
-pub(crate) fn looks_like_plist(body: &[u8]) -> bool {
+#[must_use]
+pub fn looks_like_plist(body: &[u8]) -> bool {
     let trimmed = body.trim_ascii();
     if trimmed.starts_with(b"bplist") {
         return true;
@@ -56,7 +58,8 @@ pub(crate) fn looks_like_plist(body: &[u8]) -> bool {
 /// Go's `bodySnippet`: tag-free, whitespace-collapsed, at most 200 bytes plus an ellipsis.
 const SNIPPET_MAX_LEN: usize = 200;
 
-pub(crate) fn snippet(body: &[u8]) -> String {
+#[must_use]
+pub fn snippet(body: &[u8]) -> String {
     let text = HTML_TAG.replace_all(body, &b" "[..]);
     let mut snippet = String::from_utf8_lossy(&text)
         .split_whitespace()
@@ -74,7 +77,10 @@ pub(crate) fn snippet(body: &[u8]) -> String {
 }
 
 /// Decodes a normalized body. The `plist` crate wants a `<plist>` root; Go's parser does not.
-pub(crate) fn decode<T: DeserializeOwned>(body: &[u8]) -> Result<T, plist::Error> {
+///
+/// # Errors
+/// Fails when the normalized body is not a property list of type `T`.
+pub fn decode<T: DeserializeOwned>(body: &[u8]) -> Result<T, plist::Error> {
     let normalized = normalize(body);
     if normalized.starts_with(b"bplist") || normalized.starts_with(b"<plist") {
         return plist::from_bytes(&normalized);

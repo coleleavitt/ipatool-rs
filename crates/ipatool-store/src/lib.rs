@@ -7,6 +7,10 @@
 
 pub mod emulator;
 
+pub mod backend;
+pub(crate) mod cookie;
 pub(crate) mod gourl;
+pub mod http;
+pub mod plist_body;
 pub mod profile;
 pub mod terms;

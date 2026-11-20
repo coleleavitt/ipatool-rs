@@ -17,5 +17,5 @@ cp "$repo/crates/ipatool-store/tests/oracle/network/oracle_test.go" \
 cd "$work"
 GOTOOLCHAIN=auto GOFLAGS=-mod=mod go generate ./... >/dev/null
 mkdir -p "$repo/crates/ipatool-store/tests/fixtures"
-IPATOOL_ORACLE_OUT="$repo/crates/ipatool-store/tests/fixtures/network-oracle.json" \
+TZ=UTC IPATOOL_ORACLE_OUT="$repo/crates/ipatool-store/tests/fixtures/network-oracle.json" \
     GOTOOLCHAIN=auto GOFLAGS=-mod=mod go test ./internal/store/emulator -run '^TestRustOracle$' -count=1

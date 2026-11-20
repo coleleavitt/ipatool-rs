@@ -16,10 +16,11 @@ mod login_storefront;
 pub mod machine;
 mod native_login;
 mod platform;
-mod plist_body;
 mod store;
 pub mod storeauth;
 mod storefront;
+
+use ipatool_store::plist_body;
 
 pub use account::{Account, keys};
 pub use app::App;

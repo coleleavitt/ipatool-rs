@@ -12,6 +12,1119 @@
     "p١-buy.itunes.apple.com": false,
     "x.buy.itunes.apple.com": false
   },
+  "codec": [
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "a": {
+            "t": "string",
+            "v": "x"
+          },
+          "b": {
+            "t": "int",
+            "v": -5
+          },
+          "c": {
+            "t": "real",
+            "v": 4609434218613702656
+          },
+          "d": {
+            "t": "bool",
+            "v": true
+          },
+          "e": {
+            "t": "bool",
+            "v": false
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003ea\u003c/key\u003e\u003cstring\u003ex\u003c/string\u003e\u003ckey\u003eb\u003c/key\u003e\u003cinteger\u003e-5\u003c/integer\u003e\u003ckey\u003ec\u003c/key\u003e\u003creal\u003e1.5\u003c/real\u003e\u003ckey\u003ed\u003c/key\u003e\u003ctrue/\u003e\u003ckey\u003ee\u003c/key\u003e\u003cfalse/\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d50102030405060708090a51615162516351645165517813fffffffffffffffb233ff8000000000000090808131517191b1d1f2831320000000000000101000000000000000b00000000000000000000000000000033",
+      "JSON": "{\"a\":\"x\",\"b\":-5,\"c\":1.5,\"d\":true,\"e\":false}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "data": {
+            "t": "data",
+            "v": ""
+          },
+          "empty": {
+            "t": "string",
+            "v": ""
+          },
+          "list": {
+            "t": "array",
+            "v": []
+          },
+          "nested": {
+            "t": "dict",
+            "v": {}
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003edata\u003c/key\u003e\u003cdata/\u003e\u003ckey\u003eempty\u003c/key\u003e\u003cstring/\u003e\u003ckey\u003elist\u003c/key\u003e\u003carray\u003e\u003c/array\u003e\u003ckey\u003enested\u003c/key\u003e\u003cdict\u003e\u003c/dict\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d40102030405060708546461746155656d707479546c697374566e65737465644050a0d00811161c2128292a2b000000000000010100000000000000090000000000000000000000000000002c",
+      "JSON": "{\"data\":\"\",\"empty\":\"\",\"list\":[],\"nested\":{}}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "key with space": {
+            "t": "string",
+            "v": "v"
+          },
+          "nil": {
+            "t": "nil"
+          },
+          "text": {
+            "t": "string",
+            "v": "\u003c\u0026\u003e\"'\t\n\r\u0001\u2028 é 😀"
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003ekey with space\u003c/key\u003e\u003cstring\u003ev\u003c/string\u003e\u003ckey\u003etext\u003c/key\u003e\u003cstring\u003e\u0026lt;\u0026amp;\u0026gt;\u0026#34;\u0026#39;\u0026#x9;\u0026#xA;\u0026#xD;�\u2028 é 😀\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d2010203045e6b65792077697468207370616365547465787451766f100f003c0026003e002200270009000a000d00012028002000e90020d83dde00080d1c21230000000000000101000000000000000500000000000000000000000000000044",
+      "JSON": "{\"key with space\":\"v\",\"nil\":null,\"text\":\"\\u003c\\u0026\\u003e\\\"'\\t\\n\\r\\u0001\\u2028 é 😀\"}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "floats": {
+            "t": "array",
+            "v": [
+              {
+                "t": "real",
+                "v": 4696837146684686336
+              },
+              {
+                "t": "real",
+                "v": 4683220244930494464
+              },
+              {
+                "t": "real",
+                "v": 4698053236609777664
+              },
+              {
+                "t": "real",
+                "v": 4532020583610935537
+              },
+              {
+                "t": "real",
+                "v": 4547007122018943789
+              },
+              {
+                "t": "real",
+                "v": 4591870180066957722
+              },
+              {
+                "t": "real",
+                "v": 4921056587992461136
+              },
+              {
+                "t": "real",
+                "v": 4906019910204099648
+              },
+              {
+                "t": "real",
+                "v": 0
+              },
+              {
+                "t": "real",
+                "v": 0
+              },
+              {
+                "t": "real",
+                "v": 4613937818241073152
+              },
+              {
+                "t": "real",
+                "v": 4502148214488346440
+              },
+              {
+                "t": "real",
+                "v": 124633661817958447
+              },
+              {
+                "t": "real",
+                "v": 9218868437227405311
+              }
+            ]
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003efloats\u003c/key\u003e\u003carray\u003e\u003creal\u003e1e+06\u003c/real\u003e\u003creal\u003e123456\u003c/real\u003e\u003creal\u003e1.234567e+06\u003c/real\u003e\u003creal\u003e1e-05\u003c/real\u003e\u003creal\u003e0.0001\u003c/real\u003e\u003creal\u003e0.1\u003c/real\u003e\u003creal\u003e1e+21\u003c/real\u003e\u003creal\u003e1e+20\u003c/real\u003e\u003creal\u003e0\u003c/real\u003e\u003creal\u003e0\u003c/real\u003e\u003creal\u003e3\u003c/real\u003e\u003creal\u003e1e-07\u003c/real\u003e\u003creal\u003e2.5e-300\u003c/real\u003e\u003creal\u003e1.7976931348623157e+308\u003c/real\u003e\u003c/array\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d1010256666c6f617473ae030405060708090a0b0b0c0d0e0f23412e8480000000002340fe240000000000234132d68700000000233ee4f8b588e368f1233f1a36e2eb1c432d233fb999999999999a23444b1ae4d6e2ef50234415af1d78b58c40230000000000000000234008000000000000233e7ad7f29abcaf482301bac9a7b3b7302f237fefffffffffffff080b12212a333c454e576069727b848d0000000000000101000000000000001000000000000000000000000000000096",
+      "JSON": "{\"floats\":[1000000,123456,1234567,0.00001,0.0001,0.1,1e+21,100000000000000000000,0,0,3,1e-7,2.5e-300,1.7976931348623157e+308]}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "ints": {
+            "t": "array",
+            "v": [
+              {
+                "t": "int",
+                "v": 0
+              },
+              {
+                "t": "int",
+                "v": 255
+              },
+              {
+                "t": "int",
+                "v": 256
+              },
+              {
+                "t": "int",
+                "v": 65535
+              },
+              {
+                "t": "int",
+                "v": 65536
+              },
+              {
+                "t": "int",
+                "v": 4294967295
+              },
+              {
+                "t": "int",
+                "v": 4294967296
+              },
+              {
+                "t": "int",
+                "v": -1
+              },
+              {
+                "t": "int",
+                "v": -9223372036854775808
+              },
+              {
+                "t": "int",
+                "v": 9223372036854775807
+              }
+            ]
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eints\u003c/key\u003e\u003carray\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003cinteger\u003e255\u003c/integer\u003e\u003cinteger\u003e256\u003c/integer\u003e\u003cinteger\u003e65535\u003c/integer\u003e\u003cinteger\u003e65536\u003c/integer\u003e\u003cinteger\u003e4294967295\u003c/integer\u003e\u003cinteger\u003e4294967296\u003c/integer\u003e\u003cinteger\u003e-1\u003c/integer\u003e\u003cinteger\u003e-9223372036854775808\u003c/integer\u003e\u003cinteger\u003e9223372036854775807\u003c/integer\u003e\u003c/array\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d1010254696e7473aa030405060708090a0b0c100010ff11010011ffff120001000012ffffffff13000000010000000013ffffffffffffffff138000000000000000137fffffffffffffff080b101b1d1f22252a2f38414a0000000000000101000000000000000d00000000000000000000000000000053",
+      "JSON": "{\"ints\":[0,255,256,65535,65536,4294967295,4294967296,-1,-9223372036854775808,9223372036854775807]}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "data": {
+            "t": "data",
+            "v": "68656c6c6f20776f726c642c2074686973206973207369787465656e2b"
+          },
+          "date": {
+            "n": 123456789,
+            "s": 1795204679,
+            "t": "date"
+          },
+          "same": {
+            "t": "array",
+            "v": [
+              {
+                "t": "string",
+                "v": "dup"
+              },
+              {
+                "t": "string",
+                "v": "dup"
+              },
+              {
+                "t": "bool",
+                "v": true
+              },
+              {
+                "t": "bool",
+                "v": true
+              },
+              {
+                "t": "bool",
+                "v": false
+              },
+              {
+                "t": "int",
+                "v": 7
+              },
+              {
+                "t": "int",
+                "v": 7
+              },
+              {
+                "t": "real",
+                "v": 4619567317775286272
+              },
+              {
+                "t": "data",
+                "v": "78"
+              },
+              {
+                "t": "data",
+                "v": "78"
+              }
+            ]
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003edata\u003c/key\u003e\u003cdata\u003eaGVsbG8gd29ybGQsIHRoaXMgaXMgc2l4dGVlbis=\u003c/data\u003e\u003ckey\u003edate\u003c/key\u003e\u003cdate\u003e2026-11-20T19:57:59Z\u003c/date\u003e\u003ckey\u003esame\u003c/key\u003e\u003carray\u003e\u003cstring\u003edup\u003c/string\u003e\u003cstring\u003edup\u003c/string\u003e\u003ctrue/\u003e\u003ctrue/\u003e\u003cfalse/\u003e\u003cinteger\u003e7\u003c/integer\u003e\u003cinteger\u003e7\u003c/integer\u003e\u003creal\u003e7\u003c/real\u003e\u003cdata\u003eeA==\u003c/data\u003e\u003cdata\u003eeA==\u003c/data\u003e\u003c/array\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d3010203040506546461746154646174655473616d654f101d68656c6c6f20776f726c642c2074686973206973207369787465656e2b3341c8586ee38fcd6eaa070709090a0b0b0c0d0d53647570090908100723401c0000000000004178080f14191e3e4752565758595b640000000000000101000000000000000e00000000000000000000000000000066",
+      "JSON": "{\"data\":\"aGVsbG8gd29ybGQsIHRoaXMgaXMgc2l4dGVlbis=\",\"date\":\"2026-11-20T19:57:59.123456789Z\",\"same\":[\"dup\",\"dup\",true,true,false,7,7,7,\"eA==\",\"eA==\"]}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "array",
+        "v": [
+          {
+            "t": "string",
+            "v": "root"
+          },
+          {
+            "t": "string",
+            "v": "array"
+          },
+          {
+            "t": "nil"
+          },
+          {
+            "t": "dict",
+            "v": {
+              "k": {
+                "t": "string",
+                "v": "v"
+              }
+            }
+          }
+        ]
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003carray\u003e\u003cstring\u003eroot\u003c/string\u003e\u003cstring\u003earray\u003c/string\u003e\u003cdict\u003e\u003ckey\u003ek\u003c/key\u003e\u003cstring\u003ev\u003c/string\u003e\u003c/dict\u003e\u003c/array\u003e\u003c/plist\u003e",
+      "Binary": "",
+      "JSON": "[\"root\",\"array\",null,{\"k\":\"v\"}]",
+      "XMLError": "",
+      "BinaryError": "panic",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "string",
+        "v": "plain string root"
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cstring\u003eplain string root\u003c/string\u003e\u003c/plist\u003e",
+      "Binary": "62706c69737430305f1011706c61696e20737472696e6720726f6f7408000000000000010100000000000000010000000000000000000000000000001c",
+      "JSON": "\"plain string root\"",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "long": {
+            "t": "string",
+            "v": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+          },
+          "unicode": {
+            "t": "string",
+            "v": "ünïcödé string longer than fifteen"
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003elong\u003c/key\u003e\u003cstring\u003e��������������������\u003c/string\u003e\u003ckey\u003eunicode\u003c/key\u003e\u003cstring\u003eünïcödé string longer than fifteen\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d201020304546c6f6e6757756e69636f64655f101400000000000000000000000000000000000000006f102200fc006e00ef006300f6006400e900200073007400720069006e00670020006c006f006e0067006500720020007400680061006e0020006600690066007400650065006e080d121a310000000000000101000000000000000500000000000000000000000000000078",
+      "JSON": "{\"long\":\"\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\\u0000\",\"unicode\":\"ünïcödé string longer than fifteen\"}",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": ""
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "nan": {
+            "t": "real",
+            "v": 9221120237041090561
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003enan\u003c/key\u003e\u003creal\u003enan\u003c/real\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "",
+      "JSON": "",
+      "XMLError": "",
+      "BinaryError": "failed to find value in object map during serialization",
+      "JSONError": "json: unsupported value: NaN"
+    },
+    {
+      "Value": {
+        "t": "dict",
+        "v": {
+          "inf": {
+            "t": "real",
+            "v": 9218868437227405312
+          },
+          "ninf": {
+            "t": "real",
+            "v": 18442240474082181120
+          }
+        }
+      },
+      "XML": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003einf\u003c/key\u003e\u003creal\u003einf\u003c/real\u003e\u003ckey\u003eninf\u003c/key\u003e\u003creal\u003e-inf\u003c/real\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Binary": "62706c6973743030d20102030453696e66546e696e66237ff000000000000023fff0000000000000080d11161f0000000000000101000000000000000500000000000000000000000000000028",
+      "JSON": "",
+      "XMLError": "",
+      "BinaryError": "",
+      "JSONError": "json: unsupported value: +Inf"
+    },
+    {
+      "Value": {
+        "t": "nil"
+      },
+      "XML": "",
+      "Binary": "",
+      "JSON": "null",
+      "XMLError": "plist: no root element to encode",
+      "BinaryError": "plist: no root element to encode",
+      "JSONError": ""
+    }
+  ],
+  "cookies": [
+    {
+      "Line": "session=fixture; Path=/",
+      "OK": true,
+      "Name": "session",
+      "Value": "fixture",
+      "Path": "/",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; session=fixture"
+    },
+    {
+      "Line": "a=b; Domain=.apple.com; Path=/WebObjects; Secure; HttpOnly",
+      "OK": true,
+      "Name": "a",
+      "Value": "b",
+      "Path": "/WebObjects",
+      "Domain": ".apple.com",
+      "Quoted": false,
+      "Secure": true,
+      "HTTPOnly": true,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; a=b"
+    },
+    {
+      "Line": "mz_at0=AAA; expires=Fri, 20-Nov-2026 19:57:59 GMT; path=/; domain=.apple.com",
+      "OK": true,
+      "Name": "mz_at0",
+      "Value": "AAA",
+      "Path": "/",
+      "Domain": ".apple.com",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; mz_at0=AAA"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=fri, 20 nov 2026 9:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795168679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 GMT+3",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 GMT-23",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 GMT+24",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 +03",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 UTC",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 PDT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 CEST",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1795204679,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 ABCD",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 31 Nov 2026 19:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 29 Feb 2028 19:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 1835467079,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 29 Feb 2027 19:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Xyz, 20 Nov 2026 19:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 24:00:00 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 20 Nov 2026 19:57:59 GMT; Expires=bogus",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Fri, 2 Nov 2026 19:57:59 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "x=1; Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "OK": true,
+      "Name": "x",
+      "Value": "1",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": true,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; x=1"
+    },
+    {
+      "Line": "\"quoted\"=1",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "q=\"a b\"; Path=\"/x\"",
+      "OK": true,
+      "Name": "q",
+      "Value": "a b",
+      "Path": "",
+      "Domain": "",
+      "Quoted": true,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; q=\"a b\""
+    },
+    {
+      "Line": "q=\"\"",
+      "OK": true,
+      "Name": "q",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": true,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; q=\"\""
+    },
+    {
+      "Line": "q=\"",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "bad name=1",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "novalue",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": " ; ",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "=value",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "n=v\\x",
+      "OK": false,
+      "Name": "",
+      "Value": "",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": ""
+    },
+    {
+      "Line": "n=v,w",
+      "OK": true,
+      "Name": "n",
+      "Value": "v,w",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; n=\"v,w\""
+    },
+    {
+      "Line": "n= spaced ; secure",
+      "OK": true,
+      "Name": "n",
+      "Value": " spaced",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": true,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; n=\" spaced\""
+    },
+    {
+      "Line": "n=v; Domain=bad\"domain; Path=/ok",
+      "OK": true,
+      "Name": "n",
+      "Value": "v",
+      "Path": "/ok",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; n=v"
+    },
+    {
+      "Line": "n=v;;;Secure;HTTPONLY",
+      "OK": true,
+      "Name": "n",
+      "Value": "v",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": true,
+      "HTTPOnly": true,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; n=v"
+    },
+    {
+      "Line": "n=v; Max-Age=0; SameSite=Lax; Partitioned",
+      "OK": true,
+      "Name": "n",
+      "Value": "v",
+      "Path": "",
+      "Domain": "",
+      "Quoted": false,
+      "Secure": false,
+      "HTTPOnly": false,
+      "HasExpiry": false,
+      "ExpiresUnix": 0,
+      "ExpiresNanos": 0,
+      "AddCookie": "first=1; n=v"
+    }
+  ],
+  "decode": [
+    {
+      "Input": "{\"a\":1,\"b\":[1.5,true,null,\"x\"],\"c\":{\"d\":-2e3},\"big\":12345678901234567890}",
+      "Format": "json",
+      "Value": {
+        "t": "dict",
+        "v": {
+          "a": {
+            "t": "real",
+            "v": 4607182418800017408
+          },
+          "b": {
+            "t": "array",
+            "v": [
+              {
+                "t": "real",
+                "v": 4609434218613702656
+              },
+              {
+                "t": "bool",
+                "v": true
+              },
+              {
+                "t": "nil"
+              },
+              {
+                "t": "string",
+                "v": "x"
+              }
+            ]
+          },
+          "big": {
+            "t": "real",
+            "v": 4892433759222981601
+          },
+          "c": {
+            "t": "dict",
+            "v": {
+              "d": {
+                "t": "real",
+                "v": 13879882945323335680
+              }
+            }
+          }
+        }
+      },
+      "Error": false
+    },
+    {
+      "Input": "[]",
+      "Format": "json",
+      "Value": {
+        "t": "array",
+        "v": []
+      },
+      "Error": false
+    },
+    {
+      "Input": "\"\\u003c\\ud83d\\ude00\"",
+      "Format": "json",
+      "Value": {
+        "t": "string",
+        "v": "\u003c😀"
+      },
+      "Error": false
+    },
+    {
+      "Input": "{\"a\":1,}",
+      "Format": "json",
+      "Value": null,
+      "Error": true
+    },
+    {
+      "Input": "{\"a\":1} x",
+      "Format": "json",
+      "Value": null,
+      "Error": true
+    },
+    {
+      "Input": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003ei\u003c/key\u003e\u003cinteger\u003e42\u003c/integer\u003e\u003ckey\u003en\u003c/key\u003e\u003cinteger\u003e-3\u003c/integer\u003e\u003ckey\u003er\u003c/key\u003e\u003creal\u003e2.5\u003c/real\u003e\u003ckey\u003et\u003c/key\u003e\u003ctrue/\u003e\u003ckey\u003ed\u003c/key\u003e\u003cdata\u003eaGk=\u003c/data\u003e\u003ckey\u003edt\u003c/key\u003e\u003cdate\u003e2026-11-20T19:57:59Z\u003c/date\u003e\u003ckey\u003ea\u003c/key\u003e\u003carray\u003e\u003cstring\u003ex\u003c/string\u003e\u003c/array\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Format": "plist",
+      "Value": {
+        "t": "dict",
+        "v": {
+          "a": {
+            "t": "array",
+            "v": [
+              {
+                "t": "string",
+                "v": "x"
+              }
+            ]
+          },
+          "d": {
+            "t": "data",
+            "v": "6869"
+          },
+          "dt": {
+            "n": 0,
+            "s": 1795204679,
+            "t": "date"
+          },
+          "i": {
+            "t": "int",
+            "v": 42
+          },
+          "n": {
+            "t": "int",
+            "v": -3
+          },
+          "r": {
+            "t": "real",
+            "v": 4612811918334230528
+          },
+          "t": {
+            "t": "bool",
+            "v": true
+          }
+        }
+      },
+      "Error": false
+    },
+    {
+      "Input": "\u003cplist version=\"1.0\"\u003e\u003cstring\u003ebare\u003c/string\u003e\u003c/plist\u003e",
+      "Format": "plist",
+      "Value": {
+        "t": "string",
+        "v": "bare"
+      },
+      "Error": false
+    },
+    {
+      "Input": "not a plist",
+      "Format": "plist",
+      "Value": null,
+      "Error": true
+    },
+    {
+      "Input": "62706c6973743030d3010203040508516b546c697374516e5176a20607233ff80000000000000913ffffffffffffffff080f1116181a1d26270000000000000101000000000000000900000000000000000000000000000030",
+      "Format": "bplist-hex",
+      "Value": {
+        "t": "dict",
+        "v": {
+          "k": {
+            "t": "string",
+            "v": "v"
+          },
+          "list": {
+            "t": "array",
+            "v": [
+              {
+                "t": "real",
+                "v": 4609434218613702656
+              },
+              {
+                "t": "bool",
+                "v": true
+              }
+            ]
+          },
+          "n": {
+            "t": "int",
+            "v": -1
+          }
+        }
+      },
+      "Error": false
+    }
+  ],
   "escape": [
     {
       "Input": "",
@@ -111,6 +1224,415 @@
       "PathUnescape": "\u0000",
       "QueryUnescapeError": "",
       "PathUnescapeError": ""
+    }
+  ],
+  "execute": [
+    {
+      "Name": "plain GET",
+      "Requests": [
+        {
+          "Method": "GET",
+          "URL": "https://p25-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/ping?a=1\u0026b=two",
+          "Headers": {
+            "User-Agent": [
+              "oracle"
+            ],
+            "X-Apple-Store-Front": [
+              "143441-1,29"
+            ],
+            "X-Dsid": [
+              "12345"
+            ],
+            "X-Token": [
+              "token"
+            ]
+          },
+          "Body": ""
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "text/xml"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eempty\u003c/key\u003e\u003cstring/\u003e\u003ckey\u003eitems\u003c/key\u003e\u003carray\u003e\u003cstring\u003ea\u003c/string\u003e\u003creal\u003e1.5\u003c/real\u003e\u003c/array\u003e\u003ckey\u003estatus\u003c/key\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Error": ""
+    },
+    {
+      "Name": "encoded POST",
+      "Requests": [
+        {
+          "Method": "POST",
+          "URL": "https://p25-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/listPurchases",
+          "Headers": {
+            "Accept-Encoding": [
+              "br, gzip, deflate"
+            ],
+            "Accept-Language": [
+              "en"
+            ],
+            "Content-Length": [
+              "346"
+            ],
+            "Content-Type": [
+              "application/x-apple-plist"
+            ],
+            "User-Agent": [
+              "oracle"
+            ],
+            "X-Apple-Client-Application": [
+              "me.majd.ipatool"
+            ],
+            "X-Apple-Tz": [
+              "0"
+            ]
+          },
+          "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003ecount\u003c/key\u003e\u003cinteger\u003e3\u003c/integer\u003e\u003ckey\u003eflag\u003c/key\u003e\u003ctrue/\u003e\u003ckey\u003eguid\u003c/key\u003e\u003cstring\u003e000102030405\u003c/string\u003e\u003ckey\u003enested\u003c/key\u003e\u003cdict\u003e\u003ckey\u003ek\u003c/key\u003e\u003cstring\u003ev\u003c/string\u003e\u003c/dict\u003e\u003c/dict\u003e\u003c/plist\u003e"
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "text/xml; charset=UTF-8"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eempty\u003c/key\u003e\u003cstring/\u003e\u003ckey\u003eitems\u003c/key\u003e\u003carray\u003e\u003cstring\u003ea\u003c/string\u003e\u003creal\u003e1.5\u003c/real\u003e\u003c/array\u003e\u003ckey\u003estatus\u003c/key\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Error": ""
+    },
+    {
+      "Name": "json response",
+      "Requests": [
+        {
+          "Method": "GET",
+          "URL": "https://itunes.apple.com/lookup?id=1",
+          "Headers": {
+            "User-Agent": [
+              "oracle"
+            ]
+          },
+          "Body": ""
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "text/javascript; charset=utf-8"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "{\"count\":1.5,\"results\":[{\"name\":\"x \\u003cy\\u003e\",\"trackId\":1}]}",
+      "Error": ""
+    },
+    {
+      "Name": "raw body PUT",
+      "Requests": [
+        {
+          "Method": "PUT",
+          "URL": "https://p25-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/raw",
+          "Headers": {
+            "Content-Type": [
+              "application/octet-stream"
+            ],
+            "User-Agent": [
+              "oracle"
+            ]
+          },
+          "Body": "raw-bytes"
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "application/octet-stream"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "opaque",
+      "Error": ""
+    },
+    {
+      "Name": "purchase",
+      "Requests": [
+        {
+          "Method": "POST",
+          "URL": "https://p45-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/buyProduct",
+          "Headers": {
+            "Accept-Encoding": [
+              "br, gzip, deflate"
+            ],
+            "Accept-Language": [
+              "en"
+            ],
+            "Content-Length": [
+              "517"
+            ],
+            "Content-Type": [
+              "application/x-apple-plist"
+            ],
+            "User-Agent": [
+              "oracle"
+            ],
+            "X-Apple-Client-Application": [
+              "me.majd.ipatool"
+            ],
+            "X-Apple-Tz": [
+              "0"
+            ],
+            "X-Dsid": [
+              "12345"
+            ],
+            "X-Token": [
+              "token"
+            ]
+          },
+          "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eclientCorrelationKey\u003c/key\u003e\u003cstring\u003e5D050D3A-FAA5-4C07-8347-FFD786899199\u003c/string\u003e\u003ckey\u003eguid\u003c/key\u003e\u003cstring\u003e000102030405\u003c/string\u003e\u003ckey\u003ehasBeenAuthedForBuy\u003c/key\u003e\u003ctrue/\u003e\u003ckey\u003eprice\u003c/key\u003e\u003cstring\u003e0\u003c/string\u003e\u003ckey\u003epricingParameters\u003c/key\u003e\u003cstring\u003eSTDQ\u003c/string\u003e\u003ckey\u003eproductType\u003c/key\u003e\u003cstring\u003eC\u003c/string\u003e\u003ckey\u003esalableAdamId\u003c/key\u003e\u003cstring\u003e1234\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e"
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "text/xml"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eempty\u003c/key\u003e\u003cstring/\u003e\u003ckey\u003eitems\u003c/key\u003e\u003carray\u003e\u003cstring\u003ea\u003c/string\u003e\u003creal\u003e1.5\u003c/real\u003e\u003c/array\u003e\u003ckey\u003estatus\u003c/key\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Error": ""
+    },
+    {
+      "Name": "paid purchase",
+      "Requests": null,
+      "Status": 0,
+      "Headers": null,
+      "Body": "",
+      "Error": "purchasing paid apps is not supported"
+    },
+    {
+      "Name": "disallowed host",
+      "Requests": null,
+      "Status": 0,
+      "Headers": null,
+      "Body": "",
+      "Error": "guest bridge at 0x400000008c40: runtime: unsupported transport URL; recent=[-[AMSLazyPromise addBlock:orCallWithResult:] -[AMSLazyPromise _runBlock] -[AMSPromise isFinishedWithLock] -[AMSPromise promiseResult] -[AMSPromise addBlock:orCallWithResult:] -[AMSPromise promiseResult] -[AMSPromiseCompletionBlocks addErrorBlock:] -[AMSPromiseCompletionBlocks addCompletionBlock:] -[AMSURLTaskInfo finishContiguousAsyncActionWithIdentifier:] -[AMSURLTaskInfo contiguousActionPerformer] -[AMSContiguousActionPerformer finishContiguousActionWithIdentifier:] -[AMSPromise conditionHasSignaled]]"
+    },
+    {
+      "Name": "unsupported method",
+      "Requests": null,
+      "Status": 0,
+      "Headers": null,
+      "Body": "",
+      "Error": "unsupported encoded Store request method"
+    },
+    {
+      "Name": "redirect to another pod",
+      "Requests": [
+        {
+          "Method": "POST",
+          "URL": "https://p25-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/listPurchases",
+          "Headers": {
+            "Accept-Encoding": [
+              "br, gzip, deflate"
+            ],
+            "Accept-Language": [
+              "en"
+            ],
+            "Content-Length": [
+              "214"
+            ],
+            "Content-Type": [
+              "application/x-apple-plist"
+            ],
+            "Cookie": [
+              "c=d"
+            ],
+            "User-Agent": [
+              "oracle"
+            ],
+            "X-Apple-Client-Application": [
+              "me.majd.ipatool"
+            ],
+            "X-Apple-Tz": [
+              "0"
+            ],
+            "X-Dsid": [
+              "12345"
+            ],
+            "X-Token": [
+              "token"
+            ]
+          },
+          "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003ea\u003c/key\u003e\u003cstring\u003eb\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e"
+        },
+        {
+          "Method": "POST",
+          "URL": "https://p26-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/listPurchases?x=1",
+          "Headers": {
+            "Accept-Encoding": [
+              "br, gzip, deflate"
+            ],
+            "Accept-Language": [
+              "en"
+            ],
+            "Content-Type": [
+              "application/x-apple-plist"
+            ],
+            "User-Agent": [
+              "oracle"
+            ],
+            "X-Apple-Client-Application": [
+              "me.majd.ipatool"
+            ],
+            "X-Apple-Tz": [
+              "0"
+            ],
+            "X-Dsid": [
+              "12345"
+            ]
+          },
+          "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003ea\u003c/key\u003e\u003cstring\u003eb\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e"
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "text/xml"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eempty\u003c/key\u003e\u003cstring/\u003e\u003ckey\u003eitems\u003c/key\u003e\u003carray\u003e\u003cstring\u003ea\u003c/string\u003e\u003creal\u003e1.5\u003c/real\u003e\u003c/array\u003e\u003ckey\u003estatus\u003c/key\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Error": ""
+    },
+    {
+      "Name": "redirect without following",
+      "Requests": [
+        {
+          "Method": "GET",
+          "URL": "https://p25-buy.itunes.apple.com/a",
+          "Headers": {
+            "User-Agent": [
+              "oracle"
+            ]
+          },
+          "Body": ""
+        }
+      ],
+      "Status": 302,
+      "Headers": {
+        "Location": [
+          "/b"
+        ],
+        "Set-Cookie": [
+          "r=1; Path=/"
+        ]
+      },
+      "Body": "",
+      "Error": ""
+    },
+    {
+      "Name": "redirect to a foreign host",
+      "Requests": [
+        {
+          "Method": "GET",
+          "URL": "https://p25-buy.itunes.apple.com/a",
+          "Headers": {
+            "User-Agent": [
+              "oracle"
+            ]
+          },
+          "Body": ""
+        }
+      ],
+      "Status": 0,
+      "Headers": null,
+      "Body": "",
+      "Error": "guest bridge at 0x400000008ca0: runtime: invalid Store redirect destination; recent=[-[AMSLazyPromise addBlock:orCallWithResult:] -[AMSLazyPromise _runBlock] -[AMSPromise isFinishedWithLock] -[AMSPromise promiseResult] -[AMSPromise addBlock:orCallWithResult:] -[AMSPromise promiseResult] -[AMSPromiseCompletionBlocks addErrorBlock:] -[AMSPromiseCompletionBlocks addCompletionBlock:] -[AMSURLTaskInfo finishContiguousAsyncActionWithIdentifier:] -[AMSURLTaskInfo contiguousActionPerformer] -[AMSContiguousActionPerformer finishContiguousActionWithIdentifier:] -[AMSPromise conditionHasSignaled]]"
+    },
+    {
+      "Name": "stream transfer",
+      "Requests": [
+        {
+          "Method": "GET",
+          "URL": "http://downloads.example.net/file.ipa",
+          "Headers": {
+            "User-Agent": [
+              "oracle"
+            ]
+          },
+          "Body": ""
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "application/octet-stream"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "PK-package-bytes",
+      "Error": ""
+    },
+    {
+      "Name": "authenticate",
+      "Requests": [
+        {
+          "Method": "POST",
+          "URL": "https://p25-buy.itunes.apple.com/WebObjects/MZFinance.woa/wa/authenticate",
+          "Headers": {
+            "Accept-Encoding": [
+              "br, gzip, deflate"
+            ],
+            "Accept-Language": [
+              "en"
+            ],
+            "Content-Length": [
+              "710"
+            ],
+            "Content-Type": [
+              "application/x-apple-plist"
+            ],
+            "User-Agent": [
+              "oracle"
+            ],
+            "X-Apple-Actionsignature": [
+              "AQIDxg=="
+            ],
+            "X-Apple-Client-Application": [
+              "me.majd.ipatool"
+            ],
+            "X-Apple-Tz": [
+              "0"
+            ]
+          },
+          "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eappleId\u003c/key\u003e\u003cstring\u003euser@example.com\u003c/string\u003e\u003ckey\u003eattempt\u003c/key\u003e\u003cstring\u003e4\u003c/string\u003e\u003ckey\u003ecreateSession\u003c/key\u003e\u003ctrue/\u003e\u003ckey\u003ecredentialSource\u003c/key\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003ckey\u003edeviceOffersCheck\u003c/key\u003e\u003cstring\u003etrue\u003c/string\u003e\u003ckey\u003eguid\u003c/key\u003e\u003cstring\u003e000102030405\u003c/string\u003e\u003ckey\u003eisSilentAuthentication\u003c/key\u003e\u003cfalse/\u003e\u003ckey\u003epassword\u003c/key\u003e\u003cstring\u003esecret\u003c/string\u003e\u003ckey\u003epasswordSettings\u003c/key\u003e\u003cdict\u003e\u003ckey\u003efree\u003c/key\u003e\u003cstring\u003ealways\u003c/string\u003e\u003ckey\u003epaid\u003c/key\u003e\u003cstring\u003ealways\u003c/string\u003e\u003c/dict\u003e\u003ckey\u003ermp\u003c/key\u003e\u003cstring\u003e0\u003c/string\u003e\u003ckey\u003ewhy\u003c/key\u003e\u003cstring\u003esignIn\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e"
+        }
+      ],
+      "Status": 200,
+      "Headers": {
+        "Content-Type": [
+          "text/xml"
+        ],
+        "Set-Cookie": [
+          "a=b; Path=/"
+        ]
+      },
+      "Body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eempty\u003c/key\u003e\u003cstring/\u003e\u003ckey\u003eitems\u003c/key\u003e\u003carray\u003e\u003cstring\u003ea\u003c/string\u003e\u003creal\u003e1.5\u003c/real\u003e\u003c/array\u003e\u003ckey\u003estatus\u003c/key\u003e\u003cinteger\u003e0\u003c/integer\u003e\u003c/dict\u003e\u003c/plist\u003e",
+      "Error": ""
     }
   ],
   "join": [
