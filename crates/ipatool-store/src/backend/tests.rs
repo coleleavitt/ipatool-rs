@@ -275,6 +275,49 @@ fn sends_go_client_defaults_and_decodes_gzip_transparently() {
 }
 
 #[test]
+fn sends_a_zero_content_length_for_an_empty_post_like_go() {
+    let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+    let url = format!("http://{}/", listener.local_addr().expect("address"));
+    let handle = thread::spawn(move || {
+        let mut heads = Vec::new();
+        for _ in 0..2 {
+            let (stream, _) = listener.accept().expect("accept");
+            let mut reader = BufReader::new(stream.try_clone().expect("clone"));
+            let mut head = Vec::new();
+            loop {
+                let mut line = String::new();
+                reader.read_line(&mut line).expect("read");
+                if line.trim_end().is_empty() {
+                    break;
+                }
+                head.push(line.trim_end().to_ascii_lowercase());
+            }
+            let mut stream = stream;
+            write!(stream, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n").expect("write");
+            heads.push(head);
+        }
+        heads
+    });
+    let backend = Backend::new(None, None).expect("backend");
+    for method in ["POST", "GET"] {
+        (backend.request_transport("authenticate", None))(HttpRequest {
+            method: method.to_owned(),
+            url: url.clone(),
+            ..HttpRequest::default()
+        })
+        .expect("response");
+    }
+    let heads = handle.join().expect("server");
+    let length = |head: &[String]| {
+        head.iter()
+            .find_map(|line| line.strip_prefix("content-length: "))
+            .map(str::to_owned)
+    };
+    assert_eq!(length(&heads[0]).as_deref(), Some("0"), "{:?}", heads[0]);
+    assert_eq!(length(&heads[1]), None, "{:?}", heads[1]);
+}
+
+#[test]
 fn honors_the_public_bag_request_timeout() {
     let (backend, server) = (Arc::new(backend()), Server::start());
     let err = backend
