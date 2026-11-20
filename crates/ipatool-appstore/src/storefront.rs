@@ -126,6 +126,21 @@ impl Client {
         find(&lock(&self.storefronts).country_codes, identifier, country)
     }
 
+    /// Go's `storefrontID`: the cached storefront ID for a country, or empty.
+    pub(crate) fn storefront_id(&self, country: &str) -> String {
+        self.cached("", country)
+            .map_or_else(String::new, |mapping| mapping.id)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn cache_storefronts(&self, codes: &[(&str, &str)]) {
+        lock(&self.storefronts).country_codes.extend(
+            codes
+                .iter()
+                .map(|(id, country)| ((*id).to_owned(), (*country).to_owned())),
+        );
+    }
+
     /// Go's `countryCodeFromStoreFront`: the country of an account storefront.
     ///
     /// # Errors

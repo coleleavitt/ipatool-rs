@@ -8,7 +8,11 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
+base64 = "0.23"
 cookie = "0.18"
+hyper = "1"
+ipatool-keychain.workspace = true
+ipatool-sap.workspace = true
 plist = "1.10"
 psl = "2"
 regex = "1"
@@ -18,11 +22,11 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 time.workspace = true
+tokio = { workspace = true, features = ["time"] }
 url.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
-tokio.workspace = true
 
 [lints]
 workspace = true
