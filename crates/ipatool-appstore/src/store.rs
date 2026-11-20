@@ -8,7 +8,7 @@ use reqwest::StatusCode;
 use reqwest::header::{ACCEPT, HeaderMap, USER_AGENT};
 use serde::de::DeserializeOwned;
 
-use crate::{Client, Error, Result, plist_body};
+use crate::{Client, Error, Result, UnexpectedResponseError, plist_body};
 
 /// `storeAuthenticationUserAgent` in `pkg/appstore/constants.go`.
 pub(crate) const STORE_USER_AGENT: &str =
@@ -75,10 +75,11 @@ pub(crate) fn decode_xml_response<T: DeserializeOwned>(
         return Ok(None);
     }
     if !plist_body::looks_like_plist(&plist_body::normalize(body)) {
-        return Err(Error::UnexpectedResponse {
+        return Err(Error::UnexpectedResponse(UnexpectedResponseError {
             status,
             snippet: plist_body::snippet(body),
-        });
+            ..UnexpectedResponseError::default()
+        }));
     }
     Ok(Some(plist_body::decode(body)?))
 }

@@ -18,6 +18,9 @@ pub struct Client {
     /// Store endpoints: shares the cookie jar and, like Go's Store transport,
     /// returns redirects instead of following them.
     pub(crate) store: reqwest::Client,
+    /// Login requests: like `store`, but on fresh connections, as Go's auth transport
+    /// disables keep-alives.
+    pub(crate) auth: reqwest::Client,
     pub(crate) jar: Option<Arc<CookieJar>>,
     pub(crate) storefronts: Arc<Mutex<StorefrontCache>>,
 }
@@ -52,9 +55,18 @@ impl Client {
         if let Some(jar) = &jar {
             store = store.cookie_provider(Arc::clone(jar));
         }
+        let store = store.build()?;
+        let mut auth = reqwest::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(STORE_TIMEOUT)
+            .pool_max_idle_per_host(0);
+        if let Some(jar) = &jar {
+            auth = auth.cookie_provider(Arc::clone(jar));
+        }
         Ok(Self {
             http,
-            store: store.build()?,
+            store,
+            auth: auth.build()?,
             jar,
             storefronts: Arc::default(),
         })

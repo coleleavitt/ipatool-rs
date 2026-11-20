@@ -183,10 +183,23 @@ parity check for the commands it touches.
         validation and redirect rule are unit tested).
   - [ ] Store AMD headers: `StoreAmd` trait and `UnavailableStoreAmd`; the real
         implementation needs the phase-5 Store emulator.
-- [ ] SAP signer and action signing. The signer is ported in phase 3 (live setup + sign
-      checked by `cargo test -p ipatool-sap signs_after_live_setup -- --ignored`); wiring
-      into the App Store client remains.
+- [x] SAP signer and action signing. The signer is ported in phase 3 (live setup + sign
+      checked by `cargo test -p ipatool-sap signs_after_live_setup -- --ignored`). Login creates
+      it from the bag's SAP configuration and the machine ID and closes it after login. Go
+      sends login through the Store framework emulator; until phase 5 the Rust client encodes
+      the XML plist payload itself and sends the body signature in `X-Apple-ActionSignature`,
+      as Go did before the emulator (`abd86cb`). The emulator's own login parameters and
+      headers are not added.
 - [ ] Legacy and native login, 2FA prompt, `5005` handling and re-prompt, retries.
+      Legacy login is done (`ipatool_appstore::login`, `Client::login`): 2FA code
+      normalization, redirects (max 4), request retries (3 attempts, 10 s doubling to 30 s,
+      `Retry-After`), dialog and machine-action errors, DSID from header or cookie,
+      phone-number storefront hint, account saved under `account`, and the fork's
+      `5005`/invalid-code errors. `auth login` prompts and re-prompts up to 3 attempts.
+      Go's login tests are ported with a fake HTTP layer. Not covered: Go's
+      `context.Canceled` cases (no Rust equivalent), the RFC 850 and ANSI C `Retry-After`
+      dates only by unit test, and the signed request against Apple. Native login
+      (anisette) plugs in through the `authentication_headers` argument.
 - [ ] `auth login` end to end with a real account (manual, opt-in).
 
 ### Phase 5 — Store engine emulator

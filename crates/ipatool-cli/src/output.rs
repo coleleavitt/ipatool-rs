@@ -1,5 +1,6 @@
 //! Log-style output matching the Go CLI: JSON mode prints one zerolog-shaped
-//! object per line (`level`, fields, `time`); text mode prints `key=value` pairs.
+//! object per line (`level`, fields, `time`, `message`); text mode prints the level,
+//! the message and `key=value` pairs.
 
 use clap::ValueEnum;
 use serde_json::{Map, Value};
@@ -14,7 +15,6 @@ pub enum Format {
 
 pub struct Output {
     format: Format,
-    #[allow(dead_code, reason = "used once commands emit debug logs")]
     verbose: bool,
 }
 
@@ -23,21 +23,39 @@ impl Output {
         Self { format, verbose }
     }
 
+    /// `Logger.Log()...Send()`.
     pub fn info(&self, fields: Value) {
-        println!("{}", self.render("info", fields));
+        println!("{}", self.render("info", fields, None));
+    }
+
+    /// `Logger.Log().Msg(message)`.
+    pub fn message(&self, message: &str) {
+        println!("{}", self.render("info", Value::Null, Some(message)));
+    }
+
+    /// `Logger.Verbose()...Msg(message)`: printed only with `--verbose`.
+    pub fn verbose(&self, fields: Value, message: &str) {
+        if self.verbose {
+            println!("{}", self.render("debug", fields, Some(message)));
+        }
     }
 
     pub fn error(&self, error: &dyn std::error::Error) {
-        let line = self.render("error", serde_json::json!({ "error": error.to_string() }));
+        let line = self.render(
+            "error",
+            serde_json::json!({ "error": error.to_string() }),
+            None,
+        );
         match self.format {
             Format::Json => println!("{line}"),
             Format::Text => eprintln!("{line}"),
         }
     }
 
-    fn render(&self, level: &str, fields: Value) -> String {
+    fn render(&self, level: &str, fields: Value, message: Option<&str>) -> String {
         let fields = match fields {
             Value::Object(map) => map,
+            Value::Null => Map::new(),
             other => Map::from_iter([("message".to_owned(), other)]),
         };
         match self.format {
@@ -53,18 +71,24 @@ impl Output {
                     "time".into(),
                     now.format(&Rfc3339).unwrap_or_default().into(),
                 );
+                if let Some(message) = message {
+                    line.insert("message".into(), message.into());
+                }
                 Value::Object(line).to_string()
             }
             Format::Text => {
-                let level = if level == "error" { "ERR" } else { "INF" };
-                let pairs: Vec<String> = fields
-                    .into_iter()
-                    .map(|(key, value)| match value {
-                        Value::String(s) => format!("{key}={s}"),
-                        other => format!("{key}={other}"),
-                    })
-                    .collect();
-                format!("{level} {}", pairs.join(" "))
+                let level = match level {
+                    "error" => "ERR",
+                    "debug" => "DBG",
+                    _ => "INF",
+                };
+                let mut parts = vec![level.to_owned()];
+                parts.extend(message.map(str::to_owned));
+                parts.extend(fields.into_iter().map(|(key, value)| match value {
+                    Value::String(s) => format!("{key}={s}"),
+                    other => format!("{key}={other}"),
+                }));
+                parts.join(" ")
             }
         }
     }
