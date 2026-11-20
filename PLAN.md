@@ -213,7 +213,7 @@ parity check for the commands it touches.
 
 ### Phase 5 — Store engine emulator
 
-- [ ] Objective-C runtime bridge, Swift metadata, async tasks, network bridge.
+- [x] Objective-C runtime bridge, Swift metadata, async tasks, network bridge.
   - [x] Runtime core (`ipatool_store::emulator`): `runtime.go`, `memory.go`, `metadata.go`,
         `profile_pages.go`, `bridge.go`, `swift.go`, `dictionary.go`, `async.go`,
         `callbacks.go`, `hashing.go`, `compression.go`, `notifications.go`, `delegate.go`,
@@ -235,14 +235,44 @@ parity check for the commands it touches.
         (`swift_task_isCancelled` is 0); guest strings are UTF-8 (invalid bytes become U+FFFD;
         `strlen`/`strptime` use the raw bytes); dates print in UTC for `%@`; profile constants
         accept property writes (Go's nil map panics); `Runtime` has no `Close` (drop frees it).
-        `emulator/network.rs` is a stand-in with `requestWithURL:` until `p5-network` lands.
         Untested against Go: bridge services the Store AMD flow does not reach (they run with
         the request engine through `Execute`), `inflate` in the guest, Swift dictionary
         bridging and the strict guard's guest-side hooks.
+  - [x] Network bridge and request engine: `network.go`, `client.go` (`Runtime::execute`,
+        `encodeRequest`, `purchaseRequest`, `allowedURL`), `purchase_adapter.go`,
+        `terms_adapter.go` and `internal/store/backend.go` (`ipatool_store::backend`:
+        `Backend::new`, `client(operation)` with `send`/`execute_http`, `bag-direct` and `sap`
+        straight to the transport, hardware identity, bag caching, gzip, the shared and
+        authentication pools). Go's `net/url` (`gourl`), `http.Header`, cookie parsing and
+        `AddCookie` (`cookie`), howett plist XML/binary and `encoding/json` (`emulator::codec`)
+        are ported because the guest sees their exact output. `plist_body` moved here from
+        `ipatool-appstore`. Go's tests are ported: `backend_test.go` (pool reuse, separate auth
+        connections, redirects returned, explicit cookies, per-request and bag timeouts, stream
+        drop), `terms_adapter_test.go` and `generated_profile_test.go`.
+        Oracle: `scripts/network-oracle.sh` records `tests/fixtures/network-oracle.json` from Go:
+        `net/url` parse/format/resolve/join/escape, terms URLs, `allowedURL`, Set-Cookie parsing,
+        the codecs (XML and binary plist bytes, JSON) and 13 `Execute` runs through a fake
+        transport (plain, encoded POST, JSON, raw PUT, free and paid purchase, bad host, bad
+        method, followed/unfollowed/foreign redirects, stream, authenticate with a fake signer).
+        `IPATOOL_TEST_SAP_CACHE=1 cargo test -p ipatool-store` replays them; every outgoing
+        request (method, URL, headers, body) and every response matches Go byte for byte, error
+        text included (purchase bodies differ only in the random `clientCorrelationKey`).
+        Differences: the transport is `reqwest::blocking` over HTTP/1.1 (Go negotiates HTTP/2),
+        reqwest adds `Accept: */*`, and there is no response-header timeout (Go: 30 s); Go's
+        implicit `User-Agent: Go-http-client/1.1`, `Accept-Encoding: gzip` with transparent
+        decoding and `Connection: close` on the authentication pool are reproduced; no
+        `context.Context`; `close_idle_connections` rebuilds the pools; `execute_http` treats an
+        empty body as Go's nil body; property lists parse as XML or binary only (Go also reads
+        OpenStep text); JSON dates are written in UTC (Go writes the local zone); cookie
+        `Expires` ignores local-zone abbreviations (Go applies the local offset for them).
+        Untested against Go: a finance `FrameworkError` returning the original response, the
+        `AKAppleIDSession` anisette challenge, `cookiesWithResponseHeaderFields:` and the other
+        `NSHTTPCookie` selectors (unit-tested parsing only), binary plists with dates or
+        non-ASCII keys, live Apple traffic (none sent).
 - [x] Profile: `ipatool_store::profile` embeds Go's three zstd artifacts (extracted by
       `scripts/extract-store-profile.py`), checks Go's sizes, digests and page index, and
       decodes the metadata; re-encoding it gives the same JSON values. `profilegen` is phase 9.
-- [ ] Terms acceptance adapter.
+- [x] Terms acceptance adapter (`emulator::terms_adapter`, `ipatool_store::terms`).
 
 ### Phase 6 — purchase and download
 

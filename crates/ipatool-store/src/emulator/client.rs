@@ -460,4 +460,6 @@ fn purchase_request(uc: &mut Uc, account: u64, bag: u64, input: &Request) -> Res
 #[cfg(test)]
 mod oracle_tests;
 #[cfg(test)]
+mod profile_tests;
+#[cfg(test)]
 mod tests;
