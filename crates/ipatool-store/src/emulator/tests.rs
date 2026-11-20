@@ -73,3 +73,76 @@ fn runs_the_store_amd_provider_up_to_the_adid_exchange() {
         .to_string();
     assert!(error.contains("test adid unavailable"), "{error}");
 }
+
+/// Byte-for-byte comparison with the Go emulator's Store AMD flow, recorded by
+/// `scripts/store-amd-oracle.sh` from a copy of a real anisette-v4 state: the same fixed time
+/// and counter randomness, the recorded `com.apple.adid` replies, and the same headers, call
+/// trace and heap size. Opt-in: `IPATOOL_STORE_AMD_ORACLE=<record>` and the SAP asset cache.
+#[test]
+fn store_amd_oracle_matches_go() {
+    use std::cell::RefCell;
+    use std::collections::{BTreeMap, VecDeque};
+    use std::rc::Rc;
+
+    use base64::Engine as _;
+    use base64::engine::general_purpose::STANDARD;
+    use serde::Deserialize;
+
+    use super::value::{Date, TEST_NOW, TEST_RANDOM};
+
+    #[derive(Deserialize)]
+    struct Exchange {
+        service: String,
+        request: String,
+        reply: String,
+    }
+
+    #[derive(Deserialize)]
+    struct Record {
+        endpoint: String,
+        hardware_id: String,
+        exchanges: Vec<Exchange>,
+        headers: Option<BTreeMap<String, String>>,
+        error: String,
+        trace: Vec<String>,
+        cursor: u64,
+    }
+
+    let Some(path) = std::env::var_os("IPATOOL_STORE_AMD_ORACLE") else {
+        return;
+    };
+    let record: Record = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let decode = |text: &str| STANDARD.decode(text).unwrap();
+    TEST_NOW.set(Some(Date::unix(1_795_200_000, 123_456_789)));
+    TEST_RANDOM.set(Some(0));
+    let mut runtime = Runtime::open(&image(), profile::load().unwrap()).unwrap();
+    let trace = Rc::new(RefCell::new(Vec::new()));
+    let recorded = Rc::clone(&trace);
+    runtime
+        .uc
+        .add_code_hook(0, u64::MAX, move |uc, address, _| {
+            if let Some(call) = uc.get_data().meta.calls.get(&address) {
+                recorded
+                    .borrow_mut()
+                    .push(format!("{}{}", call.symbol, call.selector));
+            }
+        })
+        .unwrap();
+    let mut exchanges: VecDeque<_> = record.exchanges.into_iter().collect();
+    let result = runtime.store_amd_headers(
+        &record.endpoint,
+        &decode(&record.hardware_id),
+        Box::new(move |service, request| {
+            let exchange = exchanges.pop_front().expect("an unrecorded XPC exchange");
+            assert_eq!(service, exchange.service);
+            assert_eq!(request, decode(&exchange.request));
+            Ok(decode(&exchange.reply))
+        }),
+    );
+    match result {
+        Ok(headers) => assert_eq!(Some(headers), record.headers),
+        Err(error) => assert_eq!(error.to_string(), record.error),
+    }
+    assert_eq!(*trace.borrow(), record.trace);
+    assert_eq!(runtime.uc.sti().cursor, record.cursor);
+}

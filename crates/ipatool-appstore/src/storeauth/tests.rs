@@ -1,4 +1,8 @@
+use std::collections::BTreeMap;
 use std::sync::{Arc, Mutex};
+
+use base64::Engine as _;
+use base64::engine::general_purpose::STANDARD;
 
 use reqwest::header::HeaderMap;
 use serde::Deserialize;
@@ -688,4 +692,69 @@ async fn store_provisioning_validates_challenge_before_loading_assets() {
     .await
     .unwrap_err();
     assert_eq!(error.to_string(), "invalid persisted anisette state");
+}
+
+/// Compares `EmulatorStoreAmd` with Go's `StoreAMDHeaders` on the same copy of a real
+/// anisette-v4 state: the header names, lengths and encoding, and how the state changed.
+/// Opt-in: `IPATOOL_STORE_AMD_STATE=<state copy>` and `IPATOOL_STORE_AMD_ORACLE=<record from
+/// scripts/store-amd-oracle.sh>`. Runs only the local guests; nothing is sent to Apple.
+#[test]
+fn store_amd_matches_go_on_a_saved_state() {
+    #[derive(serde::Deserialize)]
+    struct Shape {
+        headers: BTreeMap<String, usize>,
+        base64: BTreeMap<String, bool>,
+        identifier_kept: bool,
+        routing_info_kept: bool,
+        provisioning_changed: bool,
+        provisioning_length: usize,
+    }
+    #[derive(serde::Deserialize)]
+    struct Record {
+        endpoint: String,
+        hardware_id: String,
+        storeauth: Shape,
+    }
+    let (Some(state), Some(record)) = (
+        std::env::var_os("IPATOOL_STORE_AMD_STATE"),
+        std::env::var_os("IPATOOL_STORE_AMD_ORACLE"),
+    ) else {
+        return;
+    };
+    let encoded = std::fs::read(state).unwrap();
+    let record: Record = serde_json::from_slice(&std::fs::read(record).unwrap()).unwrap();
+    let hardware_id = STANDARD.decode(&record.hardware_id).unwrap();
+    let (headers, updated) = EmulatorStoreAmd
+        .headers(&encoded, &record.endpoint, &hardware_id)
+        .unwrap();
+    let lengths: BTreeMap<String, usize> = headers
+        .iter()
+        .map(|(key, value)| (key.clone(), value.len()))
+        .collect();
+    let encoding: BTreeMap<String, bool> = headers
+        .iter()
+        .map(|(key, value)| (key.clone(), STANDARD.decode(value).is_ok()))
+        .collect();
+    assert_eq!(lengths, record.storeauth.headers);
+    assert_eq!(encoding, record.storeauth.base64);
+    let before = decode_anisette_state(&encoded).unwrap();
+    let after = decode_anisette_state(&updated).unwrap();
+    assert_eq!(
+        after.identifier == before.identifier,
+        record.storeauth.identifier_kept
+    );
+    assert_eq!(
+        after.routing_info == before.routing_info,
+        record.storeauth.routing_info_kept
+    );
+    assert_eq!(
+        after.provisioning != before.provisioning,
+        record.storeauth.provisioning_changed
+    );
+    assert_eq!(
+        after.provisioning.unwrap().len(),
+        record.storeauth.provisioning_length
+    );
+    // Go's json.Marshal field order.
+    assert!(updated.starts_with(br#"{"Identifier":"#));
 }
