@@ -33,7 +33,7 @@ sha1 = "0.11"
 sha2 = "0.11"
 tempfile = "3"
 thiserror.workspace = true
-time.workspace = true
+time = { workspace = true, features = ["local-offset"] }
 tokio = { workspace = true, features = ["sync", "time"] }
 url.workspace = true
 x509-cert = "0.3"

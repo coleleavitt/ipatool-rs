@@ -38,6 +38,11 @@ pub struct CommerceRequest {
     pub response_format: ResponseFormat,
     pub no_redirects: bool,
     pub timeout: Option<Duration>,
+    /// Go's `ActionSigner` result for the raw payload: the SAP signature of the body, or the
+    /// signer's error. The signer runs Apple's code on the caller's thread and is not `Send`,
+    /// so it signs before the request moves to the guest thread; the guest signs the body it
+    /// was given unchanged, so the bytes are the same.
+    pub signature: Option<std::result::Result<Vec<u8>, String>>,
 }
 
 /// Go's Store executors (`backend.Client(operation)`): `send` is `Executor.Send`, `http` is
@@ -101,7 +106,10 @@ impl StoreTransport for EmulatorTransport {
             url: request.url,
             headers: request.headers,
             payload,
-            action_signer: None,
+            action_signer: request.signature.map(|signature| {
+                Box::new(move |_: &[u8]| signature.clone().map_err(BoxError::from))
+                    as ipatool_store::emulator::Signer
+            }),
             response_format: request.response_format,
         };
         Ok(self.backend()?.client(operation).send(request, body)?)

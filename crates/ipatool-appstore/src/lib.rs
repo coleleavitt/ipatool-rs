@@ -37,6 +37,7 @@ mod macos_version_lookup;
 )]
 mod macos_version_metadata;
 mod native_login;
+mod owned_apps;
 mod platform;
 mod purchase;
 mod replicate_sinf;
@@ -73,6 +74,9 @@ pub use ipatool_store::backend::ResponseFormat;
 pub use ipatool_store::emulator::Value;
 pub use ipatool_store::http::{Header, HttpRequest, HttpResponse};
 pub use login::{LoginInput, LoginOutput};
+pub use owned_apps::{
+    DEFAULT_OWNED_APPS_LIMIT, MAX_OWNED_APPS_LIMIT, OwnedAppsInput, OwnedAppsOutput,
+};
 pub use platform::Platform;
 pub use session::StoreSession;
 pub use storefront::storefront_identifier;

@@ -1,4 +1,5 @@
-//! `purchase` and `download` (Go `cmd/purchase.go`, `cmd/download.go`).
+//! `purchase`, `download` and `list-purchases` (Go `cmd/purchase.go`, `cmd/download.go`,
+//! `cmd/purchases.go`).
 
 use std::io::Write as _;
 use std::path::PathBuf;
@@ -9,8 +10,9 @@ use std::time::{Duration, Instant};
 use clap::Args;
 use ipatool_appstore::storeauth::EmulatorStoreAmd;
 use ipatool_appstore::{
-    Account, App, DownloadInput, DownloadOutput, LoginInput, LookupQuery, Platform, Progress,
-    ProgressHandle, Sinf, StoreSession,
+    Account, App, DEFAULT_OWNED_APPS_LIMIT, DownloadInput, DownloadOutput, LoginInput, LookupQuery,
+    MAX_OWNED_APPS_LIMIT, OwnedAppsInput, OwnedAppsOutput, Platform, Progress, ProgressHandle,
+    Sinf, StoreSession,
 };
 use serde_json::json;
 
@@ -55,6 +57,19 @@ pub struct DownloadArgs {
     purchase: bool,
 }
 
+#[derive(Args, Clone)]
+pub struct ListPurchasesArgs {
+    /// maximum number of apps to return per page
+    #[arg(short = 'l', long, default_value_t = DEFAULT_OWNED_APPS_LIMIT, allow_negative_numbers = true)]
+    max_results: i64,
+    /// page of owned apps to return
+    #[arg(short, long, default_value_t = 1, allow_negative_numbers = true)]
+    page: i64,
+    /// Filter by platform: iphone (iOS), ipad (iPadOS), appletv (tvOS), visionos, or macos
+    #[arg(long, default_value = "")]
+    platform: String,
+}
+
 const MISSING_APP: &str = "either the app ID or the bundle identifier must be specified";
 
 type AppResult<T> = ipatool_appstore::Result<T>;
@@ -79,6 +94,7 @@ pub(crate) trait Store {
     ) -> AppResult<()>;
     async fn download(&self, input: DownloadInput) -> AppResult<DownloadOutput>;
     async fn replicate_sinf(&self, sinfs: Vec<Sinf>, package: PathBuf) -> AppResult<()>;
+    async fn owned_apps(&self, input: OwnedAppsInput) -> AppResult<OwnedAppsOutput>;
 }
 
 impl Store for StoreSession<'_> {
@@ -140,10 +156,15 @@ impl Store for StoreSession<'_> {
     async fn replicate_sinf(&self, sinfs: Vec<Sinf>, package: PathBuf) -> AppResult<()> {
         self.client.replicate_sinf(sinfs, package).await
     }
+
+    async fn owned_apps(&self, input: OwnedAppsInput) -> AppResult<OwnedAppsOutput> {
+        self.client.owned_apps(input).await
+    }
 }
 
 /// Go's `purchaseCmd`: two attempts; any step failing with an expired password token
-/// logs in again on the second.
+/// logs in again on the second. The account is read once and the refreshed one reused
+/// (fork: `fix/reuse-account-across-retries`).
 pub(crate) async fn purchase(
     args: &PurchaseArgs,
     store: &impl Store,
@@ -152,9 +173,10 @@ pub(crate) async fn purchase(
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
+    let mut account = store.account_info().await?;
     let mut token_expired = false;
     for attempt in 0..2 {
-        match purchase_attempt(args, store, token_expired).await {
+        match purchase_attempt(args, store, &mut account, token_expired).await {
             Ok(already_owned) => {
                 out.info(json!({ "alreadyOwned": already_owned, "success": true }));
                 return Ok(());
@@ -169,10 +191,14 @@ pub(crate) async fn purchase(
 }
 
 /// One run of Go's `purchaseCmd` retry callback; `Ok(true)` when the app is already owned.
-async fn purchase_attempt(args: &PurchaseArgs, store: &impl Store, login: bool) -> AppResult<bool> {
-    let mut account = store.account_info().await?;
+async fn purchase_attempt(
+    args: &PurchaseArgs,
+    store: &impl Store,
+    account: &mut Account,
+    login: bool,
+) -> AppResult<bool> {
     if login {
-        account = store.login(&account).await?;
+        *account = store.login(account).await?;
     }
     let mut app = App {
         id: args.app_id,
@@ -180,13 +206,68 @@ async fn purchase_attempt(args: &PurchaseArgs, store: &impl Store, login: bool) 
     };
     if !args.bundle_identifier.is_empty() {
         app = store
-            .lookup(&account, &args.bundle_identifier, args.platform)
+            .lookup(account, &args.bundle_identifier, args.platform)
             .await?;
     }
-    match store.purchase(&mut account, &app, args.platform).await {
+    match store.purchase(account, &app, args.platform).await {
         Ok(()) => Ok(false),
         Err(error) if error.is_license_already_exists() => Ok(true),
         Err(error) => Err(error),
+    }
+}
+
+/// Go's `listPurchasesCmd`: the flags are checked before the account is read; two attempts,
+/// the second after logging in again when the token expired. The account is read once
+/// (fork: `fix/reuse-account-across-retries`).
+pub(crate) async fn list_purchases(
+    args: &ListPurchasesArgs,
+    store: &impl Store,
+    out: &Output,
+) -> Result<(), BoxError> {
+    if args.page < 1 {
+        return Err("page must be greater than 0".into());
+    }
+    if args.max_results < 1 {
+        return Err("max results must be greater than 0".into());
+    }
+    if args.max_results > MAX_OWNED_APPS_LIMIT {
+        return Err(format!("max results must not exceed {MAX_OWNED_APPS_LIMIT}").into());
+    }
+    let platform = parse_platform_filter(&args.platform)?;
+    let mut account = store.account_info().await?;
+    for attempt in 0..2 {
+        if attempt == 1 {
+            account = store.login(&account).await?;
+        }
+        let input = OwnedAppsInput {
+            account: account.clone(),
+            page: args.page,
+            limit: args.max_results,
+            platform,
+        };
+        match store.owned_apps(input).await {
+            Ok(output) => {
+                out.info(json!({
+                    "count": output.count,
+                    "totalCount": output.total_count,
+                    "page": output.page,
+                    "apps": output.results,
+                }));
+                return Ok(());
+            }
+            Err(error) if error.is_password_token_expired() && attempt == 0 => {}
+            Err(error) => return Err(error.into()),
+        }
+    }
+    unreachable!("the second attempt returns")
+}
+
+/// Go's `ParsePlatform`, where an empty value means every platform.
+fn parse_platform_filter(value: &str) -> AppResult<Option<Platform>> {
+    if value.is_empty() {
+        Ok(None)
+    } else {
+        value.parse().map(Some)
     }
 }
 

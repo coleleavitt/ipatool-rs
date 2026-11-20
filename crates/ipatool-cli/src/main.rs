@@ -68,6 +68,8 @@ enum Command {
     /// Download iOS, iPadOS, tvOS, watchOS, visionOS, and macOS app packages from the App
     /// Store.
     Download(commerce::DownloadArgs),
+    /// List apps owned by the authenticated App Store account.
+    ListPurchases(commerce::ListPurchasesArgs),
 }
 
 #[derive(Subcommand)]
@@ -257,6 +259,11 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
             let (client, keychain) = (store_client()?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             commerce::download(args, &session, !cli.non_interactive, out).await?;
+        }
+        Command::ListPurchases(args) => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            commerce::list_purchases(args, &session, out).await?;
         }
     }
     Ok(())
