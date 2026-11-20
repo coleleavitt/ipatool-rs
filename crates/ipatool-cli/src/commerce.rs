@@ -212,6 +212,12 @@ impl Store for StoreSession<'_> {
         self.client
             .catalog_version_history(app.id, &country, platform)
             .await
+            .map_err(|error| match error {
+                ipatool_appstore::Error::Status { status, .. } => ipatool_appstore::Error::Invalid(
+                    format!("catalog version history returned HTTP {status}"),
+                ),
+                error => error,
+            })
     }
 }
 

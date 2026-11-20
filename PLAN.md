@@ -348,8 +348,56 @@ parity check for the commands it touches.
 
 ### Phase 7 — versions and purchases
 
-- [ ] `list-versions`, `get-version-metadata` (partial-zip `Info.plist` read with read-ahead).
-- [ ] `--with-metadata` catalog-first + cache + concurrency (fork feature).
+- [x] `list-versions`, `get-version-metadata` (partial-zip `Info.plist` read with read-ahead),
+      branch `phase7-versions`. `list_versions.rs` and `get_version_metadata.rs` port
+      `appstore_list_versions.go` and `appstore_get_version_metadata.go` on `StoreSession`
+      (platform pin first: Mac offer, tvOS/watchOS/visionOS lookup; shared failure mapping in
+      `version_item`). `partial_zip.rs` ports `appstore_partial_zip.go`: `HttpRangeReader`
+      (Go's `httpRangeReaderAt`: `bytes=0-0` size probe, `Content-Range` checks, 1 MiB
+      read-ahead window, a partial body still serves the read, the window is replaced only by
+      complete responses), requests through the Store `transfer` executor with
+      `Accept-Encoding: identity`, and the `Info.plist` reader (display version keys, release
+      date keys and value types, `Monday, January 2, 2006` and `2006-01-02` layouts, entry
+      time fallback). `zipfile::Archive` now reads any `ReadAt` source through a 4 KiB
+      buffered directory reader as Go's, checks the data descriptor CRC, and gives Go's
+      `Modified` (NTFS, Unix, extended timestamp extra fields, else normalized MS-DOS time).
+      A macOS package result goes through `read_version_metadata_from_mac_package`
+      (preflight first, then the decrypted package), so the phase 6 readers are no longer
+      dead code; the decrypter and OS seam is `StoreSession::mac_package`. The iOS/platform
+      version lookups were already ported in phase 6 (`version_lookup.rs`,
+      `macos_version_lookup.rs`). CLI `versions.rs` ports both commands with Go's flags and
+      JSON (`externalVersionIdentifiers`, `bundleID`, `success`; `externalVersionID`,
+      `displayVersion`, `releaseDate` in whole-second RFC 3339) and fork fix `aee638e`
+      (account read once, re-login result reused). Tests: Go's
+      `appstore_list_versions_test.go`, `appstore_get_version_metadata_test.go`,
+      `appstore_partial_zip_test.go`, the `GetVersionMetadata` cases of the macOS metadata
+      tests, `cmd/list_versions_test.go` and `cmd/get_version_metadata_test.go`
+      (`commerce_tests::{list_versions, get_version_metadata, partial_zip}`, `versions/tests.rs`).
+      Live (read-only, same output as the Go binary except `time`): `list-versions` for
+      Perplexity (227 IDs), `get-version-metadata -i 1668000334 --external-version-id
+      895516672` (26.46.0, `2026-11-18T08:16:56Z`, the package date; the catalog says
+      19:21:02), and the three error lines (missing app, `--concurrency 0`).
+- [x] `--with-metadata` catalog-first + cache + concurrency (fork feature, Go branch
+      `feat/list-versions-metadata` 8a75934, aaaa3c6, 241230f). `list-versions
+      --with-metadata --concurrency N` (default 4, below 1 is Go's error): the catalog
+      version history (phase 0 `catalog_version_history`, newest 25, one unauthenticated
+      request in the account's storefront), then `version-metadata.json` in the state
+      directory, then per-version store requests at most N at once; the first failure stops
+      the rest and the versions fetched before it are cached. Each entry has `source`
+      (`catalog` or `store`). The cache has Go's shape and bytes (sorted keys, RFC 3339 with
+      trimmed nanoseconds, mode 0600, `.tmp` then rename), so both tools share it. The fork's
+      tests are ported (`versions/tests.rs`, plus a Go-written cache file read and rewritten
+      byte for byte, and the catalog test for non-iOS platforms). Live: Perplexity from the
+      Go-written cache (227 entries, no per-version requests; the catalog answered 429 and the
+      cache covered it) gives the Go output and leaves the file byte-identical. Sony Music
+      Center uncached: 85 versions, 25 from the catalog and 60 from the store; the Go fork
+      binary run afterwards reads the Rust-written cache, prints the same JSON and rewrites
+      the file byte-identical; four store entries (1.0.0, 3.3.1, 5.15.0, 6.7.0) match Go
+      `get-version-metadata` run against Apple. Differences: a catalog failure's verbose
+      line for network or decode errors uses this port's error text (HTTP status errors use
+      Go's `catalog version history returned HTTP N`). Untested live: the macOS paths of
+      both commands (offline tests only; no owned Mac app in the allowed set), tvOS/watchOS/
+      visionOS pins, and the expired-token re-login (fake store only).
 - [x] `list-purchases` (owned apps), branch `phase7-purchases`. `owned_apps.rs` ports
       `appstore_owned_apps.go`: the Configurator purchase history (DAAP `login`, signed
       `update`, signed `databases/<revision>/items` on `pd.itunes.apple.com`) for storefront
@@ -379,9 +427,8 @@ parity check for the commands it touches.
       re-login (fake store only), DAAP `mstt` errors, and a Mac storefront failure.
 - [x] Account read once per command (fork fix `aee638e`) for `purchase` and `list-purchases`
       (`download` already did): the account is read before the attempts and the account
-      from the re-login is reused. `list-versions` and `get-version-metadata` (branch
-      `phase7-versions`) need the same: call `account_info` once before the retry loop and
-      replace the account with the login result on the token-expired retry.
+      from the re-login is reused. `list-versions` and `get-version-metadata` do the same
+      (branch `phase7-versions`).
 - [x] Error lines carry `"success": false`, as Go's `Execute` logs them (all commands).
 
 ### Phase 8 — MCP
