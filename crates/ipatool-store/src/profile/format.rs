@@ -10,7 +10,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 type Addresses = BTreeMap<String, u64>;
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct Method {
     pub selector: String,
     pub address: u64,
@@ -19,7 +19,7 @@ pub struct Method {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct Class {
     pub meta_address: u64,
     pub name: String,
@@ -32,7 +32,7 @@ pub struct Class {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct Call {
     pub address: u64,
     pub symbol: String,
@@ -41,7 +41,7 @@ pub struct Call {
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct Page {
     pub address: u64,
     pub offset: u64,
@@ -49,7 +49,7 @@ pub struct Page {
 
 /// Go's `Constant`; the `omitempty` fields default when absent.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct Constant {
     #[serde(default, skip_serializing_if = "is_false")]
     pub is_boolean: bool,
@@ -67,7 +67,7 @@ pub struct Constant {
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct DictionaryLayout {
     pub metadata: u64,
     pub key_stride: u64,
@@ -75,7 +75,7 @@ pub struct DictionaryLayout {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct MetadataPatch {
     pub address: u64,
     /// Go encodes `[]byte` as standard base64.
@@ -84,7 +84,7 @@ pub struct MetadataPatch {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
-#[serde(rename_all = "PascalCase")]
+#[serde(default, rename_all = "PascalCase")]
 pub struct Profile {
     pub bridges: Addresses,
     #[serde(rename = "ObjCMetadata")]
