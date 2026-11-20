@@ -512,7 +512,9 @@ impl<W: Write> Writer<W> {
                 *size += data.len() as u64;
                 encoder.write_all(data)
             }
-            None => Err(io::Error::other("zip: write to directory")),
+            // Go's dirWriter accepts empty writes.
+            None if data.is_empty() => Ok(()),
+            None => Err(io::Error::other("zip: write data to directory")),
         }
     }
 

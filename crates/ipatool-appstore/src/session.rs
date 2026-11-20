@@ -53,6 +53,8 @@ pub struct StoreSession<'a> {
     store_amd: &'a dyn StoreAmd,
     state: Mutex<SessionState>,
     pub(crate) kbsync_generator: Option<KbsyncGenerator>,
+    /// Go's `machine.MacAddress` (tests replace it).
+    pub(crate) mac_address: fn() -> Result<String>,
 }
 
 impl std::fmt::Debug for StoreSession<'_> {
@@ -75,16 +77,25 @@ impl Client {
             store_amd,
             state: Mutex::default(),
             kbsync_generator: Some(Box::new(default_kbsync_generator)),
+            mac_address: crate::machine::mac_address,
         }
     }
 }
 
-/// Go's `defaultKBSyncGenerator`.
+/// Go's `defaultKBSyncGenerator`. A cold asset cache reads the restore image with blocking
+/// HTTP, which must not run on an async runtime's thread.
 fn default_kbsync_generator(hardware_id: &[u8], dsid: u64) -> Result<Vec<u8>> {
-    let bundle = ipatool_sap::assets::load()
-        .map_err(|error| Error::from(error).context("load SAP assets for kbsync"))?;
-    ipatool_sap::machine::generate_kb_sync(&bundle, hardware_id, dsid)
-        .map_err(|error| Error::from(error).context("generate kbsync"))
+    std::thread::scope(|scope| {
+        scope
+            .spawn(|| {
+                let bundle = ipatool_sap::assets::load()
+                    .map_err(|error| Error::from(error).context("load SAP assets for kbsync"))?;
+                ipatool_sap::machine::generate_kb_sync(&bundle, hardware_id, dsid)
+                    .map_err(|error| Error::from(error).context("generate kbsync"))
+            })
+            .join()
+            .unwrap_or_else(|_| Err(Error::Invalid("kbsync guest panicked".to_owned())))
+    })
 }
 
 impl<'a> StoreSession<'a> {

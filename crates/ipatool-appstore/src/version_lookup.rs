@@ -229,10 +229,12 @@ impl Client {
                 .await
             {
                 Ok(version) => return Ok(version),
+                // Go wraps both errors, so `errors.Is` finds either sentinel.
                 Err(error) => {
-                    last_error = Error::Invalid(format!(
-                        "{last_error}; iOS catalog fallback failed: {error}"
-                    ));
+                    last_error = Error::Wrapped {
+                        message: format!("{last_error}; iOS catalog fallback failed: {error}"),
+                        sources: vec![last_error, error],
+                    };
                 }
             }
         }

@@ -238,7 +238,7 @@ impl StoreSession<'_> {
     /// [`Error::PasswordTokenExpired`], [`Error::LicenseRequired`] and Go's other errors.
     pub async fn download(&self, input: DownloadInput) -> Result<DownloadOutput> {
         let mac_address =
-            machine::mac_address().map_err(|error| error.context("failed to get mac address"))?;
+            (self.mac_address)().map_err(|error| error.context("failed to get mac address"))?;
         let mut guid = mac_address.to_uppercase().replace(':', "");
         let mut machine_guid = Vec::new();
         if input.platform == Some(Platform::MacOs) {

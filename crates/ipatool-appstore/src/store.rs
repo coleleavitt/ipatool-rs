@@ -5,9 +5,13 @@
 use std::time::Duration;
 
 use reqwest::StatusCode;
-use reqwest::header::{ACCEPT, HeaderMap, USER_AGENT};
+use std::collections::BTreeMap;
+
+use ipatool_store::backend::ResponseFormat;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use serde::de::DeserializeOwned;
 
+use crate::commerce::CommerceRequest;
 use crate::{Client, Error, Result, UnexpectedResponseError, plist_body};
 
 /// `storeAuthenticationUserAgent` in `pkg/appstore/constants.go`.
@@ -30,21 +34,41 @@ impl Client {
         url: &str,
         headers: HeaderMap,
     ) -> Result<(u16, HeaderMap, Vec<u8>)> {
-        let response = self
-            .store
-            .get(url)
-            .header(USER_AGENT, STORE_USER_AGENT)
-            .header(ACCEPT, "application/xml")
-            .headers(headers)
-            .send()
-            .await?;
-        let status = response.status().as_u16();
-        let headers = response.headers().clone();
-        let body = response.bytes().await?.to_vec();
-        if let Some(jar) = &self.jar {
-            jar.save()?;
+        // Go sends bag requests through the `bag-direct` executor.
+        let mut fields = BTreeMap::from([
+            ("Accept".to_owned(), "application/xml".to_owned()),
+            ("User-Agent".to_owned(), STORE_USER_AGENT.to_owned()),
+        ]);
+        for (name, value) in &headers {
+            fields.insert(
+                ipatool_store::http::canonical_header_key(name.as_str()),
+                String::from_utf8_lossy(value.as_bytes()).into_owned(),
+            );
         }
-        Ok((status, headers, body))
+        let response = self
+            .store_send(
+                "bag-direct",
+                CommerceRequest {
+                    method: "GET".to_owned(),
+                    url: url.to_owned(),
+                    headers: fields,
+                    response_format: ResponseFormat::Xml,
+                    timeout: Some(STORE_TIMEOUT),
+                    ..CommerceRequest::default()
+                },
+            )
+            .await?;
+        let mut headers = HeaderMap::new();
+        for (name, values) in response.headers.iter() {
+            for value in values {
+                if let (Ok(name), Ok(value)) =
+                    (HeaderName::try_from(name), HeaderValue::from_str(value))
+                {
+                    headers.append(name, value);
+                }
+            }
+        }
+        Ok((response.status, headers, response.body))
     }
 
     /// `handleXMLResponse` for clients without login diagnostics.

@@ -14,7 +14,7 @@ use crate::download_types::{integer, string};
 use crate::session::{PURCHASE_PATH, StoreSession};
 use crate::store::STORE_USER_AGENT;
 use crate::storefront::storefront_identifier;
-use crate::{Account, App, Error, Platform, Result, Value, machine};
+use crate::{Account, App, Error, Platform, Result, Value};
 
 /// `PricingParameterAppStore` and `PricingParameterAppleArcade`.
 pub(crate) const PRICING_APP_STORE: &str = "STDQ";
@@ -157,15 +157,15 @@ pub(crate) fn purchase_request(
 #[serde(rename_all = "camelCase")]
 pub(crate) struct TermsResult {
     #[serde(default)]
-    status: Option<i64>,
+    pub(crate) status: Option<i64>,
     #[serde(default)]
-    terms_version_id: Option<serde_json::Value>,
+    pub(crate) terms_version_id: Option<serde_json::Value>,
     #[serde(default)]
-    latest_terms_version_id: Option<serde_json::Value>,
+    pub(crate) latest_terms_version_id: Option<serde_json::Value>,
     #[serde(default)]
-    is_current: bool,
+    pub(crate) is_current: bool,
     #[serde(default)]
-    error_message_key: String,
+    pub(crate) error_message_key: String,
 }
 
 /// Go's `termsVersion`: the version as Apple sent it (a number, or a string holding one).
@@ -301,7 +301,7 @@ impl StoreSession<'_> {
         platform: Option<Platform>,
     ) -> Result<()> {
         let mac_address =
-            machine::mac_address().map_err(|error| error.context("failed to get mac address"))?;
+            (self.mac_address)().map_err(|error| error.context("failed to get mac address"))?;
         let guid = mac_address.to_uppercase().replace(':', "");
         if app.price > 0.0 {
             return Err(Error::Invalid(

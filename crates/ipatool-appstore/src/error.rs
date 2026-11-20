@@ -46,6 +46,13 @@ pub enum Error {
     Context { context: String, source: Box<Error> },
     #[error(transparent)]
     Emulator(#[from] ipatool_store::emulator::Error),
+    /// Go's `fmt.Errorf` with several `%w`: Go's text, and every wrapped error for
+    /// `errors.Is`.
+    #[error("{message}")]
+    Wrapped {
+        message: String,
+        sources: Vec<Error>,
+    },
     /// Go's `errors.Join`.
     #[error("{}", join_messages(.0))]
     Joined(Vec<Error>),
@@ -105,7 +112,10 @@ impl Error {
                 Self::Context { source, .. } | Self::AuthRedirect { source, .. } => {
                     source.any(matches)
                 }
-                Self::Joined(errors) => errors.iter().any(|error| error.any(matches)),
+                Self::Joined(errors)
+                | Self::Wrapped {
+                    sources: errors, ..
+                } => errors.iter().any(|error| error.any(matches)),
                 _ => false,
             }
     }

@@ -10,6 +10,8 @@ mod bag;
 mod catalog;
 mod client;
 mod commerce;
+#[cfg(test)]
+mod commerce_tests;
 mod cookies;
 mod download;
 mod download_file;
