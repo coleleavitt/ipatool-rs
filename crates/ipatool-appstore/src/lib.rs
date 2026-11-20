@@ -23,7 +23,19 @@ mod error;
 mod login;
 mod login_storefront;
 pub mod machine;
+#[cfg(test)]
+mod macos_oracle_tests;
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "read by get-version-metadata, phase 7")
+)]
+mod macos_preflight_metadata;
 mod macos_version_lookup;
+#[cfg_attr(
+    not(test),
+    expect(dead_code, reason = "read by get-version-metadata, phase 7")
+)]
+mod macos_version_metadata;
 mod native_login;
 mod platform;
 mod purchase;
@@ -33,6 +45,14 @@ mod store;
 pub mod storeauth;
 mod storefront;
 mod version_lookup;
+#[cfg_attr(
+    not(test),
+    allow(
+        dead_code,
+        reason = "the metadata readers are used by get-version-metadata, phase 7"
+    )
+)]
+mod xar;
 mod zipfile;
 
 use ipatool_store::plist_body;
