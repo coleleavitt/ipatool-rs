@@ -210,7 +210,9 @@ parity check for the commands it touches.
 ### Phase 5 — Store engine emulator
 
 - [ ] Objective-C runtime bridge, Swift metadata, async tasks, network bridge.
-- [ ] Profile: load Go's committed generated artifacts (extracted by `xtask`) first; port `profilegen` in phase 9.
+- [x] Profile: `ipatool_store::profile` embeds Go's three zstd artifacts (extracted by
+      `scripts/extract-store-profile.py`), checks Go's sizes, digests and page index, and
+      decodes the metadata; re-encoding it gives the same JSON values. `profilegen` is phase 9.
 - [ ] Terms acceptance adapter.
 
 ### Phase 6 — purchase and download
