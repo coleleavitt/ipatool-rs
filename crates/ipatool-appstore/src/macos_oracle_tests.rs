@@ -296,3 +296,24 @@ fn package_platform_matches_go() {
         }
     }
 }
+
+/// A real decrypted package from the Go tool, e.g. `ipatool download --platform macos`:
+/// `IPATOOL_TEST_MAC_PKG=<path> IPATOOL_TEST_MAC_BUNDLE=<bundle id> cargo test -p
+/// ipatool-appstore real_mac_package`.
+#[test]
+fn real_mac_package() {
+    let Ok(path) = std::env::var("IPATOOL_TEST_MAC_PKG") else {
+        return;
+    };
+    let bundle = std::env::var("IPATOOL_TEST_MAC_BUNDLE").unwrap_or_default();
+    let archive = xar::Reader::open(std::path::Path::new(&path)).expect("XAR");
+    assert!(!archive.files.is_empty());
+    for file in archive.files.values() {
+        assert!(archive.verify_checksum(file), "{}", file.name);
+    }
+    // Go's PackageInfo reader only sees `bundle` elements directly under the root; current
+    // Mac App Store packages nest them in `bundle-version`, so Go (and this port) report
+    // "does not contain metadata for the requested bundle" for them.
+    let metadata = package_version_metadata(&archive, &bundle);
+    eprintln!("{path}: {} files, {metadata:?}", archive.files.len());
+}
