@@ -277,8 +277,49 @@ parity check for the commands it touches.
 
 ### Phase 6 — purchase and download
 
-- [ ] `purchase` (free apps), license-exists handling, terms.
-- [ ] `download`: parallel range download with resume, sinf replication, iTunesMetadata, artwork.
+- [x] `purchase` (free apps), license-exists handling, terms. `purchase.rs`: `Purchase`
+      (`STDQ`, then `GAME` after `2059` outside macOS), `purchaseWithParams` (one
+      country-mismatch storefront correction saved to the keychain, one terms acceptance),
+      Go's failure mapping (`5002` and HTTP 500 are `license already exists`), and
+      `appstore_terms.go` (terms info/check endpoints from the bag, pod host, raw JSON
+      version). Requests go through the Store `purchase` and `request` executors
+      (`commerce.rs`, `Client::store_*`; `StoreTransport` is the seam tests replace).
+      `StoreSession` (`session.rs`) holds what Go's `appstore` keeps beside the client: the
+      keychain, the Store AMD proof (`storeAMDProof`, state written only when it changes) and
+      the `kbsync-v1` cache. CLI `purchase` prints `alreadyOwned`/`success` like Go and logs
+      in again once after an expired token. Live: `purchase -b ai.perplexity.app` reports
+      `alreadyOwned: true` (the account owns it; nothing was bought).
+- [x] `download`: parallel range download with resume, sinf replication, iTunesMetadata,
+      artwork. `download_product.rs` (`sendDownloadProduct`: ent/download with a kbsync blob
+      and its cache, volumeStoreDownloadProduct, redownload, updateProduct, the delisted-app
+      chain), `version_lookup.rs` (MDM catalogs, the App Store catalog API for Arcade apps,
+      the visionOS product page), `download.rs` (`Download`, package platform check,
+      `iTunesArtwork`, binary `iTunesMetadata.plist` with sorted keys), `download_file.rs`
+      (resume from the `.tmp` length, four ranges from 128 MiB with a strong `ETag`, staged
+      parts, single-connection fallback with `If-Range`), `replicate_sinf.rs`, and
+      `zipfile.rs`: the parts of Go's `archive/zip` the rewrite depends on (central-directory
+      reader with zip64 and prefixed archives, `CreateRaw`/`Create`/`Close` framing, local
+      extras kept beside central ones), because entries are copied compressed and must keep
+      Go's framing. Bag and storefront-bag requests now use the `bag-direct` executor, as Go.
+      CLI `download` (all Go flags, `--purchase`, three attempts, progress bar when
+      interactive). `ipatool_store::gourl` is public with `ParseRequestURI`, `ParseQuery` and
+      `Values`. Go's tests are ported (`commerce_tests`, CLI `commerce/tests.rs`) against fake
+      executors. Live: `download -b ai.perplexity.app` (26.46.0, 146 MB, parallel path)
+      matches Go's IPA: same 7485 entries in the same order with identical local headers and
+      compressed bytes for every package entry, the same `Info.plist` version, decoded
+      `iTunesMetadata.plist` equal to Go's; the sinf differs between any two downloads (Go
+      vs Go too).
+      Differences: no `context.Context` (Go's cancellation cases and the killed-process
+      resume test are not ported; a failing range stops the others between reads, and
+      ent/download has no overall two-minute bound); deflated entries the tool adds
+      (`iTunesArtwork`, `iTunesMetadata.plist`, sinfs) are compressed by flate2, so their
+      bytes differ from Go's compress/flate; the binary plist encoder differs from howett's
+      (same decoded content); the replicate temporary file is truncated (Go opens it without
+      `O_TRUNC`); a package without `Info.plist` and manifest is an error (Go panics); plist
+      fields of an unexpected type read as empty (Go fails the decode); the progress bar
+      only approximates `schollz/progressbar`. Untested against Apple: terms acceptance,
+      storefront correction, the GAME retry, updateProduct and the delisted chain (all
+      covered by fake executors only), visionOS/tvOS/watchOS downloads.
 - [x] macOS `.pkg` download, decryption and publish. `download_package.rs`
       (`downloadPackagePlatform`), `download_macos.rs` (`downloadMacPackage`, the
       `StoreAgent` decrypter adapter, staging, XAR validation, backup/rollback publish),

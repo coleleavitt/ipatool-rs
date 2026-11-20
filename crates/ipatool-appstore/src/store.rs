@@ -1,6 +1,5 @@
-//! Direct Store transport: Go's `bag-direct` executor (`internal/store/backend.go`)
-//! and the XML response rules of `pkg/http/client.go` for non-login clients.
-//! Requests that Go sends through the Store framework emulator arrive in phase 5.
+//! Bag requests through Go's `bag-direct` executor (`internal/store/backend.go`) and the
+//! XML response rules of `pkg/http/client.go` for non-login clients.
 
 use std::time::Duration;
 

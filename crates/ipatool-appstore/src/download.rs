@@ -97,10 +97,22 @@ pub(crate) fn validate_package_platform(path: &Path, platform: Option<Platform>)
             .map_err(|error| Error::io("failed to read info plist", error))?;
         let info: Value = plist::from_bytes(&data)
             .map_err(|error| Error::Invalid(format!("failed to decode info plist: {error}")))?;
-        let platforms = info
+        let declared = info
             .as_dictionary()
-            .and_then(|dict| dict.get("CFBundleSupportedPlatforms"))
-            .and_then(Value::as_array);
+            .and_then(|dict| dict.get("CFBundleSupportedPlatforms"));
+        // Go decodes into a []string and fails on any other type.
+        let platforms = match declared {
+            None => None,
+            Some(Value::Array(items)) if items.iter().all(|item| item.as_string().is_some()) => {
+                Some(items)
+            }
+            Some(_) => {
+                return Err(Error::Invalid(
+                    "failed to decode info plist: CFBundleSupportedPlatforms is not a list of strings"
+                        .to_owned(),
+                ));
+            }
+        };
         // Legacy iOS apps may predate CFBundleSupportedPlatforms; only a missing
         // declaration qualifies.
         let Some(platforms) = platforms else {

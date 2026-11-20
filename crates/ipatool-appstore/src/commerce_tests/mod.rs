@@ -6,6 +6,11 @@
     clippy::cast_possible_wrap,
     clippy::needless_pass_by_value,
     clippy::assert_is_empty,
+    clippy::needless_raw_string_hashes,
+    clippy::too_many_lines,
+    clippy::single_match_else,
+    clippy::comparison_to_empty,
+    clippy::items_after_statements,
     reason = "test fixtures"
 )]
 

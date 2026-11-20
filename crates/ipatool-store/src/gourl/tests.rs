@@ -117,3 +117,44 @@ fn escapes_like_go() {
         check(path_unescape(&input), "PathUnescape", "PathUnescapeError");
     }
 }
+
+#[test]
+fn parses_request_uris_like_go() {
+    let u = parse_request_uri("https://downloaddispatch.itunes.apple.com/r/redownload#x").unwrap();
+    // ParseRequestURI keeps `#` in the path.
+    assert_eq!(u.path, "/r/redownload#x");
+    assert_eq!(u.fragment, "");
+    assert_eq!(
+        parse_request_uri("").unwrap_err().to_string(),
+        "parse \"\": empty url"
+    );
+    assert_eq!(
+        parse_request_uri("relative/path").unwrap_err().to_string(),
+        "parse \"relative/path\": invalid URI for request"
+    );
+    let u = parse_request_uri("https://h/p?").unwrap();
+    assert!(u.force_query);
+    let u = parse_request_uri("//host/path").unwrap();
+    assert_eq!(u.host, "");
+    assert_eq!(u.path, "//host/path");
+}
+
+#[test]
+fn parses_queries_like_go() {
+    let (values, error) = parse_query("a=1&b=2&a=3&&c");
+    assert!(error.is_none());
+    assert_eq!(values.values("a"), ["1", "3"]);
+    assert_eq!(values.get("c"), "");
+    assert_eq!(values.len(), 3);
+    let (values, error) = parse_query("a=1;b=2&c=%zz&d=4");
+    assert_eq!(
+        error.as_deref(),
+        Some("invalid semicolon separator in query")
+    );
+    assert_eq!(values.get("d"), "4");
+    assert_eq!(values.values("c"), [] as [String; 0]);
+    let mut values = Values::default();
+    values.set("termsType", "MZStore.New Terms");
+    values.set("cc", "JP");
+    assert_eq!(values.encode(), "cc=JP&termsType=MZStore.New+Terms");
+}

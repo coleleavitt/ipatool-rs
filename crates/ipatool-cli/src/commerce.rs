@@ -9,8 +9,8 @@ use std::time::{Duration, Instant};
 use clap::Args;
 use ipatool_appstore::storeauth::EmulatorStoreAmd;
 use ipatool_appstore::{
-    Account, App, Client, DownloadInput, DownloadOutput, LoginInput, Platform, Progress,
-    ProgressHandle, StoreSession,
+    Account, App, DownloadInput, DownloadOutput, LoginInput, LookupQuery, Platform, Progress,
+    ProgressHandle, Sinf, StoreSession,
 };
 use serde_json::json;
 
@@ -57,72 +57,116 @@ pub struct DownloadArgs {
 
 const MISSING_APP: &str = "either the app ID or the bundle identifier must be specified";
 
-/// Go's `Login` with the saved credentials, after an expired password token.
-async fn relogin(
-    client: &Client,
-    session: &StoreSession<'_>,
-    account: &Account,
-) -> Result<Account, BoxError> {
-    let input = LoginInput {
-        email: account.email.clone(),
-        password: account.password.clone(),
-        auth_code: String::new(),
-    };
-    Ok(client
-        .native_login(&input, session.keychain(), &EmulatorStoreAmd)
-        .await?
-        .account)
+type AppResult<T> = ipatool_appstore::Result<T>;
+
+/// The App Store calls the commands make (Go's `appstore.AppStore`), so tests can replace them.
+pub(crate) trait Store {
+    async fn account_info(&self) -> AppResult<Account>;
+    /// Go's `Login` with the saved credentials, after an expired password token.
+    async fn login(&self, account: &Account) -> AppResult<Account>;
+    /// Go's `Lookup` in the account's storefront.
+    async fn lookup(
+        &self,
+        account: &Account,
+        bundle_id: &str,
+        platform: Option<Platform>,
+    ) -> AppResult<App>;
+    async fn purchase(
+        &self,
+        account: &mut Account,
+        app: &App,
+        platform: Option<Platform>,
+    ) -> AppResult<()>;
+    async fn download(&self, input: DownloadInput) -> AppResult<DownloadOutput>;
+    async fn replicate_sinf(&self, sinfs: Vec<Sinf>, package: PathBuf) -> AppResult<()>;
 }
 
-/// Go's `store.Lookup` with the account's storefront.
-async fn lookup(
-    client: &Client,
-    account: &Account,
-    bundle_id: &str,
-    platform: Option<Platform>,
-) -> ipatool_appstore::Result<App> {
-    let country = client
-        .country_code_from_store_front(&account.store_front)
-        .await
-        .map_err(|error| {
-            ipatool_appstore::Error::Invalid(format!("failed to resolve the country code: {error}"))
-        })?;
-    let country = country
-        .parse()
-        .map_err(|error: ipatool_appstore::Error| error)?;
-    client
-        .lookup(
-            &ipatool_appstore::LookupQuery::BundleId(bundle_id.to_owned()),
-            &country,
-            platform,
-        )
-        .await
+impl Store for StoreSession<'_> {
+    async fn account_info(&self) -> AppResult<Account> {
+        StoreSession::account_info(self).await
+    }
+
+    async fn login(&self, account: &Account) -> AppResult<Account> {
+        let input = LoginInput {
+            email: account.email.clone(),
+            password: account.password.clone(),
+            auth_code: String::new(),
+        };
+        Ok(self
+            .client
+            .native_login(&input, self.keychain(), &EmulatorStoreAmd)
+            .await?
+            .account)
+    }
+
+    async fn lookup(
+        &self,
+        account: &Account,
+        bundle_id: &str,
+        platform: Option<Platform>,
+    ) -> AppResult<App> {
+        let country = self
+            .client
+            .country_code_from_store_front(&account.store_front)
+            .await
+            .map_err(|error| {
+                ipatool_appstore::Error::Invalid(format!(
+                    "failed to resolve the country code: {error}"
+                ))
+            })?
+            .parse()?;
+        self.client
+            .lookup(
+                &LookupQuery::BundleId(bundle_id.to_owned()),
+                &country,
+                platform,
+            )
+            .await
+    }
+
+    async fn purchase(
+        &self,
+        account: &mut Account,
+        app: &App,
+        platform: Option<Platform>,
+    ) -> AppResult<()> {
+        StoreSession::purchase(self, account, app, platform).await
+    }
+
+    async fn download(&self, input: DownloadInput) -> AppResult<DownloadOutput> {
+        StoreSession::download(self, input).await
+    }
+
+    async fn replicate_sinf(&self, sinfs: Vec<Sinf>, package: PathBuf) -> AppResult<()> {
+        self.client.replicate_sinf(sinfs, package).await
+    }
 }
 
 /// Go's `purchaseCmd`: two attempts, logging in again after an expired token.
-pub async fn purchase(
+pub(crate) async fn purchase(
     args: &PurchaseArgs,
-    session: &StoreSession<'_>,
+    store: &impl Store,
     out: &Output,
 ) -> Result<(), BoxError> {
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
-    let client = session.client;
     let mut token_expired = false;
     for attempt in 0..2 {
-        let mut account = session.account_info().await?;
+        let mut account = store.account_info().await?;
         if token_expired {
-            account = relogin(client, session, &account).await?;
+            account = store.login(&account).await?;
         }
         let mut app = App {
             id: args.app_id,
             ..App::default()
         };
         if !args.bundle_identifier.is_empty() {
-            app = lookup(client, &account, &args.bundle_identifier, args.platform).await?;
+            app = store
+                .lookup(&account, &args.bundle_identifier, args.platform)
+                .await?;
         }
-        match session.purchase(&mut account, &app, args.platform).await {
+        match store.purchase(&mut account, &app, args.platform).await {
             Err(error) if error.is_password_token_expired() && attempt == 0 => {
                 token_expired = true;
             }
@@ -138,21 +182,20 @@ pub async fn purchase(
 
 /// Go's `downloadCmd`: up to three attempts; an expired token logs in again, and with
 /// `--purchase` a missing license is obtained first.
-pub async fn download(
+pub(crate) async fn download(
     args: &DownloadArgs,
-    session: &StoreSession<'_>,
+    store: &impl Store,
     interactive: bool,
     out: &Output,
 ) -> Result<(), BoxError> {
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
-    let client = session.client;
-    let mut account = session.account_info().await?;
+    let mut account = store.account_info().await?;
     let (mut token_expired, mut purchase_required, mut purchased) = (false, false, false);
     for attempt in 0..3 {
         if token_expired {
-            account = relogin(client, session, &account).await?;
+            account = store.login(&account).await?;
         }
         let mut app = App {
             id: args.app_id,
@@ -160,7 +203,10 @@ pub async fn download(
             ..App::default()
         };
         if !args.bundle_identifier.is_empty() {
-            match lookup(client, &account, &args.bundle_identifier, args.platform).await {
+            match store
+                .lookup(&account, &args.bundle_identifier, args.platform)
+                .await
+            {
                 Ok(found) => app = found,
                 // Delisted apps may still be downloadable by their numeric ID.
                 Err(ipatool_appstore::Error::AppNotFound) if args.app_id != 0 => {}
@@ -168,31 +214,31 @@ pub async fn download(
             }
         }
         if purchase_required {
-            if let Err(error) = session.purchase(&mut account, &app, args.platform).await
+            if let Err(error) = store.purchase(&mut account, &app, args.platform).await
                 && !error.is_license_already_exists()
             {
                 return Err(error.into());
             }
             // Purchasing may persist a server-corrected storefront.
-            account = session.account_info().await?;
+            account = store.account_info().await?;
             purchased = true;
             out.verbose(json!({ "success": true }), "purchase");
         }
         let progress =
             interactive.then(|| Arc::new(ProgressBar::new("downloading")) as ProgressHandle);
-        let result = session
+        let result = store
             .download(DownloadInput {
                 account: account.clone(),
                 app,
                 output_path: args.output.clone(),
-                progress: progress.clone(),
+                progress,
                 external_version_id: args.external_version_id.clone(),
                 platform: args.platform,
             })
             .await;
         let error = match result {
             Ok(output) => {
-                replicate_download_sinf(client, args.platform, &output).await?;
+                replicate_download_sinf(store, args.platform, &output).await?;
                 out.info(json!({
                     "output": output.destination_path.display().to_string(),
                     "purchased": purchased,
@@ -214,18 +260,15 @@ pub async fn download(
 
 /// Go's `replicateDownloadSinf`.
 async fn replicate_download_sinf(
-    client: &Client,
+    store: &impl Store,
     platform: Option<Platform>,
     output: &DownloadOutput,
 ) -> Result<(), BoxError> {
     if platform == Some(Platform::MacOs) && output.sinfs.is_empty() {
         return Ok(());
     }
-    client
-        .replicate_sinf(
-            output.sinfs.clone(),
-            PathBuf::from(&output.destination_path),
-        )
+    store
+        .replicate_sinf(output.sinfs.clone(), output.destination_path.clone())
         .await?;
     Ok(())
 }
@@ -361,3 +404,6 @@ impl Progress for ProgressBar {
         self.draw(&mut state, done);
     }
 }
+
+#[cfg(test)]
+mod tests;

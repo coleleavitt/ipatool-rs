@@ -7,6 +7,7 @@ use ipatool_store::gourl;
 use serde::{Deserialize, Deserializer};
 
 use crate::commerce::CommerceRequest;
+use crate::macos_version_lookup::serialized_server_data;
 use crate::{Account, App, Client, Error, Platform, Result};
 
 /// Go's `errPlatformAppNotFound`.
@@ -172,7 +173,9 @@ impl Client {
             .await
             .map_err(|error| error.context("failed to resolve the country code"))?;
         if platform == Platform::VisionOs {
-            return Err(Error::NotPorted("visionOS version lookup"));
+            return self
+                .lookup_latest_visionos_external_version_id(app.id, &country)
+                .await;
         }
         let metadata = metadata_platform(platform)
             .map_err(|error| error.context("failed to create platform version lookup request"))?;
@@ -245,6 +248,31 @@ impl Client {
         )))
     }
 
+    /// Go's `lookupLatestVisionOSExternalVersionID`: the product page's purchase
+    /// configuration.
+    async fn lookup_latest_visionos_external_version_id(
+        &self,
+        app_id: i64,
+        country: &str,
+    ) -> Result<String> {
+        let url = format!(
+            "https://apps.apple.com/{}/app/id{app_id}?platform=vision",
+            country.to_lowercase()
+        );
+        let response = self
+            .store_raw("request", get(url))
+            .await
+            .map_err(|error| error.context("visionOS version lookup request failed"))?;
+        if response.status != 200 {
+            return Err(store_error(
+                "visionOS version lookup request failed",
+                response.status,
+            ));
+        }
+        vision_external_version_id(&response.data, app_id)
+            .map_err(|error| error.context("failed to parse visionOS version lookup response"))
+    }
+
     /// Go's `lookupLatestIOSExternalVersionID`: the JSON catalog API of the App Store client.
     async fn lookup_latest_ios_external_version_id(
         &self,
@@ -304,4 +332,85 @@ impl Client {
         }
         Ok(version.clone())
     }
+}
+
+/// Go's `visionExternalVersionID`.
+pub(crate) fn vision_external_version_id(body: &[u8], app_id: i64) -> Result<String> {
+    let data = serialized_server_data(body)?;
+    let value: serde_json::Value = serde_json::from_slice(data).map_err(|error| {
+        Error::Invalid(format!("failed to decode serialized server data: {error}"))
+    })?;
+    match find_vision_external_version_id(&value, app_id) {
+        None => Err(Error::Invalid(
+            "visionOS purchase configuration was not found".to_owned(),
+        )),
+        Some(version) if version.is_empty() => Err(Error::Invalid(
+            "visionOS purchase configuration has no external version id".to_owned(),
+        )),
+        Some(version) => Ok(version),
+    }
+}
+
+/// Go's `findVisionExternalVersionID`: the first configuration with a version, else
+/// whether one matched without a version. Go walks object members in map order; this
+/// walks them in document order.
+fn find_vision_external_version_id(value: &serde_json::Value, app_id: i64) -> Option<String> {
+    let mut matched = false;
+    let mut visit = |found: Option<String>| -> Option<String> {
+        match found {
+            Some(version) if !version.is_empty() => Some(version),
+            Some(_) => {
+                matched = true;
+                None
+            }
+            None => None,
+        }
+    };
+    match value {
+        serde_json::Value::Array(items) => {
+            for item in items {
+                if let Some(version) = visit(find_vision_external_version_id(item, app_id)) {
+                    return Some(version);
+                }
+            }
+        }
+        serde_json::Value::Object(map) => {
+            if let Some(serde_json::Value::Object(configuration)) = map.get("purchaseConfiguration")
+                && let Some(version) = visit(vision_configuration_version(configuration, app_id))
+            {
+                return Some(version);
+            }
+            for child in map.values() {
+                if let Some(version) = visit(find_vision_external_version_id(child, app_id)) {
+                    return Some(version);
+                }
+            }
+        }
+        _ => {}
+    }
+    matched.then(String::new)
+}
+
+/// Go's `externalVersionIDFromVisionConfiguration`.
+fn vision_configuration_version(
+    configuration: &serde_json::Map<String, serde_json::Value>,
+    app_id: i64,
+) -> Option<String> {
+    let text = |key: &str| configuration.get(key).and_then(serde_json::Value::as_str);
+    if text("metricsPlatformDisplayStyle") != Some("vision") {
+        return None;
+    }
+    let platforms = configuration.get("appPlatforms")?.as_array()?;
+    if !platforms
+        .iter()
+        .any(|platform| platform.as_str() == Some("vision"))
+    {
+        return None;
+    }
+    let buy_params = text("buyParams").filter(|params| !params.is_empty())?;
+    let (values, error) = gourl::parse_query(buy_params);
+    if error.is_some() || values.get("salableAdamId") != app_id.to_string() {
+        return None;
+    }
+    Some(values.get("appExtVrsId").to_owned())
 }
