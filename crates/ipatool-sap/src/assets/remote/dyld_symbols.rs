@@ -125,3 +125,79 @@ pub(super) fn read_image_symbols(file: &dyn ReadAt, size: u64, raw: &[u8]) -> Re
     table.symbols = symbols;
     Ok(table)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    use super::*;
+
+    /// A large sparse cache member that records the largest requested read.
+    struct SparseSymbols {
+        data: Vec<u8>,
+        largest: AtomicUsize,
+    }
+
+    impl ReadAt for SparseSymbols {
+        fn read_at(&self, output: &mut [u8], offset: u64) -> Result<()> {
+            self.largest.fetch_max(output.len(), Ordering::Relaxed);
+            output.fill(0);
+            let start = usize::try_from(offset).unwrap();
+            if start < self.data.len() {
+                let count = output.len().min(self.data.len() - start);
+                output[..count].copy_from_slice(&self.data[start..start + count]);
+            }
+            Ok(())
+        }
+    }
+
+    fn nlist(name: u32, n_type: u8, value: u64) -> Vec<u8> {
+        let mut entry = name.to_le_bytes().to_vec();
+        entry.extend_from_slice(&[n_type, 0, 0, 0]);
+        entry.extend_from_slice(&value.to_le_bytes());
+        entry
+    }
+
+    fn symtab_command(symbol_offset: u32, count: u32, string_offset: u32, size: u32) -> Vec<u8> {
+        [LC_SYMTAB, 24, symbol_offset, count, string_offset, size]
+            .iter()
+            .flat_map(|value| value.to_le_bytes())
+            .collect()
+    }
+
+    #[test]
+    fn reads_only_referenced_strings_from_a_gigabyte_sized_string_table() {
+        let mut data = vec![0u8; 2048];
+        data[1024..1024 + 39].copy_from_slice(b"\0_regular\0_Go.symbol\0_target.symbol\0\0\0\0");
+        let mut table = nlist(1, 0x0f, 0x1_8000_1000);
+        table.extend_from_slice(&nlist(10, 0x0b, 21));
+        data[128..128 + table.len()].copy_from_slice(&table);
+        let source = SparseSymbols {
+            data,
+            largest: AtomicUsize::new(0),
+        };
+        let result =
+            read_image_symbols(&source, 2 << 30, &symtab_command(128, 2, 1024, 1 << 30)).unwrap();
+        assert_eq!(result.symbols.len(), 2);
+        assert_eq!(result.symbols[0].name, "_regular");
+        assert_eq!(result.symbols[1].name, "Go.symbol");
+        assert_eq!(result.symbols[1].indirect_name, "target.symbol");
+        assert!(source.largest.load(Ordering::Relaxed) <= 4096);
+    }
+
+    #[test]
+    fn rejects_symbol_data_extending_beyond_the_cache_member() {
+        let source = SparseSymbols {
+            data: vec![0u8; 256],
+            largest: AtomicUsize::new(0),
+        };
+        let Err(error) = read_image_symbols(&source, 256, &symtab_command(128, 10, 256, 128))
+        else {
+            panic!("symbols beyond the member were accepted");
+        };
+        assert!(
+            error.to_string().contains("invalid image symbol table"),
+            "{error}"
+        );
+    }
+}

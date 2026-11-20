@@ -292,3 +292,117 @@ pub(super) fn le64(data: &[u8]) -> u64 {
     bytes.copy_from_slice(&data[..8]);
     u64::from_le_bytes(bytes)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::fmt::Write as _;
+
+    use sha2::{Digest, Sha256};
+
+    use super::*;
+
+    /// The input the Go codec vectors in `testdata` were produced from.
+    fn vector_input() -> Vec<u8> {
+        let mut data = b"the quick brown fox ".repeat(500);
+        let mut state = 1u32;
+        for _ in 0..2000 {
+            state = state.wrapping_mul(1_103_515_245).wrapping_add(12_345);
+            data.push(state.to_le_bytes()[2]);
+        }
+        data.extend_from_slice(&b"xyz".repeat(3000));
+        data
+    }
+
+    #[test]
+    fn decodes_go_lzbitmap_output() {
+        let decoded = lzbitmap::decompress(include_bytes!("testdata/lzbitmap.bin")).unwrap();
+        assert_eq!(decoded, vector_input());
+        assert!(lzbitmap::decompress(b"bvx2").is_err());
+        assert!(lzbitmap::decompress(&include_bytes!("testdata/lzbitmap.bin")[..100]).is_err());
+    }
+
+    #[test]
+    fn decodes_go_lzvn_output() {
+        let input = vector_input();
+        let decoded = lzvn::decompress(include_bytes!("testdata/lzvn.bin"), input.len()).unwrap();
+        assert_eq!(decoded, input);
+        assert!(lzvn::decompress(include_bytes!("testdata/lzvn.bin"), 100).is_err());
+    }
+
+    /// Go needs `padLZFSEStreams` for short FSE streams; Apple's reference decoder reads
+    /// them as they are (`testdata/lzfse_short.bin` is the stream from Go's padding test).
+    #[test]
+    fn decodes_a_valid_short_lzfse_literal_payload() {
+        let decoded = lzfse_decode(include_bytes!("testdata/lzfse_short.bin"), 65536).unwrap();
+        assert_eq!(decoded, vec![0u8; 65536]);
+        assert!(lzfse_decode(b"bvx2", 65536).is_err());
+    }
+
+    #[test]
+    fn decodes_the_im4p_kernel_payload() {
+        fn element(tag: u8, value: &[u8]) -> Vec<u8> {
+            let mut data = vec![tag];
+            if value.len() < 0x80 {
+                data.push(u8::try_from(value.len()).unwrap());
+            } else {
+                let [high, low] = u16::try_from(value.len()).unwrap().to_be_bytes();
+                data.extend_from_slice(&[0x82, high, low]);
+            }
+            data.extend_from_slice(value);
+            data
+        }
+        let payload = vec![7u8; 300];
+        let fields = [
+            element(0x16, b"IM4P"),
+            element(0x16, b"krnl"),
+            element(0x16, b"KernelCache"),
+            element(0x04, &payload),
+        ]
+        .concat();
+        assert_eq!(
+            kernel::im4p_payload(&element(0x30, &fields)).unwrap(),
+            payload
+        );
+
+        let wrong = [
+            element(0x16, b"IM4P"),
+            element(0x16, b"rkrn"),
+            element(0x16, b""),
+            element(0x04, b"x"),
+        ]
+        .concat();
+        let error = kernel::im4p_payload(&element(0x30, &wrong)).unwrap_err();
+        assert_eq!(error.to_string(), "invalid IM4P kernel payload");
+        let error = kernel::im4p_payload(&[0x30, 0x05, 0x16]).unwrap_err();
+        assert_eq!(error.to_string(), "invalid IM4P container");
+    }
+
+    /// Runs the whole extraction against Apple's servers when `IPATOOL_TEST_SAP_REMOTE` is
+    /// set, and checks every file against the pinned size and SHA-256.
+    #[test]
+    fn extracts_the_pinned_frameworks_from_the_restore_image() {
+        if std::env::var_os("IPATOOL_TEST_SAP_REMOTE").is_none() {
+            return;
+        }
+        let started = std::time::Instant::now();
+        let bundle = super::super::compact_bundle(resolve_remote_image().unwrap()).unwrap();
+        eprintln!("extracted in {:.1?}", started.elapsed());
+        for spec in &REQUIRED_FILES {
+            let data = bundle.file(spec.name);
+            eprintln!(
+                "{} {} {}",
+                spec.name,
+                data.len(),
+                hex(&Sha256::digest(data))
+            );
+            super::super::validate_file(spec, data).unwrap();
+        }
+    }
+
+    fn hex(bytes: &[u8]) -> String {
+        bytes.iter().fold(String::new(), |mut text, byte| {
+            let _ = write!(text, "{byte:02x}");
+            text
+        })
+    }
+}

@@ -594,3 +594,42 @@ fn decrypt_aea_ctr(data: &[u8], key: &[u8; 32], iv: [u8; 16]) -> Vec<u8> {
 fn to_usize(value: u64) -> Result<usize> {
     usize::try_from(value).map_err(|_| Error::msg("AEA offset overflows"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn record(key: &str, value: &str) -> Vec<u8> {
+        let mut record = key.as_bytes().to_vec();
+        record.push(0);
+        record.extend_from_slice(value.as_bytes());
+        let mut data = u32::try_from(record.len() + 4)
+            .unwrap()
+            .to_le_bytes()
+            .to_vec();
+        data.extend_from_slice(&record);
+        data
+    }
+
+    #[test]
+    fn parses_bounded_aea_metadata_records() {
+        let mut data = record("first", "value");
+        data.extend_from_slice(&record("second", "another"));
+        let metadata = parse_aea_metadata(&data).unwrap();
+        assert_eq!(metadata["first"], b"value");
+        assert_eq!(metadata["second"], b"another");
+    }
+
+    #[test]
+    fn rejects_an_aea_metadata_record_outside_the_authentication_block() {
+        let mut data = vec![0u8; 8];
+        data[..4].copy_from_slice(&32u32.to_le_bytes());
+        let error = parse_aea_metadata(&data).unwrap_err();
+        assert!(
+            error
+                .to_string()
+                .contains("invalid AEA metadata record length"),
+            "{error}"
+        );
+    }
+}

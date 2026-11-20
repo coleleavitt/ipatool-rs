@@ -57,6 +57,8 @@ IPATOOL_GO_KEYRING=/tmp/kr cargo test -p ipatool-keychain --test go_interop
 IPATOOL_TEST_SECRET_SERVICE=1 cargo test -p ipatool-keychain --test go_interop
 # a copy of a real Go cookie jar (the original is not written)
 IPATOOL_GO_COOKIES=~/.ipatool/cookies cargo test -p ipatool-appstore cookies
+# the macOS restore-image extraction against Apple's CDN (about 250 MB of range reads)
+IPATOOL_TEST_SAP_REMOTE=1 cargo test -p ipatool-sap --release extracts_the_pinned_frameworks
 ```
 
 ## Apple services and accounts

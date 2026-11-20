@@ -127,8 +127,17 @@ parity check for the commands it touches.
 - [ ] Engine: `unicorn-engine` crate built from source (replaces Go's runtime download of
       a pinned `libunicorn` wheel and `purego`). Hooks, memory guard, timeouts, clock.
 - [ ] `machimage`: Mach-O image mapping, shared regions, preparation cache.
-- [ ] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
+- [x] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
       extraction, LZFSE; same pinned files, sizes and SHA-256 digests; same cache directory name.
+      `store.go`/`store_images.go` move to phase 5. Crates: `zip`, `hpke` + `p256` (FCS key),
+      `aes`/`ctr`/`hkdf`/`hmac`, `lzfse` (Apple's reference C decoder, so Go's
+      `padLZFSEStreams` workaround is not needed). Ported from Go dependencies: the sealed-APFS
+      subset of `majd/go-apfs`, the LZVN decoder of `go-compressions/lzfse` (decmpfs streams
+      have no end-of-stream opcode), the `go-macos-pkg` LZBITMAP decoder and the in-cache
+      `File.Export` path of `blacktop/go-macho`. Not ported: the DMG fallback (both pinned
+      images are raw APFS), chained-fixup parsing (unused by `Export`), context cancellation.
+      Verified with `IPATOOL_TEST_SAP_REMOTE=1 cargo test -p ipatool-sap --release`: all seven
+      files byte-identical to the Go cache (about 32 s and 250 MB of range reads).
 - [ ] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent.
 - [ ] Oracle: a Go test harness (`xtask`) that records inputs/outputs of each guest call
       from the Go implementation; Rust must produce identical bytes for the same inputs.
