@@ -14,6 +14,7 @@ pub mod machine;
 mod platform;
 mod plist_body;
 mod store;
+pub mod storeauth;
 mod storefront;
 
 pub use account::{Account, keys};

@@ -41,6 +41,9 @@ pub enum Error {
     Invalid(String),
     #[error("{context}: {source}")]
     Context { context: String, source: Box<Error> },
+    /// Failures of the SAP/ADI guest, already carrying Go's message.
+    #[error(transparent)]
+    Sap(#[from] ipatool_sap::Error),
 }
 
 impl Error {

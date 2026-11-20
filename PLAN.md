@@ -70,7 +70,7 @@ Only `ipatool-appstore` and `ipatool-cli` exist now. Add a crate when its phase 
 | `internal/store/profilegen` | 3328 | 415 | xtask profilegen (dev tool) | 9 |
 | `internal/store/profilegen/cmd/profilegen` | 146 | 0 | xtask profilegen | 9 |
 | `internal/store/terms` | 37 | 0 | ipatool-store::terms | 5 |
-| `internal/storeauth` | 647 | 50 | ipatool-sap::storeauth | 4 |
+| `internal/storeauth` | 647 | 50 | ipatool-appstore::storeauth | 4 |
 | `pkg/appstore` | 7400 | 11734 | ipatool-appstore | 0–7 |
 | `pkg/http` | 513 | 299 | ipatool-appstore::http | 2 |
 | `pkg/keychain` | 83 | 214 | ipatool-keychain | 1 |
@@ -168,6 +168,21 @@ parity check for the commands it touches.
 ### Phase 4 — authentication
 
 - [ ] Anisette provisioning and Store AMD state (with the skip-unchanged-write fix).
+  - [x] `ipatool_appstore::storeauth`: `anisette.go`, `store_provisioning.go`, `http_client.go`
+        and the state handling of `store_amd.go`. `AnisetteState` JSON, identity headers, the
+        header set and the XML plist request bodies match a Go oracle
+        (`scripts/storeauth-oracle.sh` records `tests/fixtures/storeauth-oracle.json`); both
+        provisioning flows are tested against a fake HTTP server with a fake ADI.
+        `gsa.apple.com` chains to Apple Root CA, which this machine's system store (used by
+        reqwest's platform verifier) lacks, so Go's root download fallback is needed and is
+        checked live by `cargo test -p ipatool-appstore gsa_needs_the_apple_root -- --ignored`.
+        Differences: requests go over HTTP/1.1 (Go negotiates HTTP/2) without
+        `Accept-Encoding: gzip`; response plists are XML or binary only (Go also reads
+        OpenStep text); Go's nil-context checks have no equivalent. Untested: the real
+        `ModernAdi` provisioning calls against Apple, and the root download itself (only its
+        validation and redirect rule are unit tested).
+  - [ ] Store AMD headers: `StoreAmd` trait and `UnavailableStoreAmd`; the real
+        implementation needs the phase-5 Store emulator.
 - [ ] SAP signer and action signing. The signer is ported in phase 3 (live setup + sign
       checked by `cargo test -p ipatool-sap signs_after_live_setup -- --ignored`); wiring
       into the App Store client remains.

@@ -1,0 +1,171 @@
+{
+  "identities": [
+    {
+      "identifier": "000102030405060708090a0b0c0d0e0f",
+      "local_user_id": "be45cb2605bf36bebde684841a28f0fd43c69850a3dce5fedba69928ee3a8991",
+      "device_id": "00010203-0405-0607-0809-0a0b0c0d0e0f"
+    },
+    {
+      "identifier": "ffffffffffffffffffffffffffffffff",
+      "local_user_id": "5ac6a5945f16500911219129984ba8b387a06f24fe383ce4e81a73294065461b",
+      "device_id": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+    },
+    {
+      "identifier": "8c1f2e3d4c5b6a798897a6b5c4d3e2f1",
+      "local_user_id": "21350591eadfd7f08e568a522eb7d8e8a58668c454cc8513f5060960ac05d77c",
+      "device_id": "8c1f2e3d-4c5b-6a79-8897-a6b5c4d3e2f1"
+    }
+  ],
+  "decodes": [
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"cHJvdmlzaW9uZWQ=\",\"RoutingInfo\":17106176}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"cHJvdmlzaW9uZWQ=\",\"RoutingInfo\":17106176}"
+    },
+    {
+      "input": "{\"identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"provisioning\":\"cHJvdmlzaW9uZWQ=\",\"routinginfo\":1}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"cHJvdmlzaW9uZWQ=\",\"RoutingInfo\":1}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":0}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":0}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"\",\"RoutingInfo\":0}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"\",\"RoutingInfo\":0}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\"}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":0}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Extra\":[1,2],\"RoutingInfo\":18446744073709551615}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":18446744073709551615}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"RoutingInfo\":18446744073709551616}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"RoutingInfo\":-1}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"RoutingInfo\":1.5}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"RoutingInfo\":1e2}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"RoutingInfo\":\"1\"}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw\",\"RoutingInfo\":1}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODx==\",\"RoutingInfo\":1}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":1}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQF\\nBgcICQoLDA0ODw==\",\"RoutingInfo\":1}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":1}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0O\",\"RoutingInfo\":1}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Identifier\":\"AAECAwQFBgcICQoLDA0ODxA=\"}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODxA=\",\"identifier\":\"AAECAwQFBgcICQoLDA0ODw==\"}",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":0}"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":5}",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "[]",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "null",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "not json",
+      "error": "invalid persisted anisette state"
+    },
+    {
+      "input": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\"} trailing",
+      "error": "invalid persisted anisette state"
+    }
+  ],
+  "marshals": [
+    {
+      "input": "",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":0}"
+    },
+    {
+      "input": "",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"\",\"RoutingInfo\":1}"
+    },
+    {
+      "input": "",
+      "output": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":\"AP8gc3RhdGU=\",\"RoutingInfo\":18446744073709551615}"
+    }
+  ],
+  "headers": [
+    {
+      "state": "{\"Identifier\":\"AAECAwQFBgcICQoLDA0ODw==\",\"Provisioning\":null,\"RoutingInfo\":17106176}",
+      "otp": "otp",
+      "mid": "mid",
+      "headers": {
+        "X-Apple-I-Md": "b3Rw",
+        "X-Apple-I-Md-Lu": "be45cb2605bf36bebde684841a28f0fd43c69850a3dce5fedba69928ee3a8991",
+        "X-Apple-I-Md-M": "bWlk",
+        "X-Apple-I-Md-Rinfo": "17106176",
+        "X-Apple-I-Srl-No": "0",
+        "X-Apple-Locale": "en_US",
+        "X-Mme-Client-Info": "\u003cMacBookPro13,3\u003e \u003cMac OS X;10.12.6;16G29\u003e \u003ccom.apple.AuthKit/1 (com.apple.akd/1.0)\u003e",
+        "X-Mme-Device-Id": "00010203-0405-0607-0809-0a0b0c0d0e0f"
+      }
+    }
+  ],
+  "plists": [
+    {
+      "values": {
+        "Header": {},
+        "Request": {}
+      },
+      "body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eHeader\u003c/key\u003e\u003cdict\u003e\u003c/dict\u003e\u003ckey\u003eRequest\u003c/key\u003e\u003cdict\u003e\u003c/dict\u003e\u003c/dict\u003e\u003c/plist\u003e"
+    },
+    {
+      "values": {
+        "Header": {},
+        "Request": {
+          "cpim": "Y3BpbQ=="
+        }
+      },
+      "body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eHeader\u003c/key\u003e\u003cdict\u003e\u003c/dict\u003e\u003ckey\u003eRequest\u003c/key\u003e\u003cdict\u003e\u003ckey\u003ecpim\u003c/key\u003e\u003cstring\u003eY3BpbQ==\u003c/string\u003e\u003c/dict\u003e\u003c/dict\u003e\u003c/plist\u003e"
+    },
+    {
+      "values": {
+        "clientData": "Y2xpZW50"
+      },
+      "body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eclientData\u003c/key\u003e\u003cstring\u003eY2xpZW50\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e"
+    },
+    {
+      "values": {
+        "clientData": "Y2xpZW50",
+        "kbsync": "a\u003cb\u003e\u0026c\"d'e\tf\ng\rh"
+      },
+      "body": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\"?\u003e\n\u003c!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"\u003e\n\u003cplist version=\"1.0\"\u003e\u003cdict\u003e\u003ckey\u003eclientData\u003c/key\u003e\u003cstring\u003eY2xpZW50\u003c/string\u003e\u003ckey\u003ekbsync\u003c/key\u003e\u003cstring\u003ea\u0026lt;b\u0026gt;\u0026amp;c\u0026#34;d\u0026#39;e\u0026#x9;f\u0026#xA;g\u0026#xD;h\u003c/string\u003e\u003c/dict\u003e\u003c/plist\u003e"
+    }
+  ]
+}
