@@ -10,9 +10,9 @@ use std::sync::Arc;
 
 use ipatool_sap::machine::StoreAgent;
 
-use crate::download::{DownloadItem, DownloadOutput, Sinf};
+use crate::download_types::{DownloadItem, DownloadOutput, ProgressHandle, Sinf};
 use crate::xar;
-use crate::{Error, Result};
+use crate::{Client, Error, Result};
 
 pub(crate) const DP_INFO_SUFFIX: &str = ".dpInfo";
 pub(crate) const HW_INFO_SUFFIX: &str = ".hwInfo";
@@ -99,6 +99,26 @@ pub(crate) fn with_suffix(path: &Path, suffix: &str) -> PathBuf {
     let mut path = OsString::from(path);
     path.push(suffix);
     PathBuf::from(path)
+}
+
+impl Client {
+    /// Go's `downloadMacPackage`.
+    pub(crate) async fn download_mac_package(
+        &self,
+        item: &DownloadItem,
+        destination: &Path,
+        hardware_id: &[u8],
+        progress: Option<ProgressHandle>,
+    ) -> Result<DownloadOutput> {
+        MacPackageDownload::default()
+            .run(
+                item,
+                destination,
+                hardware_id,
+                async |url: &str, path: &Path| self.download_file(url, path, progress).await,
+            )
+            .await
+    }
 }
 
 /// The macOS package download with its replaceable parts (Go's `appstore.os` and

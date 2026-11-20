@@ -5,6 +5,7 @@
 
 #![allow(dead_code, reason = "the network bridge uses the rest of Go's API")]
 
+use std::collections::BTreeMap;
 use std::fmt::{self, Write as _};
 use std::net::{Ipv4Addr, Ipv6Addr};
 
@@ -21,7 +22,7 @@ pub(crate) enum Encoding {
 
 /// Go's `url.Error` and the errors it wraps, with Go's text.
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
-pub(crate) enum UrlError {
+pub enum UrlError {
     #[error("parse {}: {reason}", go_quote(url.as_bytes()))]
     Parse { url: String, reason: String },
     /// `URL.JoinPath` returns `setPath`'s escape error unwrapped.
@@ -30,7 +31,7 @@ pub(crate) enum UrlError {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct Userinfo {
+pub struct Userinfo {
     pub username: String,
     pub password: Option<String>,
 }
@@ -47,7 +48,7 @@ impl fmt::Display for Userinfo {
 
 /// Go's `url.URL`.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub(crate) struct Url {
+pub struct Url {
     pub scheme: String,
     pub opaque: String,
     pub user: Option<Userinfo>,
@@ -112,7 +113,8 @@ pub(crate) fn should_escape(c: u8, mode: Encoding) -> bool {
 }
 
 /// Go's `strconv.Quote`.
-pub(crate) fn go_quote(text: &[u8]) -> String {
+#[must_use]
+pub fn go_quote(text: &[u8]) -> String {
     let mut out = String::from("\"");
     for chunk in text.utf8_chunks() {
         for c in chunk.valid().chars() {
@@ -236,43 +238,14 @@ pub(crate) fn escape(s: &str, mode: Encoding) -> String {
 }
 
 /// Go's `url.QueryEscape`.
-pub(crate) fn query_escape(s: &str) -> String {
+#[must_use]
+pub fn query_escape(s: &str) -> String {
     escape(s, Encoding::QueryComponent)
 }
 
 /// Go's `url.QueryUnescape`.
-pub(crate) fn query_unescape(s: &str) -> Result<String, String> {
+pub fn query_unescape(s: &str) -> Result<String, String> {
     unescape(s, Encoding::QueryComponent)
-}
-
-/// Go's `url.ParseQuery`: every value per key, and the first error (parsing goes on after
-/// one, as in Go).
-#[must_use]
-pub fn parse_query(
-    query: &str,
-) -> (
-    std::collections::BTreeMap<String, Vec<String>>,
-    Option<String>,
-) {
-    let mut values = std::collections::BTreeMap::<String, Vec<String>>::new();
-    let mut first_error = None;
-    for pair in query.split('&') {
-        if pair.contains(';') {
-            first_error = Some("invalid semicolon separator in query".to_owned());
-            continue;
-        }
-        if pair.is_empty() {
-            continue;
-        }
-        let (key, value) = pair.split_once('=').unwrap_or((pair, ""));
-        match (query_unescape(key), query_unescape(value)) {
-            (Ok(key), Ok(value)) => values.entry(key).or_default().push(value),
-            (Err(err), _) | (_, Err(err)) => {
-                first_error.get_or_insert(err);
-            }
-        }
-    }
-    (values, first_error)
 }
 
 /// Go's `url.PathUnescape`.
@@ -410,9 +383,12 @@ fn parse_authority(scheme: &str, authority: &str) -> Result<(Option<Userinfo>, S
     Ok((Some(user), host))
 }
 
-fn parse_inner(raw: &str) -> Result<Url, String> {
+fn parse_inner(raw: &str, via_request: bool) -> Result<Url, String> {
     if raw.bytes().any(|b| b < b' ' || b == 0x7f) {
         return Err("net/url: invalid control character in URL".to_owned());
+    }
+    if raw.is_empty() && via_request {
+        return Err("empty url".to_owned());
     }
     let mut url = Url::default();
     if raw == "*" {
@@ -435,12 +411,17 @@ fn parse_inner(raw: &str) -> Result<Url, String> {
             rest.clone_into(&mut url.opaque);
             return Ok(url);
         }
+        if via_request {
+            return Err("invalid URI for request".to_owned());
+        }
         let segment = rest.split('/').next().unwrap_or_default();
         if segment.contains(':') {
             return Err("first path segment in URL cannot contain colon".to_owned());
         }
     }
-    if (!url.scheme.is_empty() || !rest.starts_with("///")) && rest.starts_with("//") {
+    if (!url.scheme.is_empty() || !via_request && !rest.starts_with("///"))
+        && rest.starts_with("//")
+    {
         let mut authority = &rest[2..];
         rest = "";
         if let Some(slash) = authority.find('/') {
@@ -456,9 +437,9 @@ fn parse_inner(raw: &str) -> Result<Url, String> {
 }
 
 /// Go's `url.Parse`.
-pub(crate) fn parse(raw: &str) -> Result<Url, UrlError> {
+pub fn parse(raw: &str) -> Result<Url, UrlError> {
     let (before, fragment) = raw.split_once('#').unwrap_or((raw, ""));
-    let mut url = parse_inner(before).map_err(|reason| UrlError::Parse {
+    let mut url = parse_inner(before, false).map_err(|reason| UrlError::Parse {
         url: before.to_owned(),
         reason,
     })?;
@@ -471,6 +452,102 @@ pub(crate) fn parse(raw: &str) -> Result<Url, UrlError> {
             reason,
         })?;
     Ok(url)
+}
+
+/// Go's `url.ParseRequestURI`: no fragment, and an absolute URI or path.
+pub fn parse_request_uri(raw: &str) -> Result<Url, UrlError> {
+    parse_inner(raw, true).map_err(|reason| UrlError::Parse {
+        url: raw.to_owned(),
+        reason,
+    })
+}
+
+/// Go's `url.Values`.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Values(pub BTreeMap<String, Vec<String>>);
+
+impl Values {
+    /// Go's `Get`: the first value, or empty.
+    #[must_use]
+    pub fn get(&self, key: &str) -> &str {
+        self.0
+            .get(key)
+            .and_then(|values| values.first())
+            .map_or("", String::as_str)
+    }
+
+    /// Go's `Set`.
+    pub fn set(&mut self, key: &str, value: impl Into<String>) {
+        self.0.insert(key.to_owned(), vec![value.into()]);
+    }
+
+    /// The values of `key`, as Go's `values[key]`.
+    #[must_use]
+    pub fn values(&self, key: &str) -> &[String] {
+        self.0.get(key).map_or(&[], Vec::as_slice)
+    }
+
+    /// Go's `len(values)`.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Go's `len(values) == 0`.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Go's `Encode`: keys sorted, each value query-escaped.
+    #[must_use]
+    pub fn encode(&self) -> String {
+        let mut parts = Vec::new();
+        for (key, values) in &self.0 {
+            let key = query_escape(key);
+            for value in values {
+                parts.push(format!("{key}={}", query_escape(value)));
+            }
+        }
+        parts.join("&")
+    }
+}
+
+/// Go's `url.ParseQuery`: every valid pair is kept; the first error is returned with them.
+#[must_use]
+pub fn parse_query(query: &str) -> (Values, Option<String>) {
+    let mut values = Values::default();
+    let mut error = None;
+    let mut rest = query;
+    while !rest.is_empty() {
+        let key;
+        (key, rest) = rest.split_once('&').unwrap_or((rest, ""));
+        if key.contains(';') {
+            error = Some("invalid semicolon separator in query".to_owned());
+            continue;
+        }
+        if key.is_empty() {
+            continue;
+        }
+        let (key, value) = key.split_once('=').unwrap_or((key, ""));
+        let (key, value) = match (query_unescape(key), query_unescape(value)) {
+            (Ok(key), Ok(value)) => (key, value),
+            (Err(err), _) | (_, Err(err)) => {
+                error.get_or_insert(err);
+                continue;
+            }
+        };
+        values.0.entry(key).or_default().push(value);
+    }
+    (values, error)
+}
+
+impl Url {
+    /// Go's `Query`: the parsed query, ignoring errors.
+    #[must_use]
+    pub fn query(&self) -> Values {
+        parse_query(&self.raw_query).0
+    }
 }
 
 fn valid_encoded(s: &str, mode: Encoding) -> bool {
@@ -640,12 +717,14 @@ impl Url {
     }
 
     /// Go's `Hostname`.
-    pub(crate) fn hostname(&self) -> &str {
+    #[must_use]
+    pub fn hostname(&self) -> &str {
         self.split_host_port().0
     }
 
     /// Go's `Port`.
-    pub(crate) fn port(&self) -> &str {
+    #[must_use]
+    pub fn port(&self) -> &str {
         self.split_host_port().1
     }
 

@@ -4,7 +4,8 @@
 use ipatool_store::gourl;
 use serde_json::Value;
 
-use crate::{App, Error, Result};
+use crate::commerce::CommerceRequest;
+use crate::{Account, App, Client, Error, Result};
 
 const SERIALIZED_SERVER_DATA_ID: &str = "serialized-server-data";
 
@@ -16,6 +17,43 @@ fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     haystack
         .windows(needle.len())
         .position(|window| window == needle)
+}
+
+impl Client {
+    /// Go's `lookupLatestMacOSExternalVersionID`. The legacy MDM lookup can return an iOS
+    /// offer even with `platform=osx`, so the Mac product page selects the native Mac offer.
+    pub(crate) async fn lookup_latest_macos_external_version_id(
+        &self,
+        account: &Account,
+        app: &App,
+    ) -> Result<String> {
+        let country = self
+            .country_code_from_store_front(&account.store_front)
+            .await
+            .map_err(|err| err.context("failed to resolve the country code"))?;
+        let response = self
+            .store_raw(
+                "request",
+                CommerceRequest {
+                    method: "GET".to_owned(),
+                    url: format!(
+                        "https://apps.apple.com/{}/app/id{}?platform=mac",
+                        country.to_lowercase(),
+                        app.id
+                    ),
+                    ..CommerceRequest::default()
+                },
+            )
+            .await
+            .map_err(|err| err.context("macOS version lookup request failed"))?;
+        if response.status != 200 {
+            return Err(Error::Invalid(format!(
+                "macOS version lookup returned HTTP {}",
+                response.status
+            )));
+        }
+        macos_external_version_id(&response.data, app)
+    }
 }
 
 /// Go's `serializedServerData`: the JSON inside the product page's
@@ -108,12 +146,7 @@ fn mac_offer_version(configuration: &serde_json::Map<String, Value>, app: &App) 
         .and_then(Value::as_str)
         .unwrap_or_default();
     let (params, err) = gourl::parse_query(buy_params);
-    let get = |key: &str| {
-        params
-            .get(key)
-            .and_then(|values| values.first())
-            .map_or("", String::as_str)
-    };
+    let get = |key: &str| params.get(key);
     if err.is_some()
         || !mac
         || get("salableAdamId") != app.id.to_string()

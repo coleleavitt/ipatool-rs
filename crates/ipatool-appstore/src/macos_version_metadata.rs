@@ -5,9 +5,9 @@ use std::path::{Path, PathBuf};
 
 use time::OffsetDateTime;
 
-use crate::download::DownloadItem;
 use crate::download_macos::MacPackageDownload;
 use crate::download_package::{has_mac_dp_info, metadata_string};
+use crate::download_types::DownloadItem;
 use crate::macos_preflight_metadata::preflight_version_metadata;
 use crate::xar::{self, ReadAt, go_path};
 use crate::{Error, Result};

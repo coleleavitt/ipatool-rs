@@ -5,8 +5,8 @@ use sha1::{Digest, Sha1};
 use time::macros::datetime;
 
 use super::*;
-use crate::download::Sinf;
 use crate::download_macos::{MacPackageDecrypter, MacPackageDownload, OsFileSystem};
+use crate::download_types::Sinf;
 use crate::macos_preflight_metadata::tests::{preflight_distribution, preflight_xar};
 use crate::xar::tests::{hex, test_archive};
 

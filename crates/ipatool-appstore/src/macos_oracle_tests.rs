@@ -4,8 +4,8 @@
 use base64::Engine as _;
 use serde::Deserialize;
 
-use crate::download::{DownloadItem, Sinf};
 use crate::download_package::download_package_platform;
+use crate::download_types::{DownloadItem, Sinf};
 use crate::macos_preflight_metadata::preflight_version_metadata;
 use crate::macos_version_lookup::macos_external_version_id;
 use crate::macos_version_metadata::package_version_metadata;

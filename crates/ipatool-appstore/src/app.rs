@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::Platform;
 
 /// An app as returned by the iTunes search and lookup APIs.
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub struct App {
     pub id: i64,
     #[serde(rename = "bundleID")]

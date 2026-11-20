@@ -1,6 +1,6 @@
 //! Port of Go `appstore_download_package.go`: which package a macOS download response holds.
 
-use crate::download::{DownloadItem, Sinf};
+use crate::download_types::{DownloadItem, Sinf};
 use crate::{Error, Platform, Result};
 
 /// Go's `downloadPackagePlatform`: a macOS request can return an iOS app made available
