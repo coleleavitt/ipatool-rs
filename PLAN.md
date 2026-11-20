@@ -112,10 +112,15 @@ parity check for the commands it touches.
 
 ### Phase 2 — store HTTP plumbing
 
-- [ ] Plist request/response client, failure types and error metadata (`pkg/appstore/error.go`, `constants.go`).
-- [ ] Bag fetch and storefront discovery (scoped bags, available-storefronts).
-- [ ] Machine GUID from the MAC address (`pkg/util/machine`).
-- [ ] `search`/`lookup` take the account storefront when logged in.
+- [x] Plist response handling: Apple's envelopes, HTML/429 errors (`pkg/http/client.go`).
+      Requests go direct, as Go's `bag-direct` executor does (no redirects, shared cookie jar,
+      30 s timeout). Requests Go sends through the Store emulator wait for phase 5.
+- [x] URL bag and SAP configuration (`appstore_bag.go`), storefront discovery
+      (scoped bags, available-storefronts fallback). Live check: `IPATOOL_TEST_LIVE=1`.
+- [x] Machine GUID from the MAC address, Linux sysfs selection (same address as Go here).
+      macOS IOKit and Windows primary-adapter lookups are not ported yet.
+- [x] `search`/`catalog-versions` take the account storefront; `--country` overrides it.
+- [ ] Failure types and the plist login/purchase envelopes move to phase 4 with their users.
 
 ### Phase 3 — SAP emulator (highest risk)
 

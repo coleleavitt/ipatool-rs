@@ -3,10 +3,12 @@
 mod output;
 mod state;
 
+use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::Arc;
 
 use clap::{Args, Parser, Subcommand};
-use ipatool_appstore::{Account, Client, CountryCode, LookupQuery, Platform, keys};
+use ipatool_appstore::{Account, Client, CookieJar, CountryCode, LookupQuery, Platform, keys};
 use ipatool_keychain::{Config, Keychain};
 use serde_json::json;
 
@@ -72,9 +74,9 @@ struct StoreArgs {
     /// Platform: iphone, ipad, appletv, watchos, visionos, or macos.
     #[arg(long)]
     platform: Option<Platform>,
-    /// Storefront country code. Used until login and account storefronts are ported.
-    #[arg(long, default_value = "US")]
-    country: CountryCode,
+    /// Storefront country code. Defaults to the logged-in account's storefront.
+    #[arg(long)]
+    country: Option<CountryCode>,
 }
 
 #[derive(Args)]
@@ -102,10 +104,35 @@ type BoxError = Box<dyn std::error::Error>;
 
 const KEYCHAIN_SERVICE_NAME: &str = "ipatool-auth.service";
 
+const COOKIE_JAR_FILE_NAME: &str = "cookies";
+
+fn state_dir() -> Result<PathBuf, BoxError> {
+    let home = std::env::home_dir().ok_or("could not find the home directory")?;
+    Ok(state::prepare(&home, |name| std::env::var(name).ok())?)
+}
+
+/// A client sharing the Go tool's cookie jar (`cmd/common.go` `newCookieJar`).
+fn store_client() -> Result<Client, BoxError> {
+    let jar = CookieJar::open(state_dir()?.join(COOKIE_JAR_FILE_NAME))?;
+    Ok(Client::with_cookie_jar(Arc::new(jar))?)
+}
+
+/// `--country`, or the country of the logged-in account's storefront as Go uses.
+async fn country(cli: &Cli, client: &Client, store: &StoreArgs) -> Result<CountryCode, BoxError> {
+    if let Some(country) = &store.country {
+        return Ok(country.clone());
+    }
+    let account = account_info(&open_keychain(cli).await?).await?;
+    let code = client
+        .country_code_from_store_front(&account.store_front)
+        .await
+        .map_err(|err| format!("country code is invalid: {err}"))?;
+    Ok(code.parse()?)
+}
+
 /// The Go keychain setup (`cmd/common.go` `newKeychain`).
 async fn open_keychain(cli: &Cli) -> Result<Keychain, BoxError> {
-    let home = std::env::home_dir().ok_or("could not find the home directory")?;
-    let state_dir = state::prepare(&home, |name| std::env::var(name).ok())?;
+    let state_dir = state_dir()?;
     let passphrase = cli.keychain_passphrase.clone();
     let interactive = !cli.non_interactive;
     Ok(Keychain::open(Config {
@@ -174,18 +201,21 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
     match &cli.command {
         Command::Auth(command) => run_auth(cli, command, out).await?,
         Command::Search { term, limit, store } => {
-            let apps = Client::new()?
-                .search(term, &store.country, *limit, store.platform)
+            let client = store_client()?;
+            let country = country(cli, &client, store).await?;
+            let apps = client
+                .search(term, &country, *limit, store.platform)
                 .await?;
             out.info(json!({ "count": apps.len(), "apps": apps }));
         }
         Command::CatalogVersions { app, store } => {
-            let client = Client::new()?;
+            let client = store_client()?;
+            let country = country(cli, &client, store).await?;
             let app = client
-                .lookup(&app.query(), &store.country, store.platform)
+                .lookup(&app.query(), &country, store.platform)
                 .await?;
             let versions = client
-                .catalog_version_history(app.id, &store.country, store.platform)
+                .catalog_version_history(app.id, &country, store.platform)
                 .await?;
             out.info(json!({ "app": app, "count": versions.len(), "versions": versions }));
         }

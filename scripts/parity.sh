@@ -22,7 +22,7 @@ check() {
     echo "DIFF  $name"; diff <(echo "$go") <(echo "$rs") | head -20 || true; status=1; fi
 }
 
-# The Go tool takes the storefront from the logged-in account (US here); Rust defaults to --country US.
+# Both tools take the storefront from the logged-in account.
 check "search perplexity" search perplexity --limit 3
 check "search watch" search weather --limit 3 --platform watchos
 check "search mac" search xcode --limit 2 --platform macos

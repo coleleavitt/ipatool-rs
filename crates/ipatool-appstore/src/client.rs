@@ -1,6 +1,10 @@
 use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
 
-use crate::{Error, Result};
+use std::sync::{Arc, Mutex};
+
+use crate::store::STORE_TIMEOUT;
+use crate::storefront::StorefrontCache;
+use crate::{CookieJar, Error, Result};
 
 /// Same user agent as the Go client (`pkg/http/constants.go`).
 pub(crate) const DEFAULT_USER_AGENT: &str =
@@ -9,19 +13,51 @@ pub(crate) const DEFAULT_USER_AGENT: &str =
 /// App Store client. Cheap to clone.
 #[derive(Clone, Debug)]
 pub struct Client {
+    /// Public catalog endpoints, without cookies.
     pub(crate) http: reqwest::Client,
+    /// Store endpoints: shares the cookie jar and, like Go's Store transport,
+    /// returns redirects instead of following them.
+    pub(crate) store: reqwest::Client,
+    pub(crate) jar: Option<Arc<CookieJar>>,
+    pub(crate) storefronts: Arc<Mutex<StorefrontCache>>,
 }
 
 impl Client {
+    /// A client without persistent cookies.
+    ///
     /// # Errors
     /// Fails when the TLS backend cannot be initialized.
     pub fn new() -> Result<Self> {
+        Self::build(None)
+    }
+
+    /// A client whose Store requests read and save `jar`, which is shared with the Go tool.
+    ///
+    /// # Errors
+    /// Fails when the TLS backend cannot be initialized.
+    pub fn with_cookie_jar(jar: Arc<CookieJar>) -> Result<Self> {
+        Self::build(Some(jar))
+    }
+
+    fn build(jar: Option<Arc<CookieJar>>) -> Result<Self> {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static(DEFAULT_USER_AGENT));
         let http = reqwest::Client::builder()
-            .default_headers(headers)
+            .default_headers(headers.clone())
             .build()?;
-        Ok(Self { http })
+        let mut store = reqwest::Client::builder()
+            .default_headers(headers)
+            .redirect(reqwest::redirect::Policy::none())
+            .timeout(STORE_TIMEOUT);
+        if let Some(jar) = &jar {
+            store = store.cookie_provider(Arc::clone(jar));
+        }
+        Ok(Self {
+            http,
+            store: store.build()?,
+            jar,
+            storefronts: Arc::default(),
+        })
     }
 
     pub(crate) async fn get_bytes(
