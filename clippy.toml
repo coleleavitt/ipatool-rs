@@ -1,0 +1,1 @@
+# Present so clippy does not pick up ~/.clippy.toml (nightly-only options).

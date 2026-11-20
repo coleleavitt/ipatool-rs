@@ -1,0 +1,166 @@
+# ipatool → Rust port plan
+
+Port of [majd/ipatool](https://github.com/majd/ipatool) (Go, MIT) to Rust.
+Reference commit: upstream `main` at `3b02b4c55` (`3b02b4c55576562f2a55284cda9db9a4411d3067`),
+checked out at `~/GolandProjects/ipatool` (remote `upstream`).
+
+## Goal
+
+A single `ipatool` binary with the same commands, flags, output, and on-disk
+state as the Go tool, plus the fork improvements already written in Go:
+
+- the `5005` / invalid-2FA-code handling and re-prompt (`fix/invalid-auth-code`, issue #678);
+- `list-versions --with-metadata` with catalog-first names, concurrency and a local cache
+  (`feat/list-versions-metadata`);
+- read the stored account once per command (`fix/reuse-account-across-retries`, #677);
+- skip unchanged anisette keyring writes (`fix/store-amd-redundant-save`).
+
+"Same behavior" is checked by differential tests against the Go binary, not by
+reading code side by side.
+
+## Size and where the risk is
+
+About 33k lines of hand-written Go plus a 55k-line generated data file, and about 19k
+lines of Go tests. The ordinary App Store client (`pkg/*`, `cmd`) is about 10k lines and
+ports directly. The hard part is the Apple-binary emulation (about 20k lines):
+
+- `internal/sap`: runs Apple's own arm64 FairPlay/ADI code (`CoreFP`, `adid`,
+  `fairplayd`, `commerce` from a pinned macOS 27.0.1 IPSW) inside Unicorn to produce
+  SAP signatures, anisette headers and kbsync. Assets are fetched by HTTP range reads
+  out of the IPSW (AEA, APFS, dyld shared cache, LZFSE).
+- `internal/store`: an Objective-C/Swift runtime bridge that runs the App Store's
+  `StoreServices` request engine in the emulator, driven by a precomputed profile.
+
+Login, purchase and download all depend on these. So the plan builds the emulator
+early (phase 3) and keeps public, no-login features usable from day one.
+
+## Crate layout
+
+```text
+ipatool-cli ──> ipatool-appstore ──> ipatool-sap ──> unicorn-engine
+      │                │        └──> ipatool-store ──> ipatool-sap
+      └──> ipatool-keychain <──┘
+```
+
+| crate | owns |
+|---|---|
+| `ipatool-appstore` | catalog, bag, storefronts, login flow, purchase, download, versions; plist/JSON HTTP |
+| `ipatool-keychain` | account/anisette storage: system keyring + encrypted file backend |
+| `ipatool-sap` | Unicorn engine wrapper, Mach-O image loader, IPSW asset loader, SAP/ADI/kbsync machine, anisette provisioning |
+| `ipatool-store` | Objective-C runtime bridge and Store profile |
+| `ipatool-cli` | clap commands, prompts, output, MCP server, state directory |
+| `xtask` | dev tools: parity runner, profile extraction/generation |
+
+Only `ipatool-appstore` and `ipatool-cli` exist now. Add a crate when its phase starts.
+
+## Package ledger
+
+| Go package | lines | test lines | Rust owner | phase |
+|---|---:|---:|---|---|
+| `cmd` | 1831 | 1775 | ipatool-cli | 1–8 |
+| `internal/sap` | 315 | 223 | ipatool-sap | 3 |
+| `internal/sap/assets` | 3894 | 768 | ipatool-sap::assets | 3 |
+| `internal/sap/machimage` | 1289 | 576 | ipatool-sap::machimage | 3 |
+| `internal/sap/machine` | 4981 | 725 | ipatool-sap::machine | 3 |
+| `internal/sap/unicorn` | 2036 | 1382 | ipatool-sap::engine (unicorn-engine crate) | 3 |
+| `internal/store` | 324 | 128 | ipatool-store | 5 |
+| `internal/store/emulator` | 6987 | 480 | ipatool-store::emulator | 5 |
+| `internal/store/profile` | 55648 | 134 | ipatool-store::profile (generated data) | 5 |
+| `internal/store/profile/format` | 63 | 0 | ipatool-store::profile | 5 |
+| `internal/store/profilegen` | 3328 | 415 | xtask profilegen (dev tool) | 9 |
+| `internal/store/profilegen/cmd/profilegen` | 146 | 0 | xtask profilegen | 9 |
+| `internal/store/terms` | 37 | 0 | ipatool-store::terms | 5 |
+| `internal/storeauth` | 647 | 50 | ipatool-sap::storeauth | 4 |
+| `pkg/appstore` | 7400 | 11734 | ipatool-appstore | 0–7 |
+| `pkg/http` | 513 | 299 | ipatool-appstore::http | 2 |
+| `pkg/keychain` | 83 | 214 | ipatool-keychain | 1 |
+| `pkg/log` | 116 | 172 | ipatool-cli::output | 0 |
+| `pkg/util` | 43 | 87 | (inlined) | 1 |
+| `pkg/util/machine` | 353 | 547 | ipatool-appstore::machine | 2 |
+| `pkg/util/operatingsystem` | 62 | 108 | (std) | 1 |
+
+Keep a per-file status in `docs/port-ledger.md` once a package is in progress.
+
+## Phases
+
+Each phase ends with fmt, clippy (pedantic, `-D warnings`), offline tests, and the
+parity check for the commands it touches.
+
+### Phase 0 — scaffold and public catalog (done)
+
+- [x] Workspace, lints, agent files, plan.
+- [x] `Platform` parsing and iTunes entities, `App` with platform derivation.
+- [x] iTunes search and lookup; `apps.apple.com` catalog version history (newest 25).
+- [x] CLI: `search` (with `--country` until account storefronts exist) and the new
+      `catalog-versions` command; zerolog-shaped JSON/text output.
+- [x] `scripts/parity.sh` comparing `search` output with the Go binary (iPhone, watchOS, macOS searches match).
+
+### Phase 1 — state, storage, account
+
+- [ ] State directory: `XDG_STATE_HOME`/`XDG_DATA_HOME` then `~/.ipatool`, with the Go migration rules.
+- [ ] Keychain: same service name (`ipatool-auth.service`) and keys as Go, system
+      keyring first, encrypted-file fallback with `--keychain-passphrase`.
+- [ ] `Account` JSON identical to Go, so a session made by one tool loads in the other.
+- [ ] Persistent cookie jar in the `juju/persistent-cookiejar` file format.
+- [ ] `auth info`, `auth revoke`. Decision needed: share state with the Go tool or use a separate directory (see open questions).
+
+### Phase 2 — store HTTP plumbing
+
+- [ ] Plist request/response client, failure types and error metadata (`pkg/appstore/error.go`, `constants.go`).
+- [ ] Bag fetch and storefront discovery (scoped bags, available-storefronts).
+- [ ] Machine GUID from the MAC address (`pkg/util/machine`).
+- [ ] `search`/`lookup` take the account storefront when logged in.
+
+### Phase 3 — SAP emulator (highest risk)
+
+- [ ] Engine: `unicorn-engine` crate built from source (replaces Go's runtime download of
+      a pinned `libunicorn` wheel and `purego`). Hooks, memory guard, timeouts, clock.
+- [ ] `machimage`: Mach-O image mapping, shared regions, preparation cache.
+- [ ] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
+      extraction, LZFSE; same pinned files, sizes and SHA-256 digests; same cache directory name.
+- [ ] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent.
+- [ ] Oracle: a Go test harness (`xtask`) that records inputs/outputs of each guest call
+      from the Go implementation; Rust must produce identical bytes for the same inputs.
+
+### Phase 4 — authentication
+
+- [ ] Anisette provisioning and Store AMD state (with the skip-unchanged-write fix).
+- [ ] SAP signer and action signing.
+- [ ] Legacy and native login, 2FA prompt, `5005` handling and re-prompt, retries.
+- [ ] `auth login` end to end with a real account (manual, opt-in).
+
+### Phase 5 — Store engine emulator
+
+- [ ] Objective-C runtime bridge, Swift metadata, async tasks, network bridge.
+- [ ] Profile: load Go's committed generated artifacts (extracted by `xtask`) first; port `profilegen` in phase 9.
+- [ ] Terms acceptance adapter.
+
+### Phase 6 — purchase and download
+
+- [ ] `purchase` (free apps), license-exists handling, terms.
+- [ ] `download`: parallel range download with resume, sinf replication, iTunesMetadata, artwork.
+- [ ] macOS `.pkg` download, decryption and publish.
+
+### Phase 7 — versions and purchases
+
+- [ ] `list-versions`, `get-version-metadata` (partial-zip `Info.plist` read with read-ahead).
+- [ ] `--with-metadata` catalog-first + cache + concurrency (fork feature).
+- [ ] `list-purchases` (owned apps).
+- [ ] Account read once per command (fork fix).
+
+### Phase 8 — MCP
+
+- [ ] `ipatool mcp` stdio server with the same tools via `rmcp`.
+
+### Phase 9 — parity, release
+
+- [ ] Parity suite over all commands (offline fixtures + opt-in live).
+- [ ] `profilegen` port, CI (Linux, macOS, Windows), release builds, iOS build.
+
+## Open questions for the user
+
+1. Share the state directory and keyring entries with the Go tool (lets one login work
+   for both and enables cross-tool tests) or keep a separate `ipatool-rs` state?
+   Current lean: share, because the formats are meant to be identical.
+2. Repository: publish as `coleleavitt/ipatool-rs`?
+3. Keep the Go tool's exact text output, or improve text mode while keeping JSON identical?

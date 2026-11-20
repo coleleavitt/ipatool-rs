@@ -1,0 +1,45 @@
+use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT};
+
+use crate::{Error, Result};
+
+/// Same user agent as the Go client (`pkg/http/constants.go`).
+pub(crate) const DEFAULT_USER_AGENT: &str =
+    "Configurator/2.17 (Macintosh; OS X 15.2; 24C5089c) AppleWebKit/0620.1.16.11.6";
+
+/// App Store client. Cheap to clone.
+#[derive(Clone, Debug)]
+pub struct Client {
+    pub(crate) http: reqwest::Client,
+}
+
+impl Client {
+    /// # Errors
+    /// Fails when the TLS backend cannot be initialized.
+    pub fn new() -> Result<Self> {
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_static(DEFAULT_USER_AGENT));
+        let http = reqwest::Client::builder()
+            .default_headers(headers)
+            .build()?;
+        Ok(Self { http })
+    }
+
+    pub(crate) async fn get_bytes(
+        &self,
+        request: reqwest::RequestBuilder,
+    ) -> Result<(u16, Vec<u8>, String)> {
+        let response = request.send().await?;
+        let status = response.status().as_u16();
+        let url = response.url().to_string();
+        let body = response.bytes().await?.to_vec();
+        Ok((status, body, url))
+    }
+
+    pub(crate) async fn get_ok(&self, request: reqwest::RequestBuilder) -> Result<Vec<u8>> {
+        let (status, body, url) = self.get_bytes(request).await?;
+        if status != 200 {
+            return Err(Error::Status { status, url });
+        }
+        Ok(body)
+    }
+}

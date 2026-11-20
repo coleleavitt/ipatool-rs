@@ -1,0 +1,13 @@
+/target/
+/MEMORY.md
+/.codegraph/
+/.jfc/
+/research/local/
+*.ipa
+*.pkg
+*.har
+.env
+.env.*
+
+!/.claude/
+!/.claude/**

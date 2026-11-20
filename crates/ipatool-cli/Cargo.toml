@@ -1,0 +1,23 @@
+[package]
+name = "ipatool-cli"
+description = "ipatool command line interface"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[[bin]]
+name = "ipatool"
+path = "src/main.rs"
+
+[dependencies]
+clap.workspace = true
+ipatool-appstore.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+time = { workspace = true, features = ["local-offset"] }
+tokio.workspace = true
+
+[lints]
+workspace = true
