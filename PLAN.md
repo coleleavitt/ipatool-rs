@@ -126,7 +126,14 @@ parity check for the commands it touches.
 
 - [ ] Engine: `unicorn-engine` crate built from source (replaces Go's runtime download of
       a pinned `libunicorn` wheel and `purego`). Hooks, memory guard, timeouts, clock.
-- [ ] `machimage`: Mach-O image mapping, shared regions, preparation cache.
+- [x] `machimage`: Mach-O image mapping, shared regions, preparation cache. Mach-O load
+      commands come from the `object` crate; the go-macho pieces Go relies on (symbol table,
+      chained-fixup walk and decoding, dyld-info bind/rebase opcodes, export trie) are ported
+      with their quirks. Oracle: `scripts/machimage-oracle.sh` records every guest map and
+      write (SHA-256), exports and resolved imports for the six pinned images from Go;
+      `IPATOOL_TEST_SAP_CACHE=1 cargo test -p ipatool-sap --test machimage_oracle` matches it.
+      Differences: an out-of-range `ARM64E_USERLAND24` bind ordinal is an error (go-macho
+      panics); `strings.EqualFold` is approximated by per-character Unicode lowercasing.
 - [ ] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
       extraction, LZFSE; same pinned files, sizes and SHA-256 digests; same cache directory name.
 - [ ] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent.
