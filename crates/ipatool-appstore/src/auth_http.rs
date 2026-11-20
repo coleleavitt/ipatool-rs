@@ -332,4 +332,136 @@ mod tests {
             assert!(!retryable_transport_error(&error(kind.into())), "{kind:?}");
         }
     }
+
+    struct FixedSigner;
+
+    impl ActionSigner for FixedSigner {
+        fn sign(&mut self, input: &[u8]) -> ipatool_sap::Result<Vec<u8>> {
+            assert!(input.starts_with(b"<?xml"), "signs the encoded body");
+            Ok(b"signature".to_vec())
+        }
+
+        fn close(&mut self) -> ipatool_sap::Result<()> {
+            Ok(())
+        }
+    }
+
+    /// A one-request HTTP server: returns its address and the raw request it received.
+    async fn serve(response: &'static [u8]) -> (String, tokio::task::JoinHandle<Vec<u8>>) {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let address = format!("http://{}/auth", listener.local_addr().unwrap());
+        let task = tokio::spawn(async move {
+            let (mut stream, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut buffer = [0u8; 4096];
+            loop {
+                let read = stream.read(&mut buffer).await.unwrap();
+                request.extend_from_slice(&buffer[..read]);
+                let text = String::from_utf8_lossy(&request).to_ascii_lowercase();
+                if let Some(end) = text.find("\r\n\r\n") {
+                    let length: usize = text
+                        .lines()
+                        .find_map(|line| line.strip_prefix("content-length: "))
+                        .map_or(0, |value| value.trim().parse().unwrap());
+                    if request.len() >= end + 4 + length || read == 0 {
+                        break;
+                    }
+                }
+            }
+            stream.write_all(response).await.unwrap();
+            stream.shutdown().await.unwrap();
+            request
+        });
+        (address, task)
+    }
+
+    fn login_request(url: String) -> AuthRequest {
+        let mut payload = Dictionary::new();
+        payload.insert("appleId".to_owned(), "user@example.com".into());
+        payload.insert("attempt".to_owned(), "1".into());
+        AuthRequest {
+            url,
+            headers: BTreeMap::from([
+                (
+                    "Content-Type".to_owned(),
+                    "application/x-apple-plist".to_owned(),
+                ),
+                ("X-Apple-AMD".to_owned(), "otp".to_owned()),
+            ]),
+            payload,
+        }
+    }
+
+    #[tokio::test]
+    async fn sends_a_signed_plist_and_decodes_the_answer() {
+        let (url, server) = serve(
+            b"HTTP/1.1 200 OK\r\nContent-Type: text/xml\r\nX-Set-Apple-Store-Front: 143441-1,29\r\nSet-Cookie: mz_at0-42=x\r\nContent-Length: 62\r\nConnection: close\r\n\r\n<plist><dict><key>foo</key><string>bar</string></dict></plist>",
+        )
+        .await;
+        let client = Client::new().unwrap();
+        let result: AuthResult<HashMap<String, String>> = client
+            .send_authentication(&login_request(url), &mut FixedSigner)
+            .await
+            .unwrap();
+        assert_eq!(result.status, 200);
+        assert_eq!(result.data["foo"], "bar");
+        assert_eq!(
+            result.header("x-set-apple-store-front"),
+            Some("143441-1,29")
+        );
+        assert_eq!(result.header("set-cookie"), Some("mz_at0-42=x"));
+
+        let request = String::from_utf8(server.await.unwrap()).unwrap();
+        let (head, body) = request.split_once("\r\n\r\n").unwrap();
+        let head = head.to_ascii_lowercase();
+        assert!(head.starts_with("post /auth http/1.1\r\n"), "{head}");
+        assert!(
+            head.contains("\r\ncontent-type: application/x-apple-plist\r\n"),
+            "{head}"
+        );
+        assert!(head.contains("\r\nx-apple-amd: otp\r\n"), "{head}");
+        assert!(
+            head.contains(&format!(
+                "\r\nx-apple-actionsignature: {}\r\n",
+                STANDARD.encode(b"signature").to_ascii_lowercase()
+            )),
+            "{head}"
+        );
+        let sent: Dictionary = plist::from_bytes(body.as_bytes()).unwrap();
+        assert_eq!(sent["appleId"].as_string(), Some("user@example.com"));
+        assert_eq!(sent["attempt"].as_string(), Some("1"));
+    }
+
+    #[tokio::test]
+    async fn reports_a_dropped_connection_as_a_retryable_transport_error() {
+        let (url, server) = serve(b"").await;
+        let client = Client::new().unwrap();
+        let error = client
+            .send_authentication::<HashMap<String, String>>(&login_request(url), &mut FixedSigner)
+            .await
+            .unwrap_err();
+        server.await.unwrap();
+        let Error::Transport(transport) = &error else {
+            panic!("{error:?}");
+        };
+        assert_eq!(transport.context, "request failed");
+        assert!(retryable_transport_error(transport), "{error:?}");
+    }
+
+    #[tokio::test]
+    async fn does_not_retry_a_refused_connection() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let url = format!("http://{}/auth", listener.local_addr().unwrap());
+        drop(listener);
+        let client = Client::new().unwrap();
+        let error = client
+            .send_authentication::<HashMap<String, String>>(&login_request(url), &mut FixedSigner)
+            .await
+            .unwrap_err();
+        let Error::Transport(transport) = &error else {
+            panic!("{error:?}");
+        };
+        assert!(!retryable_transport_error(transport), "{error:?}");
+    }
 }
