@@ -198,8 +198,13 @@ parity check for the commands it touches.
       `5005`/invalid-code errors. `auth login` prompts and re-prompts up to 3 attempts.
       Go's login tests are ported with a fake HTTP layer. Not covered: Go's
       `context.Canceled` cases (no Rust equivalent), the RFC 850 and ANSI C `Retry-After`
-      dates only by unit test, and the signed request against Apple. Native login
-      (anisette) plugs in through the `authentication_headers` argument.
+      dates only by unit test, and the signed request against Apple.
+      Native login is done (`native_login.rs`, `Client::native_login`, used by `auth login`):
+      Store AMD proof from a saved state, else `gsa.apple.com` anisette; on `RP` retry without
+      the `X-Apple-I-MD*` headers; on `SP` generate the provisioning kbsync (DSID `^1`) with the
+      phase-3 machine, finish Store provisioning, then log in with a Store AMD proof. The
+      `anisette-v4` state is written only when it changes. Tested with a fake backend.
+      Until phase 5 an `SP` answer ends with "prepare Store AMD proof: ... not ported yet".
 - [ ] `auth login` end to end with a real account (manual, opt-in).
 
 ### Phase 5 — Store engine emulator

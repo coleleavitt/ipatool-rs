@@ -14,6 +14,7 @@ mod error;
 mod login;
 mod login_storefront;
 pub mod machine;
+mod native_login;
 mod platform;
 mod plist_body;
 mod store;
