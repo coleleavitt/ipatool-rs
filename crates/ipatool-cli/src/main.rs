@@ -1,11 +1,13 @@
 //! `ipatool` command line interface (Rust port of the Go `cmd` package).
 
 mod output;
+mod state;
 
 use std::process::ExitCode;
 
 use clap::{Args, Parser, Subcommand};
-use ipatool_appstore::{Client, CountryCode, LookupQuery, Platform};
+use ipatool_appstore::{Account, Client, CountryCode, LookupQuery, Platform, keys};
+use ipatool_keychain::{Config, Keychain};
 use serde_json::json;
 
 use crate::output::{Format, Output};
@@ -26,12 +28,18 @@ struct Cli {
     /// Run in a non-interactive session.
     #[arg(long, global = true)]
     non_interactive: bool,
+    /// Passphrase for unlocking the file keychain.
+    #[arg(long, global = true, default_value = "")]
+    keychain_passphrase: String,
     #[command(subcommand)]
     command: Command,
 }
 
 #[derive(Subcommand)]
 enum Command {
+    /// Authenticate with the App Store.
+    #[command(subcommand)]
+    Auth(AuthCommand),
     /// Search for apps available on the App Store.
     Search {
         term: String,
@@ -49,6 +57,14 @@ enum Command {
         #[command(flatten)]
         store: StoreArgs,
     },
+}
+
+#[derive(Subcommand)]
+enum AuthCommand {
+    /// Show current account info.
+    Info,
+    /// Revoke your App Store credentials.
+    Revoke,
 }
 
 #[derive(Args)]
@@ -82,16 +98,89 @@ impl AppArgs {
     }
 }
 
-async fn run(cli: Cli, out: &Output) -> ipatool_appstore::Result<()> {
-    let client = Client::new()?;
-    match cli.command {
+type BoxError = Box<dyn std::error::Error>;
+
+const KEYCHAIN_SERVICE_NAME: &str = "ipatool-auth.service";
+
+/// The Go keychain setup (`cmd/common.go` `newKeychain`).
+async fn open_keychain(cli: &Cli) -> Result<Keychain, BoxError> {
+    let home = std::env::home_dir().ok_or("could not find the home directory")?;
+    let state_dir = state::prepare(&home, |name| std::env::var(name).ok())?;
+    let passphrase = cli.keychain_passphrase.clone();
+    let interactive = !cli.non_interactive;
+    Ok(Keychain::open(Config {
+        service_name: KEYCHAIN_SERVICE_NAME.to_owned(),
+        file_dir: state_dir,
+        passphrase: Box::new(move |dir| {
+            if !passphrase.is_empty() {
+                return Ok(passphrase.clone());
+            }
+            if !interactive {
+                return Err("keychain passphrase is required when not running in interactive mode; use the \"--keychain-passphrase\" flag".to_owned());
+            }
+            rpassword::prompt_password(format!(
+                "enter passphrase to unlock {} (this is separate from your Apple ID password): ",
+                dir.display()
+            ))
+            .map_err(|err| format!("failed to read password: {err}"))
+        }),
+    })
+    .await)
+}
+
+async fn account_info(keychain: &Keychain) -> Result<Account, BoxError> {
+    let data = keychain
+        .get(keys::ACCOUNT)
+        .await
+        .map_err(|err| format!("failed to get account: {err}"))?;
+    Ok(serde_json::from_slice(&data).map_err(|err| format!("failed to unmarshal json: {err}"))?)
+}
+
+/// Go's `Revoke`: removes the account and the kbsync cache, reporting both errors.
+async fn revoke(keychain: &Keychain) -> Result<(), BoxError> {
+    let mut errors = Vec::new();
+    if let Err(err) = keychain.remove(keys::ACCOUNT).await {
+        errors.push(format!("failed to remove account from keychain: {err}"));
+    }
+    match keychain.remove(keys::KBSYNC).await {
+        Ok(()) | Err(ipatool_keychain::Error::NotFound) => {}
+        Err(err) => errors.push(format!(
+            "failed to remove kbsync cache from keychain: {err}"
+        )),
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors.join("\n").into())
+    }
+}
+
+async fn run_auth(cli: &Cli, command: &AuthCommand, out: &Output) -> Result<(), BoxError> {
+    let keychain = open_keychain(cli).await?;
+    match command {
+        AuthCommand::Info => {
+            let account = account_info(&keychain).await?;
+            out.info(json!({ "name": account.name, "email": account.email, "success": true }));
+        }
+        AuthCommand::Revoke => {
+            revoke(&keychain).await?;
+            out.info(json!({ "success": true }));
+        }
+    }
+    Ok(())
+}
+
+async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
+    match &cli.command {
+        Command::Auth(command) => run_auth(cli, command, out).await?,
         Command::Search { term, limit, store } => {
-            let apps = client
-                .search(&term, &store.country, limit, store.platform)
+            let apps = Client::new()?
+                .search(term, &store.country, *limit, store.platform)
                 .await?;
             out.info(json!({ "count": apps.len(), "apps": apps }));
         }
         Command::CatalogVersions { app, store } => {
+            let client = Client::new()?;
             let app = client
                 .lookup(&app.query(), &store.country, store.platform)
                 .await?;
@@ -108,10 +197,10 @@ async fn run(cli: Cli, out: &Output) -> ipatool_appstore::Result<()> {
 async fn main() -> ExitCode {
     let cli = Cli::parse();
     let out = Output::new(cli.format, cli.verbose);
-    match run(cli, &out).await {
+    match run(&cli, &out).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
-            out.error(&error);
+            out.error(error.as_ref());
             ExitCode::FAILURE
         }
     }

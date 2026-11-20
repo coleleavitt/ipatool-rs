@@ -45,7 +45,10 @@ impl Output {
                 let mut line = Map::new();
                 line.insert("level".into(), level.into());
                 line.extend(fields);
-                let now = OffsetDateTime::now_local().unwrap_or_else(|_| OffsetDateTime::now_utc());
+                // zerolog's default time format is RFC 3339 in whole seconds.
+                let now = OffsetDateTime::now_local()
+                    .unwrap_or_else(|_| OffsetDateTime::now_utc())
+                    .truncate_to_second();
                 line.insert(
                     "time".into(),
                     now.format(&Rfc3339).unwrap_or_default().into(),

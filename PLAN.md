@@ -95,14 +95,20 @@ parity check for the commands it touches.
       `catalog-versions` command; zerolog-shaped JSON/text output.
 - [x] `scripts/parity.sh` comparing `search` output with the Go binary (iPhone, watchOS, macOS searches match).
 
-### Phase 1 — state, storage, account
+### Phase 1 — state, storage, account (done)
 
-- [ ] State directory: `XDG_STATE_HOME`/`XDG_DATA_HOME` then `~/.ipatool`, with the Go migration rules.
-- [ ] Keychain: same service name (`ipatool-auth.service`) and keys as Go, system
+- [x] State directory: `XDG_STATE_HOME`/`XDG_DATA_HOME` then `~/.ipatool`, with the Go migration rules.
+- [x] Keychain: same service name (`ipatool-auth.service`) and keys as Go, system
       keyring first, encrypted-file fallback with `--keychain-passphrase`.
-- [ ] `Account` JSON identical to Go, so a session made by one tool loads in the other.
-- [ ] Persistent cookie jar in the `juju/persistent-cookiejar` file format.
-- [ ] `auth info`, `auth revoke`. Decision needed: share state with the Go tool or use a separate directory (see open questions).
+      The file backend reads and writes Go's JWE files (checked against
+      `byteness/keyring` v1.9.0 both ways). The Secret Service connection tries each
+      `DBUS_SESSION_BUS_ADDRESS` entry without the GUID check, as godbus does.
+- [x] `Account` JSON identical to Go, so a session made by one tool loads in the other.
+- [x] Persistent cookie jar in the `juju/persistent-cookiejar` file format, with the
+      `cookies.lock` fcntl lock and merge-on-save. Not wired into HTTP until phase 2.
+- [x] `auth info`, `auth revoke`. State is shared with the Go tool (open question 1).
+      `auth info` matches Go byte for byte on the live keyring; `revoke` is tested on a
+      throwaway collection only.
 
 ### Phase 2 — store HTTP plumbing
 
@@ -159,8 +165,7 @@ parity check for the commands it touches.
 
 ## Open questions for the user
 
-1. Share the state directory and keyring entries with the Go tool (lets one login work
-   for both and enables cross-tool tests) or keep a separate `ipatool-rs` state?
-   Current lean: share, because the formats are meant to be identical.
+1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and
+   keyring entries as Go, so one login works for both.
 2. Repository: publish as `coleleavitt/ipatool-rs`?
 3. Keep the Go tool's exact text output, or improve text mode while keeping JSON identical?

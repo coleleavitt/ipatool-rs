@@ -47,6 +47,18 @@ scripts/parity.sh            # compares output with the Go binary (needs network
 Default tests are offline and use fixtures. Live tests are `#[ignore]` and run only when
 asked (`cargo test -- --ignored`).
 
+Optional cross-checks, skipped unless their variable is set:
+
+```sh
+# Go keyring file format, both directions
+(cd crates/ipatool-keychain/tests/go_helper && GOTOOLCHAIN=auto go build -o /tmp/kr .)
+IPATOOL_GO_KEYRING=/tmp/kr cargo test -p ipatool-keychain --test go_interop
+# live Secret Service, throwaway collection `ipatool-rust-test.service`
+IPATOOL_TEST_SECRET_SERVICE=1 cargo test -p ipatool-keychain --test go_interop
+# a copy of a real Go cookie jar (the original is not written)
+IPATOOL_GO_COOKIES=~/.ipatool/cookies cargo test -p ipatool-appstore cookies
+```
+
 ## Apple services and accounts
 
 - Live requests go to real Apple services with the user's own account. Keep them few:
