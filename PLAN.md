@@ -160,7 +160,8 @@ parity check for the commands it touches.
       equivalent); `StoreAgent::decrypt` returns the byte count only on success;
       `Signer::new` is async and not `Send` (the guest is single-threaded).
       Untested against Go: modern ADI provisioning, keybag import, XPC exchange and
-      StoreAgent decryption (need live Apple provisioning data or a purchased `.pkg`).
+      StoreAgent decryption (need live Apple provisioning data or a purchased `.pkg`;
+      `.pkg` decryption is now checked live in phase 6, byte-identical to Go).
 - [ ] Oracle: a Go test harness (`xtask`) that records inputs/outputs of each guest call
       from the Go implementation; Rust must produce identical bytes for the same inputs.
       Done as scripts for `machimage` and `machine`; `assets` and `xtask` remain.
@@ -278,7 +279,31 @@ parity check for the commands it touches.
 
 - [ ] `purchase` (free apps), license-exists handling, terms.
 - [ ] `download`: parallel range download with resume, sinf replication, iTunesMetadata, artwork.
-- [ ] macOS `.pkg` download, decryption and publish.
+- [x] macOS `.pkg` download, decryption and publish. `download_package.rs`
+      (`downloadPackagePlatform`), `download_macos.rs` (`downloadMacPackage`, the
+      `StoreAgent` decrypter adapter, staging, XAR validation, backup/rollback publish),
+      `macos_version_lookup.rs` (`lookupLatestMacOSExternalVersionID`, `serializedServerData`),
+      `macos_version_metadata.rs` and `macos_preflight_metadata.rs` (the Mac readers that
+      `get-version-metadata` uses in phase 7), and `xar.rs`, a port of go-macho's `pkg/xar`
+      reader (v1.1.282). Go's tests are ported; `sendDownloadProduct`'s Mac pinning cases
+      (`externalVersionId`, redownload `appExtVrsId`) wait for the phase-6 session fakes.
+      Oracle: `scripts/macos-package-oracle.sh` records `tests/fixtures/macos-package-oracle.json`
+      from Go (43 XAR archives, 33 metadata cases, 72 offer selections, 189 platform
+      decisions); `macos_oracle_tests` matches all of them. Live: `download --platform macos`
+      of two owned native apps (TestFlight 4.4.0, Calculate84 2.6.4) writes `.pkg` files
+      byte-identical to Go's (SHA-256), including a second run over an existing package.
+      Differences: XAR signatures are not verified (Go stores the result and nobody reads
+      it); files are kept sorted by ID (Go's map order is random, so only the first-reported
+      error can differ); the TOC and package XML are parsed with `roxmltree` (strict, whole
+      document) where Go's decoder is non-strict and stops after the root element, and XML,
+      `time.Parse` and JSON decode error details differ after Go's prefix; close errors of
+      the staging files are not reported (Rust drops files); the TOC is decompressed fully
+      before parsing. Cancellation is dropping the future: staging is removed, but a running
+      decryption thread finishes first. Go quirk kept: current Mac App Store packages nest
+      `bundle` under `bundle-version` in `PackageInfo`, so Go's (and this) package metadata
+      reader reports "does not contain metadata for the requested bundle" for them (checked
+      on TestFlight 4.4.0 with Go). Untested live: preflight packages (old builds without
+      `dpInfo`), iOS apps returned for a macOS request, and a failing rollback.
 
 ### Phase 7 — versions and purchases
 

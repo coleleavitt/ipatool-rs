@@ -1,4 +1,9 @@
+use std::sync::{Arc, Mutex};
+
+use ipatool_store::http::{Header, HttpRequest, HttpResponse};
+
 use super::*;
+use crate::commerce::StoreTransport;
 
 const KARING_MAC_CONFIGURATION: &str = r#"{"purchaseConfiguration":{"bundleId":"com.nebula.karing","appPlatforms":["mac","tv","phone","pad"],"metricsPlatformDisplayStyle":"ios","buyParams":"salableAdamId=6472431552&appExtVrsId=876660716"}}"#;
 
@@ -112,4 +117,137 @@ fn finds_the_serialized_server_data_script() {
             *expected
         );
     }
+}
+
+/// Live: `IPATOOL_TEST_LIVE=1 cargo test -p ipatool-appstore mac_product_page_live -- --ignored --nocapture`.
+#[tokio::test]
+#[ignore = "live Apple request"]
+async fn mac_product_page_live() {
+    let client = crate::Client::new().expect("client");
+    let response = client
+        .store_raw(
+            "request",
+            CommerceRequest {
+                method: "GET".to_owned(),
+                url: "https://apps.apple.com/us/app/id899247664?platform=mac".to_owned(),
+                ..CommerceRequest::default()
+            },
+        )
+        .await
+        .expect("request");
+    eprintln!("status {} headers {:?}", response.status, response.headers);
+    eprintln!(
+        "{}",
+        String::from_utf8_lossy(&response.data[..response.data.len().min(400)])
+    );
+}
+
+/// Answers every `request` with one scripted page and records the requests.
+#[derive(Debug, Default)]
+struct PageTransport {
+    status: u16,
+    body: Vec<u8>,
+    fail: bool,
+    requests: Mutex<Vec<(String, String, String)>>,
+}
+
+impl StoreTransport for PageTransport {
+    fn send(
+        &self,
+        operation: &str,
+        request: CommerceRequest,
+    ) -> std::result::Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
+        self.requests.lock().expect("requests").push((
+            operation.to_owned(),
+            request.method,
+            request.url,
+        ));
+        if self.fail {
+            return Err("connection reset".into());
+        }
+        Ok(HttpResponse::new(
+            self.status,
+            Header::new(),
+            self.body.clone(),
+        ))
+    }
+
+    fn http(
+        &self,
+        _: &str,
+        _: HttpRequest,
+    ) -> std::result::Result<HttpResponse, Box<dyn std::error::Error + Send + Sync>> {
+        Err("unexpected transfer".into())
+    }
+}
+
+fn german_account() -> Account {
+    Account {
+        store_front: "143443-2,34".to_owned(),
+        ..Account::default()
+    }
+}
+
+async fn lookup(transport: PageTransport) -> (Result<String>, Vec<(String, String, String)>) {
+    let transport = Arc::new(transport);
+    let client = Client::new()
+        .expect("client")
+        .with_store_transport(Arc::clone(&transport) as Arc<dyn StoreTransport>);
+    client.cache_storefronts(&[("143443", "DE")]);
+    let result = client
+        .lookup_latest_macos_external_version_id(&german_account(), &karing())
+        .await;
+    let requests = transport.requests.lock().expect("requests").clone();
+    (result, requests)
+}
+
+#[tokio::test]
+async fn requests_the_mac_product_page_of_the_account_storefront() {
+    let (result, requests) = lookup(PageTransport {
+        status: 200,
+        body: mac_version_page(KARING_MAC_CONFIGURATION),
+        ..PageTransport::default()
+    })
+    .await;
+    assert_eq!(result.expect("version"), "876660716");
+    assert_eq!(
+        requests,
+        [(
+            "request".to_owned(),
+            "GET".to_owned(),
+            "https://apps.apple.com/de/app/id6472431552?platform=mac".to_owned()
+        )]
+    );
+}
+
+#[tokio::test]
+async fn propagates_lookup_failures() {
+    let (result, _) = lookup(PageTransport {
+        status: 500,
+        ..PageTransport::default()
+    })
+    .await;
+    assert_eq!(
+        result.expect_err("HTTP failure").to_string(),
+        "macOS version lookup returned HTTP 500"
+    );
+    let (result, _) = lookup(PageTransport {
+        fail: true,
+        ..PageTransport::default()
+    })
+    .await;
+    assert_eq!(
+        result.expect_err("network failure").to_string(),
+        "macOS version lookup request failed: request failed: connection reset"
+    );
+    let (result, _) = lookup(PageTransport {
+        status: 200,
+        body: mac_version_page("{}"),
+        ..PageTransport::default()
+    })
+    .await;
+    assert_eq!(
+        result.expect_err("missing offer").to_string(),
+        "macOS purchase configuration has no external version id for the requested app"
+    );
 }
