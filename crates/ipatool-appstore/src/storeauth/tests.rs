@@ -218,17 +218,18 @@ fn store_amd_requires_provisioned_state() {
         state(None, 1).to_json(),
         state(Some(&[]), 1).to_json(),
     ] {
-        let error = UnavailableStoreAmd
+        let error = EmulatorStoreAmd
             .headers(&encoded, "https://example", b"hw")
             .unwrap_err();
         assert_eq!(error.to_string(), unprovisioned);
     }
-    let error = UnavailableStoreAmd.headers(b"{}", "", b"").unwrap_err();
+    let error = EmulatorStoreAmd.headers(b"{}", "", b"").unwrap_err();
     assert_eq!(error.to_string(), "invalid persisted anisette state");
-    let error = UnavailableStoreAmd
-        .headers(&state(Some(b"adi"), 1).to_json(), "", b"")
-        .unwrap_err();
-    assert!(matches!(error, Error::NotPorted(_)), "{error}");
+    let state = state(Some(b"adi"), 1);
+    assert_eq!(
+        provisioned_store_amd_state(&state.to_json()).unwrap(),
+        state
+    );
 }
 
 /// A recorded request to the fake server.

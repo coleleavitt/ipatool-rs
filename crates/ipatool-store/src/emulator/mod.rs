@@ -34,6 +34,8 @@ mod runtime;
 )]
 mod session;
 mod swift;
+#[cfg(test)]
+mod tests;
 mod value;
 
 use std::fmt::Display;

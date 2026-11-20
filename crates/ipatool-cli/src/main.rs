@@ -10,7 +10,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 
 use clap::{Args, Parser, Subcommand};
-use ipatool_appstore::storeauth::UnavailableStoreAmd;
+use ipatool_appstore::storeauth::EmulatorStoreAmd;
 use ipatool_appstore::{Account, Client, CookieJar, CountryCode, LookupQuery, Platform, keys};
 use ipatool_keychain::{Config, Keychain};
 use serde_json::json;
@@ -202,7 +202,7 @@ async fn run_auth(cli: &Cli, command: &AuthCommand, out: &Output) -> Result<(), 
                 prompt::read_prompt,
                 async |input| {
                     client
-                        .native_login(&input, &keychain, &UnavailableStoreAmd)
+                        .native_login(&input, &keychain, &EmulatorStoreAmd)
                         .await
                 },
             )
