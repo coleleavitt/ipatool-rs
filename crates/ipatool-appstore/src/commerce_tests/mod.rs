@@ -17,7 +17,10 @@
 mod download;
 mod download_file;
 mod download_product;
+mod get_version_metadata;
 mod kbsync;
+mod list_versions;
+mod partial_zip;
 mod purchase;
 mod redownload;
 mod terms;

@@ -346,6 +346,27 @@ mod tests {
         assert_eq!(versions[0].external_version_id, "895516672");
         assert_eq!(versions[0].display_version, "26.46.0");
         assert_eq!(versions[1].external_version_id, "895199582");
+        assert_eq!(
+            versions[0].release_date,
+            time::macros::datetime!(2026-11-18 19:21:02 UTC)
+        );
+    }
+
+    #[tokio::test]
+    async fn platforms_without_a_catalog_history_return_no_versions() {
+        let client = Client::new().unwrap();
+        for platform in [
+            Platform::MacOs,
+            Platform::AppleTv,
+            Platform::WatchOs,
+            Platform::VisionOs,
+        ] {
+            let versions = client
+                .catalog_version_history(42, &us(), Some(platform))
+                .await
+                .unwrap();
+            assert_eq!(versions, []);
+        }
     }
 
     #[test]

@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 clap.workspace = true
+futures-util = { version = "0.3", default-features = false }
 ipatool-appstore.workspace = true
 ipatool-keychain.workspace = true
 rustix = { version = "1", features = ["termios"] }

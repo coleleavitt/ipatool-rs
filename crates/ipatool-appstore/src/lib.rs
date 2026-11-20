@@ -20,23 +20,18 @@ mod download_package;
 mod download_product;
 mod download_types;
 mod error;
+mod get_version_metadata;
+mod list_versions;
 mod login;
 mod login_storefront;
 pub mod machine;
 #[cfg(test)]
 mod macos_oracle_tests;
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "read by get-version-metadata, phase 7")
-)]
 mod macos_preflight_metadata;
 mod macos_version_lookup;
-#[cfg_attr(
-    not(test),
-    expect(dead_code, reason = "read by get-version-metadata, phase 7")
-)]
 mod macos_version_metadata;
 mod native_login;
+mod partial_zip;
 mod platform;
 mod purchase;
 mod replicate_sinf;
@@ -45,13 +40,6 @@ mod store;
 pub mod storeauth;
 mod storefront;
 mod version_lookup;
-#[cfg_attr(
-    not(test),
-    allow(
-        dead_code,
-        reason = "the metadata readers are used by get-version-metadata, phase 7"
-    )
-)]
 mod xar;
 mod zipfile;
 
@@ -72,7 +60,9 @@ pub use error::{Error, MachineAction, Result, TransportError, UnexpectedResponse
 pub use ipatool_store::backend::ResponseFormat;
 pub use ipatool_store::emulator::Value;
 pub use ipatool_store::http::{Header, HttpRequest, HttpResponse};
+pub use list_versions::ListVersionsOutput;
 pub use login::{LoginInput, LoginOutput};
+pub use partial_zip::VersionMetadata;
 pub use platform::Platform;
 pub use session::StoreSession;
 pub use storefront::storefront_identifier;

@@ -134,6 +134,34 @@ impl Store for Fake {
             .push(Call::Replicate(sinfs.len(), package));
         self.replicate_error.borrow_mut().take().map_or(Ok(()), Err)
     }
+
+    async fn list_versions(
+        &self,
+        _: &Account,
+        _: &App,
+        _: Option<Platform>,
+    ) -> AppResult<ListVersionsOutput> {
+        unreachable!("purchase and download do not list versions")
+    }
+
+    async fn get_version_metadata(
+        &self,
+        _: &Account,
+        _: &App,
+        _: &str,
+        _: Option<Platform>,
+    ) -> AppResult<VersionMetadata> {
+        unreachable!("purchase and download do not read version metadata")
+    }
+
+    async fn catalog_version_history(
+        &self,
+        _: &Account,
+        _: &App,
+        _: Option<Platform>,
+    ) -> AppResult<Vec<CatalogVersion>> {
+        unreachable!("purchase and download do not read the catalog")
+    }
 }
 
 fn out() -> Output {

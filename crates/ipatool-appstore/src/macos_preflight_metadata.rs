@@ -3,7 +3,8 @@
 
 use time::OffsetDateTime;
 
-use crate::macos_version_metadata::{VersionMetadata, xml_document};
+use crate::macos_version_metadata::xml_document;
+use crate::partial_zip::VersionMetadata;
 use crate::xar::{self, ReadAt};
 use crate::{Error, Result};
 

@@ -4,11 +4,14 @@
 //! with their compressed bytes, so their framing must follow Go's writer exactly.
 
 use std::fs::File;
-use std::io::{self, BufWriter, Read, Seek, SeekFrom, Write};
+use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::path::Path;
 
 use flate2::Compression;
 use flate2::write::DeflateEncoder;
+use time::{Date, Duration, Month, OffsetDateTime};
+
+use crate::xar::ReadAt;
 
 const LOCAL_SIGNATURE: u32 = 0x0403_4b50;
 const CENTRAL_SIGNATURE: u32 = 0x0201_4b50;
@@ -76,11 +79,99 @@ impl FileHeader {
     fn has_data_descriptor(&self) -> bool {
         self.flags & 0x8 != 0
     }
+
+    /// Go's `FileHeader.Modified` as its reader sets it: the last NTFS, Unix or extended
+    /// timestamp in the central extra field, else the MS-DOS time read as UTC.
+    pub(crate) fn modified(&self) -> OffsetDateTime {
+        extra_modified(&self.extra)
+            .unwrap_or_else(|| ms_dos_time(self.modified_date, self.modified_time))
+    }
 }
 
-/// Go's `zip.ReadCloser`: the central directory of an archive on disk.
-pub(crate) struct Archive {
-    file: File,
+const NTFS_EXTRA_ID: u16 = 0x000a;
+const UNIX_EXTRA_ID: u16 = 0x000d;
+const EXT_TIME_EXTRA_ID: u16 = 0x5455;
+const INFO_ZIP_UNIX_EXTRA_ID: u16 = 0x5855;
+
+/// The timestamp part of Go's `readDirectoryHeader` extra-field walk.
+fn extra_modified(mut extra: &[u8]) -> Option<OffsetDateTime> {
+    let mut modified = None;
+    while extra.len() >= 4 {
+        let tag = u16_at(extra, 0);
+        let size = usize::from(u16_at(extra, 2));
+        if extra.len() - 4 < size {
+            break;
+        }
+        let field = &extra[4..4 + size];
+        extra = &extra[4 + size..];
+        match tag {
+            NTFS_EXTRA_ID if field.len() >= 4 => {
+                if let Some(time) = ntfs_time(&field[4..]) {
+                    modified = Some(time);
+                }
+            }
+            UNIX_EXTRA_ID | INFO_ZIP_UNIX_EXTRA_ID if field.len() >= 8 => {
+                modified = unix_time(u32_at(field, 4));
+            }
+            EXT_TIME_EXTRA_ID if field.len() >= 5 && field[0] & 1 != 0 => {
+                modified = unix_time(u32_at(field, 1));
+            }
+            _ => {}
+        }
+    }
+    modified
+}
+
+/// The last modification time among the NTFS field's attributes.
+fn ntfs_time(mut attributes: &[u8]) -> Option<OffsetDateTime> {
+    const WINDOWS_EPOCH: i128 = -11_644_473_600;
+    let mut modified = None;
+    while attributes.len() >= 4 {
+        let attribute = u16_at(attributes, 0);
+        let length = usize::from(u16_at(attributes, 2));
+        if attributes.len() - 4 < length {
+            break;
+        }
+        let value = &attributes[4..4 + length];
+        attributes = &attributes[4 + length..];
+        if attribute == 1 && length == 24 {
+            // 100 ns ticks since 1601, read as Go's int64.
+            let ticks = i128::from(u64_at(value, 0).cast_signed());
+            let nanos =
+                (WINDOWS_EPOCH + ticks / 10_000_000) * 1_000_000_000 + (ticks % 10_000_000) * 100;
+            modified = OffsetDateTime::from_unix_timestamp_nanos(nanos)
+                .ok()
+                .or(modified);
+        }
+    }
+    modified
+}
+
+fn unix_time(seconds: u32) -> Option<OffsetDateTime> {
+    OffsetDateTime::from_unix_timestamp(i64::from(seconds)).ok()
+}
+
+/// Go's `msDosTimeToTime`, with `time.Date`'s normalization of out-of-range fields.
+fn ms_dos_time(date: u16, time: u16) -> OffsetDateTime {
+    let months = i32::from(date >> 9) * 12 + i32::from(date >> 5 & 0xf) - 1;
+    let month = u8::try_from(months.rem_euclid(12) + 1).expect("1 through 12");
+    let first = Date::from_calendar_date(
+        1980 + months.div_euclid(12),
+        Month::try_from(month).expect("1 through 12"),
+        1,
+    )
+    .expect("MS-DOS years are 1979 through 2108");
+    let seconds = (i64::from(date & 0x1f) - 1) * 86_400
+        + i64::from(time >> 11) * 3600
+        + i64::from(time >> 5 & 0x3f) * 60
+        + i64::from(time & 0x1f) * 2;
+    first.midnight().assume_utc() + Duration::seconds(seconds)
+}
+
+/// Go's `zip.Reader`: the central directory of an archive read through an
+/// `io.ReaderAt` (a file on disk unless another source is given).
+pub(crate) struct Archive<R = File> {
+    source: R,
     pub files: Vec<FileHeader>,
 }
 
@@ -91,19 +182,64 @@ struct DirectoryEnd {
     end_offset: u64,
 }
 
-fn read_at(file: &File, offset: u64, buffer: &mut [u8]) -> io::Result<()> {
-    let mut file = file;
-    file.seek(SeekFrom::Start(offset))?;
-    file.read_exact(buffer)
+/// `io.ErrUnexpectedEOF`.
+pub(crate) fn unexpected_eof() -> io::Error {
+    io::Error::new(io::ErrorKind::UnexpectedEof, "unexpected EOF")
+}
+
+fn checksum_error() -> io::Error {
+    io::Error::new(io::ErrorKind::InvalidData, "zip: checksum error")
+}
+
+fn read_at(source: &(impl ReadAt + ?Sized), offset: u64, buffer: &mut [u8]) -> io::Result<()> {
+    if source.read_at(buffer, offset)? < buffer.len() {
+        return Err(unexpected_eof());
+    }
+    Ok(())
+}
+
+/// Go's `io.ReadFull`: nothing read is `io.EOF`, a partial read `io.ErrUnexpectedEOF`.
+fn read_full(reader: &mut impl Read, buffer: &mut [u8]) -> io::Result<()> {
+    let mut filled = 0;
+    while filled < buffer.len() {
+        match reader.read(&mut buffer[filled..]) {
+            Ok(0) if filled == 0 => return Err(io::Error::other("EOF")),
+            Ok(0) => return Err(unexpected_eof()),
+            Ok(count) => filled += count,
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => {}
+            Err(error) => return Err(error),
+        }
+    }
+    Ok(())
+}
+
+/// Go's `io.SectionReader` read sequentially.
+pub(crate) struct Section<'a, R: ?Sized> {
+    source: &'a R,
+    offset: u64,
+    end: u64,
+}
+
+impl<R: ReadAt + ?Sized> Read for Section<'_, R> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        let remaining = usize::try_from(self.end.saturating_sub(self.offset)).unwrap_or(usize::MAX);
+        let length = remaining.min(buffer.len());
+        if length == 0 {
+            return Ok(0);
+        }
+        let count = self.source.read_at(&mut buffer[..length], self.offset)?;
+        self.offset += count as u64;
+        Ok(count)
+    }
 }
 
 /// Go's `readDirectoryEnd` and `readDirectory64End`.
-fn read_directory_end(file: &File, size: u64) -> io::Result<DirectoryEnd> {
+fn read_directory_end(source: &impl ReadAt, size: u64) -> io::Result<DirectoryEnd> {
     let mut found = None;
     for search in [1024_u64, 65 * 1024] {
         let search = search.min(size);
         let mut tail = vec![0; usize::try_from(search).map_err(|_| format_error())?];
-        read_at(file, size - search, &mut tail)?;
+        read_at(source, size - search, &mut tail)?;
         if let Some(position) = find_signature(&tail) {
             found = Some((size - search + position as u64, tail[position..].to_vec()));
             break;
@@ -121,10 +257,10 @@ fn read_directory_end(file: &File, size: u64) -> io::Result<DirectoryEnd> {
     };
     // Go compares the directory size with 0xffff here, not 0xffffffff.
     if (end.records == 0xffff || end.size == 0xffff || end.offset == MAX32)
-        && let Some(offset) = find_directory64_end(file, end_offset)?
+        && let Some(offset) = find_directory64_end(source, end_offset)?
     {
         let mut record = [0; END64_LEN];
-        read_at(file, offset, &mut record)?;
+        read_at(source, offset, &mut record)?;
         if u32_at(&record, 0) != END64_SIGNATURE {
             return Err(format_error());
         }
@@ -137,12 +273,12 @@ fn read_directory_end(file: &File, size: u64) -> io::Result<DirectoryEnd> {
 }
 
 /// Go's `findDirectory64End`: the zip64 end record's offset from its locator, if any.
-fn find_directory64_end(file: &File, end_offset: u64) -> io::Result<Option<u64>> {
+fn find_directory64_end(source: &impl ReadAt, end_offset: u64) -> io::Result<Option<u64>> {
     let Some(at) = end_offset.checked_sub(LOCATOR64_LEN as u64) else {
         return Ok(None);
     };
     let mut locator = [0; LOCATOR64_LEN];
-    read_at(file, at, &mut locator)?;
+    read_at(source, at, &mut locator)?;
     if u32_at(&locator, 0) != LOCATOR64_SIGNATURE
         || u32_at(&locator, 4) != 0
         || u32_at(&locator, 16) != 1
@@ -163,12 +299,34 @@ fn find_signature(block: &[u8]) -> Option<usize> {
     })
 }
 
+/// One central record read from the directory stream.
+fn read_directory_record(reader: &mut impl Read) -> io::Result<FileHeader> {
+    let mut record = vec![0; CENTRAL_LEN];
+    read_full(reader, &mut record)?;
+    if u32_at(&record, 0) != CENTRAL_SIGNATURE {
+        return Err(format_error());
+    }
+    let variable = usize::from(u16_at(&record, 28))
+        + usize::from(u16_at(&record, 30))
+        + usize::from(u16_at(&record, 32));
+    record.resize(CENTRAL_LEN + variable, 0);
+    read_full(reader, &mut record[CENTRAL_LEN..])?;
+    read_directory_header(&record).map(|(header, _)| header)
+}
+
 impl Archive {
     /// Go's `zip.OpenReader`.
     pub(crate) fn open(path: &Path) -> io::Result<Self> {
         let file = File::open(path)?;
         let size = file.metadata()?.len();
-        let end = read_directory_end(&file, size)?;
+        Self::new(file, size)
+    }
+}
+
+impl<R: ReadAt> Archive<R> {
+    /// Go's `zip.NewReader`.
+    pub(crate) fn new(source: R, size: u64) -> io::Result<Self> {
+        let end = read_directory_end(&source, size)?;
         // Go's baseOffset: support archives with a prefix, unless the declared offset
         // already points at a central header.
         let mut base = end
@@ -178,7 +336,7 @@ impl Archive {
             .ok_or_else(format_error)?;
         if base > 0 {
             let mut signature = [0; 4];
-            if read_at(&file, end.offset, &mut signature).is_ok()
+            if read_at(&source, end.offset, &mut signature).is_ok()
                 && u32_at(&signature, 0) == CENTRAL_SIGNATURE
             {
                 base = 0;
@@ -188,39 +346,46 @@ impl Archive {
         if start >= size {
             return Err(format_error());
         }
-        // Go reads central records from the directory start until one does not parse.
-        let mut directory = vec![0; usize::try_from(size - start).map_err(|_| format_error())?];
-        read_at(&file, start, &mut directory)?;
+        // Go reads central records through a 4 KiB bufio.Reader until one does not
+        // parse; a remote source sees the same reads.
+        let mut directory = BufReader::with_capacity(
+            4096,
+            Section {
+                source: &source,
+                offset: start,
+                end: size,
+            },
+        );
         let mut files = Vec::new();
-        let mut rest = directory.as_slice();
-        let mut failure = format_error();
-        loop {
-            if rest.len() < 4 || u32_at(rest, 0) != CENTRAL_SIGNATURE {
-                break;
-            }
-            match read_directory_header(rest) {
-                Ok((mut header, used)) => {
+        let failure = loop {
+            match read_directory_record(&mut directory) {
+                Ok(mut header) => {
                     header.header_offset += base;
                     files.push(header);
-                    rest = &rest[used..];
                 }
-                Err(error) => {
-                    failure = error;
-                    break;
+                Err(error)
+                    if matches!(
+                        error.kind(),
+                        io::ErrorKind::InvalidData | io::ErrorKind::UnexpectedEof
+                    ) =>
+                {
+                    break error;
                 }
+                Err(error) => return Err(error),
             }
-        }
+        };
+        drop(directory);
         // Go accepts a record count that only matches modulo 2^16.
         if files.len() as u64 % 0x1_0000 != end.records % 0x1_0000 {
             return Err(failure);
         }
-        Ok(Self { file, files })
+        Ok(Self { source, files })
     }
 
     /// Go's `File.DataOffset`.
     pub(crate) fn data_offset(&self, header: &FileHeader) -> io::Result<u64> {
         let mut local = [0; LOCAL_LEN];
-        read_at(&self.file, header.header_offset, &mut local)?;
+        read_at(&self.source, header.header_offset, &mut local)?;
         if u32_at(&local, 0) != LOCAL_SIGNATURE {
             return Err(format_error());
         }
@@ -232,7 +397,7 @@ impl Archive {
     /// local name matches the central one.
     pub(crate) fn local_extra(&self, header: &FileHeader) -> io::Result<Vec<u8>> {
         let mut local = [0; LOCAL_LEN];
-        read_at(&self.file, header.header_offset, &mut local)?;
+        read_at(&self.source, header.header_offset, &mut local)?;
         if u32_at(&local, 0) != LOCAL_SIGNATURE {
             return Err(format_error());
         }
@@ -240,7 +405,7 @@ impl Archive {
         let extra_len = usize::from(u16_at(&local, 28));
         let mut metadata = vec![0; name_len + extra_len];
         read_at(
-            &self.file,
+            &self.source,
             header.header_offset + LOCAL_LEN as u64,
             &mut metadata,
         )?;
@@ -251,48 +416,161 @@ impl Archive {
     }
 
     /// Go's `File.OpenRaw`.
-    pub(crate) fn open_raw(&self, header: &FileHeader) -> io::Result<impl Read + '_> {
+    pub(crate) fn open_raw(&self, header: &FileHeader) -> io::Result<Section<'_, R>> {
         let offset = self.data_offset(header)?;
-        let mut file = &self.file;
-        file.seek(SeekFrom::Start(offset))?;
-        Ok(file.take(header.compressed_size64))
+        Ok(Section {
+            source: &self.source,
+            offset,
+            end: offset.saturating_add(header.compressed_size64),
+        })
     }
 
-    /// Go's `File.Open` + `io.ReadAll`, with its size and checksum checks.
-    pub(crate) fn read(&self, header: &FileHeader) -> io::Result<Vec<u8>> {
-        let raw = self.open_raw(header)?;
-        let mut data = Vec::new();
-        match header.method {
-            STORE => {
-                raw.take(header.uncompressed_size64)
-                    .read_to_end(&mut data)?;
+    /// Go's `File.Open`: the decompressed entry, checked at its end as Go's
+    /// `checksumReader` does.
+    pub(crate) fn open_file(&self, header: &FileHeader) -> io::Result<FileReader<'_, R>> {
+        let offset = self.data_offset(header)?;
+        let mut reader = FileReader {
+            inner: Box::new(io::empty()),
+            descriptor: None,
+            size: 0,
+            crc32: 0,
+            hash: crc32fast::Hasher::new(),
+            read: 0,
+            failed: None,
+        };
+        if header.name.ends_with('/') {
+            // Go's dirReader: a directory with data fails, otherwise it is empty.
+            if header.uncompressed_size64 != 0 {
+                reader.failed = Some((io::ErrorKind::InvalidData, format_error().to_string()));
             }
-            DEFLATE => {
-                flate2::read::DeflateDecoder::new(raw)
-                    .take(header.uncompressed_size64 + 1)
-                    .read_to_end(&mut data)?;
-            }
+            return Ok(reader);
+        }
+        let data_end = offset.saturating_add(header.compressed_size64);
+        let raw = Section {
+            source: &self.source,
+            offset,
+            end: data_end,
+        };
+        reader.inner = match header.method {
+            STORE => Box::new(raw),
+            // Go's flate reader wraps a non-byte reader in a 4 KiB bufio.Reader.
+            DEFLATE => Box::new(flate2::bufread::DeflateDecoder::new(
+                BufReader::with_capacity(4096, raw),
+            )),
             _ => {
                 return Err(io::Error::new(
                     io::ErrorKind::Unsupported,
                     "zip: unsupported compression algorithm",
                 ));
             }
-        }
-        if data.len() as u64 != header.uncompressed_size64 {
-            return Err(io::Error::new(
-                io::ErrorKind::UnexpectedEof,
-                "unexpected EOF",
-            ));
-        }
-        if crc32fast::hash(&data) != header.crc32 && header.crc32 != 0 {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "zip: checksum error",
-            ));
-        }
+        };
+        reader.size = header.uncompressed_size64;
+        reader.crc32 = header.crc32;
+        reader.descriptor = header.has_data_descriptor().then(|| Section {
+            source: &self.source,
+            offset: data_end,
+            end: data_end.saturating_add(DESCRIPTOR_LEN),
+        });
+        Ok(reader)
+    }
+
+    /// Go's `File.Open` + `io.ReadAll`.
+    pub(crate) fn read(&self, header: &FileHeader) -> io::Result<Vec<u8>> {
+        let mut data = Vec::new();
+        self.open_file(header)?.read_to_end(&mut data)?;
         Ok(data)
     }
+}
+
+/// `dataDescriptorLen`.
+const DESCRIPTOR_LEN: u64 = 16;
+
+/// Go's `checksumReader` over the decompressor.
+pub(crate) struct FileReader<'a, R> {
+    inner: Box<dyn Read + 'a>,
+    descriptor: Option<Section<'a, R>>,
+    size: u64,
+    crc32: u32,
+    hash: crc32fast::Hasher,
+    read: u64,
+    /// Go's sticky `checksumReader.err`.
+    failed: Option<(io::ErrorKind, String)>,
+}
+
+/// The `io.EOF` [`read_full`] reports when nothing was read.
+fn is_eof(error: &io::Error) -> bool {
+    error.kind() == io::ErrorKind::Other && error.to_string() == "EOF"
+}
+
+impl<R: ReadAt> FileReader<'_, R> {
+    /// The checks Go's `checksumReader` runs at the end of the entry.
+    fn finish(&mut self) -> io::Result<()> {
+        if self.read != self.size {
+            return Err(unexpected_eof());
+        }
+        let hash = self.hash.clone().finalize();
+        if let Some(mut descriptor) = self.descriptor.take() {
+            read_data_descriptor(&mut descriptor, self.crc32).map_err(|error| {
+                if is_eof(&error) {
+                    unexpected_eof()
+                } else {
+                    error
+                }
+            })?;
+            if hash != self.crc32 {
+                return Err(checksum_error());
+            }
+        } else if self.crc32 != 0 && hash != self.crc32 {
+            return Err(checksum_error());
+        }
+        Ok(())
+    }
+
+    fn fail(&mut self, error: io::Error) -> io::Error {
+        self.failed = Some((error.kind(), error.to_string()));
+        error
+    }
+}
+
+impl<R: ReadAt> Read for FileReader<'_, R> {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        if let Some((kind, message)) = &self.failed {
+            return Err(io::Error::new(*kind, message.clone()));
+        }
+        let count = match self.inner.read(buffer) {
+            Ok(count) => count,
+            Err(error) => return Err(self.fail(error)),
+        };
+        self.hash.update(&buffer[..count]);
+        self.read += count as u64;
+        if self.read > self.size {
+            return Err(format_error());
+        }
+        if count > 0 || buffer.is_empty() {
+            return Ok(count);
+        }
+        match self.finish() {
+            Ok(()) => Ok(0),
+            Err(error) => Err(self.fail(error)),
+        }
+    }
+}
+
+/// Go's `readDataDescriptor`: the descriptor's CRC-32 must match the central one.
+fn read_data_descriptor(reader: &mut impl Read, crc32: u32) -> io::Result<()> {
+    let mut buffer = [0; 12];
+    read_full(reader, &mut buffer[..4])?;
+    // The descriptor signature is optional; without it the four bytes are the CRC.
+    let start = if u32_at(&buffer, 0) == DESCRIPTOR_SIGNATURE {
+        0
+    } else {
+        4
+    };
+    read_full(reader, &mut buffer[start..])?;
+    if u32_at(&buffer, 0) != crc32 {
+        return Err(checksum_error());
+    }
+    Ok(())
 }
 
 /// Go's `readDirectoryHeader`: one central record and the bytes it used.
@@ -701,7 +979,10 @@ fn write_local_header(out: &mut impl Write, header: &FileHeader, raw: bool) -> i
 
 /// Go's `replicateZip`: every entry copied with its compressed bytes; deflated entries get
 /// a trailing descriptor for streaming installers, stored entries inline sizes.
-pub(crate) fn replicate(source: &Archive, writer: &mut Writer<impl Write>) -> io::Result<()> {
+pub(crate) fn replicate(
+    source: &Archive<impl ReadAt>,
+    writer: &mut Writer<impl Write>,
+) -> io::Result<()> {
     for file in &source.files {
         let local_extra = source.local_extra(file).map_err(|error| {
             io::Error::new(

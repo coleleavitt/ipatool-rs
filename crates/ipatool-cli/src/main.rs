@@ -5,6 +5,7 @@ mod login;
 mod output;
 mod prompt;
 mod state;
+mod versions;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -68,6 +69,10 @@ enum Command {
     /// Download iOS, iPadOS, tvOS, watchOS, visionOS, and macOS app packages from the App
     /// Store.
     Download(commerce::DownloadArgs),
+    /// List the available versions of an App Store app.
+    ListVersions(versions::ListVersionsArgs),
+    /// Retrieves the metadata for a specific version of an app.
+    GetVersionMetadata(versions::GetVersionMetadataArgs),
 }
 
 #[derive(Subcommand)]
@@ -257,6 +262,17 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
             let (client, keychain) = (store_client()?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             commerce::download(args, &session, !cli.non_interactive, out).await?;
+        }
+        Command::ListVersions(args) => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            let cache = state_dir()?.join(versions::VERSION_METADATA_CACHE_FILE_NAME);
+            versions::list_versions(args, &session, Some(&cache), out).await?;
+        }
+        Command::GetVersionMetadata(args) => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            versions::get_version_metadata(args, &session, out).await?;
         }
     }
     Ok(())

@@ -98,7 +98,9 @@ pub enum Error {
 }
 
 impl Error {
-    pub(crate) fn context(self, context: impl Into<String>) -> Self {
+    /// Go's `fmt.Errorf("%s: %w", context, err)`.
+    #[must_use]
+    pub fn context(self, context: impl Into<String>) -> Self {
         Self::Context {
             context: context.into(),
             source: Box::new(self),

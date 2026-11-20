@@ -7,7 +7,7 @@ use crate::{Account, App, Platform};
 
 const ID: i64 = 6_472_431_552;
 
-fn new_world() -> World {
+pub(crate) fn new_world() -> World {
     let world = World::new();
     world
         .client
@@ -288,9 +288,9 @@ async fn rejects_unusable_app_store_catalog_answers() {
     }
 }
 
-const KARING: &str = r#"{"purchaseConfiguration":{"bundleId":"com.nebula.karing","appPlatforms":["mac","tv","phone","pad"],"metricsPlatformDisplayStyle":"ios","buyParams":"salableAdamId=6472431552&appExtVrsId=876660716"}}"#;
+pub(crate) const KARING: &str = r#"{"purchaseConfiguration":{"bundleId":"com.nebula.karing","appPlatforms":["mac","tv","phone","pad"],"metricsPlatformDisplayStyle":"ios","buyParams":"salableAdamId=6472431552&appExtVrsId=876660716"}}"#;
 
-fn mac_page(configuration: &str) -> Reply {
+pub(crate) fn mac_page(configuration: &str) -> Reply {
     Reply::Body(
         200,
         Vec::new(),
@@ -298,7 +298,7 @@ fn mac_page(configuration: &str) -> Reply {
     )
 }
 
-fn karing() -> App {
+pub(crate) fn karing() -> App {
     App {
         id: ID,
         bundle_id: "com.nebula.karing".to_owned(),
@@ -306,7 +306,7 @@ fn karing() -> App {
     }
 }
 
-fn mac_account() -> Account {
+pub(crate) fn mac_account() -> Account {
     Account {
         store_front: "143443-2,34".to_owned(),
         ..Account::default()

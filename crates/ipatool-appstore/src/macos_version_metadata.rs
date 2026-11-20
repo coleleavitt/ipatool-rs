@@ -9,15 +9,9 @@ use crate::download_macos::MacPackageDownload;
 use crate::download_package::{has_mac_dp_info, metadata_string};
 use crate::download_types::DownloadItem;
 use crate::macos_preflight_metadata::preflight_version_metadata;
+use crate::partial_zip::VersionMetadata;
 use crate::xar::{self, ReadAt, go_path};
 use crate::{Error, Result};
-
-/// Go's `versionMetadata`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct VersionMetadata {
-    pub display_version: String,
-    pub release_date: OffsetDateTime,
-}
 
 /// `xml.Unmarshal`'s input rules: UTF-8 text with an optional DTD.
 pub(crate) fn xml_document(data: &[u8]) -> Result<roxmltree::Document<'_>> {
@@ -142,4 +136,4 @@ pub(crate) fn package_version_metadata<R: ReadAt>(
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

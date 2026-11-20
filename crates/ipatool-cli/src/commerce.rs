@@ -9,8 +9,9 @@ use std::time::{Duration, Instant};
 use clap::Args;
 use ipatool_appstore::storeauth::EmulatorStoreAmd;
 use ipatool_appstore::{
-    Account, App, DownloadInput, DownloadOutput, LoginInput, LookupQuery, Platform, Progress,
-    ProgressHandle, Sinf, StoreSession,
+    Account, App, CatalogVersion, CountryCode, DownloadInput, DownloadOutput, ListVersionsOutput,
+    LoginInput, LookupQuery, Platform, Progress, ProgressHandle, Sinf, StoreSession,
+    VersionMetadata,
 };
 use serde_json::json;
 
@@ -55,9 +56,9 @@ pub struct DownloadArgs {
     purchase: bool,
 }
 
-const MISSING_APP: &str = "either the app ID or the bundle identifier must be specified";
+pub(crate) const MISSING_APP: &str = "either the app ID or the bundle identifier must be specified";
 
-type AppResult<T> = ipatool_appstore::Result<T>;
+pub(crate) type AppResult<T> = ipatool_appstore::Result<T>;
 
 /// The App Store calls the commands make (Go's `appstore.AppStore`), so tests can replace them.
 pub(crate) trait Store {
@@ -79,6 +80,36 @@ pub(crate) trait Store {
     ) -> AppResult<()>;
     async fn download(&self, input: DownloadInput) -> AppResult<DownloadOutput>;
     async fn replicate_sinf(&self, sinfs: Vec<Sinf>, package: PathBuf) -> AppResult<()>;
+    async fn list_versions(
+        &self,
+        account: &Account,
+        app: &App,
+        platform: Option<Platform>,
+    ) -> AppResult<ListVersionsOutput>;
+    async fn get_version_metadata(
+        &self,
+        account: &Account,
+        app: &App,
+        version_id: &str,
+        platform: Option<Platform>,
+    ) -> AppResult<VersionMetadata>;
+    /// The fork's `CatalogVersionHistory` in the account's storefront.
+    async fn catalog_version_history(
+        &self,
+        account: &Account,
+        app: &App,
+        platform: Option<Platform>,
+    ) -> AppResult<Vec<CatalogVersion>>;
+}
+
+/// Go's `countryCodeFromStoreFront` as `Lookup` and `CatalogVersionHistory` wrap it.
+async fn account_country(session: &StoreSession<'_>, account: &Account) -> AppResult<CountryCode> {
+    session
+        .client
+        .country_code_from_store_front(&account.store_front)
+        .await
+        .map_err(|error| error.context("failed to resolve the country code"))?
+        .parse()
 }
 
 impl Store for StoreSession<'_> {
@@ -105,16 +136,7 @@ impl Store for StoreSession<'_> {
         bundle_id: &str,
         platform: Option<Platform>,
     ) -> AppResult<App> {
-        let country = self
-            .client
-            .country_code_from_store_front(&account.store_front)
-            .await
-            .map_err(|error| {
-                ipatool_appstore::Error::Invalid(format!(
-                    "failed to resolve the country code: {error}"
-                ))
-            })?
-            .parse()?;
+        let country = account_country(self, account).await?;
         self.client
             .lookup(
                 &LookupQuery::BundleId(bundle_id.to_owned()),
@@ -139,6 +161,37 @@ impl Store for StoreSession<'_> {
 
     async fn replicate_sinf(&self, sinfs: Vec<Sinf>, package: PathBuf) -> AppResult<()> {
         self.client.replicate_sinf(sinfs, package).await
+    }
+
+    async fn list_versions(
+        &self,
+        account: &Account,
+        app: &App,
+        platform: Option<Platform>,
+    ) -> AppResult<ListVersionsOutput> {
+        StoreSession::list_versions(self, account, app, platform).await
+    }
+
+    async fn get_version_metadata(
+        &self,
+        account: &Account,
+        app: &App,
+        version_id: &str,
+        platform: Option<Platform>,
+    ) -> AppResult<VersionMetadata> {
+        StoreSession::get_version_metadata(self, account, app, version_id, platform).await
+    }
+
+    async fn catalog_version_history(
+        &self,
+        account: &Account,
+        app: &App,
+        platform: Option<Platform>,
+    ) -> AppResult<Vec<CatalogVersion>> {
+        let country = account_country(self, account).await?;
+        self.client
+            .catalog_version_history(app.id, &country, platform)
+            .await
     }
 }
 

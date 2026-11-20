@@ -10,12 +10,12 @@ use crate::download_types::Sinf;
 use crate::macos_preflight_metadata::tests::{preflight_distribution, preflight_xar};
 use crate::xar::tests::{hex, test_archive};
 
-const INFO: &str =
+pub(crate) const INFO: &str =
     r#"<pkg-info><bundle id="com.example.mac" CFBundleShortVersionString="1.2.1"/></pkg-info>"#;
-const MODIFIED: &str = "2025-07-24T08:38:42Z";
+pub(crate) const MODIFIED: &str = "2025-07-24T08:38:42Z";
 
 /// Go's `macMetadataXAR`.
-fn metadata_xar(info: &str, modified: &str) -> Vec<u8> {
+pub(crate) fn metadata_xar(info: &str, modified: &str) -> Vec<u8> {
     let payload = b"app payload";
     let mut entries = String::new();
     let mut offset = 20;
@@ -99,7 +99,7 @@ impl MacPackageDecrypter for Decrypter {
     }
 }
 
-fn job(output: Vec<u8>, calls: Arc<Mutex<usize>>) -> MacPackageDownload {
+pub(crate) fn job(output: Vec<u8>, calls: Arc<Mutex<usize>>) -> MacPackageDownload {
     MacPackageDownload {
         fs: Arc::new(OsFileSystem),
         factory: Arc::new(move |hardware_id, dp_info| {

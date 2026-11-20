@@ -9,6 +9,7 @@ use ipatool_store::gourl;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
+use crate::download_macos::MacPackageDownload;
 use crate::storeauth::StoreAmd;
 use crate::{Account, Client, Error, Result, keys};
 
@@ -55,6 +56,9 @@ pub struct StoreSession<'a> {
     pub(crate) kbsync_generator: Option<KbsyncGenerator>,
     /// Go's `machine.MacAddress` (tests replace it).
     pub(crate) mac_address: fn() -> Result<String>,
+    /// Go's `os` and `macDecrypterFactory` for the Mac package reads of
+    /// `GetVersionMetadata` (tests replace them).
+    pub(crate) mac_package: MacPackageDownload,
 }
 
 impl std::fmt::Debug for StoreSession<'_> {
@@ -78,6 +82,7 @@ impl Client {
             state: Mutex::default(),
             kbsync_generator: Some(Box::new(default_kbsync_generator)),
             mac_address: crate::machine::mac_address,
+            mac_package: MacPackageDownload::default(),
         }
     }
 }
