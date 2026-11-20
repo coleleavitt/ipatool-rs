@@ -1070,6 +1070,9 @@ dependencies = [
 name = "ipatool-sap"
 version = "0.1.0"
 dependencies = [
+ "object",
+ "serde",
+ "serde_json",
  "sha2",
  "tempfile",
  "thiserror",
@@ -1346,6 +1349,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cabcc654086861f9e1bc5115258de62ef92c79b20f4615a1b0cc57c4e82027d4"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "object"
+version = "0.41.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11dbdb66876026054e4ffc8d757d862bdf5df5aebd5c0b95a41f17832a94f7d2"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]
