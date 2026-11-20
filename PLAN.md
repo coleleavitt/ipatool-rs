@@ -134,6 +134,8 @@ parity check for the commands it touches.
       `IPATOOL_TEST_SAP_CACHE=1 cargo test -p ipatool-sap --test machimage_oracle` matches it.
       Differences: an out-of-range `ARM64E_USERLAND24` bind ordinal is an error (go-macho
       panics); `strings.EqualFold` is approximated by per-character Unicode lowercasing.
+      Untested: dyld-info bind/rebase/export-trie and 32/64-bit chained formats (no pinned
+      image uses them; ported from go-macho by reading).
 - [ ] `assets`: IPSW HTTP range reader, AEA decryption, APFS reader, dyld shared cache
       extraction, LZFSE; same pinned files, sizes and SHA-256 digests; same cache directory name.
 - [ ] `machine`: arm64 shims, IOKit/AES shims, modern ADI, kbsync, storeagent.
