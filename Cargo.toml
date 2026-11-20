@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/ipatool-appstore", "crates/ipatool-cli", "crates/ipatool-keychain"]
+members = ["crates/ipatool-appstore", "crates/ipatool-cli", "crates/ipatool-keychain", "crates/ipatool-sap"]
 resolver = "3"
 
 [workspace.package]
