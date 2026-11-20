@@ -43,7 +43,7 @@ impl Output {
     pub fn error(&self, error: &dyn std::error::Error) {
         let line = self.render(
             "error",
-            serde_json::json!({ "error": error.to_string() }),
+            serde_json::json!({ "error": error.to_string(), "success": false }),
             None,
         );
         match self.format {
