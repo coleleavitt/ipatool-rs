@@ -23,21 +23,23 @@ use crate::output::Output;
 #[derive(Args, Clone)]
 pub struct PurchaseArgs {
     /// ID of the target app.
-    #[arg(short = 'i', long, default_value_t = 0)]
+    #[arg(short = 'i', long, default_value_t = 0, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     app_id: i64,
     /// The bundle identifier of the target app (overrides the app ID).
     #[arg(short, long, default_value = "")]
     bundle_identifier: String,
     /// Platform to purchase for: iphone (iOS), ipad (iPadOS), appletv (tvOS), watchos,
     /// visionos, or macos.
-    #[arg(long)]
-    platform: Option<Platform>,
+    #[arg(long, default_value = "")]
+    platform: String,
+    #[command(flatten)]
+    _ignored: crate::cobra::IgnoredArgs,
 }
 
 #[derive(Args, Clone)]
 pub struct DownloadArgs {
     /// ID of the target app (required).
-    #[arg(short = 'i', long, default_value_t = 0)]
+    #[arg(short = 'i', long, default_value_t = 0, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     app_id: i64,
     /// The bundle identifier of the target app (overrides the app ID when found).
     #[arg(short, long, default_value = "")]
@@ -51,20 +53,22 @@ pub struct DownloadArgs {
     external_version_id: String,
     /// Platform to download for: iphone (iOS), ipad (iPadOS), appletv (tvOS), watchos,
     /// visionos, or macos.
-    #[arg(long)]
-    platform: Option<Platform>,
+    #[arg(long, default_value = "")]
+    platform: String,
     /// Obtain a license for the app if needed.
-    #[arg(long)]
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", default_value = "false", value_parser = crate::cobra::parse_bool)]
     purchase: bool,
+    #[command(flatten)]
+    _ignored: crate::cobra::IgnoredArgs,
 }
 
 #[derive(Args, Clone)]
 pub struct ListPurchasesArgs {
     /// maximum number of apps to return per page
-    #[arg(short = 'l', long, default_value_t = DEFAULT_OWNED_APPS_LIMIT, allow_negative_numbers = true)]
+    #[arg(short = 'l', long, default_value_t = DEFAULT_OWNED_APPS_LIMIT, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     max_results: i64,
     /// page of owned apps to return
-    #[arg(short, long, default_value_t = 1, allow_negative_numbers = true)]
+    #[arg(short, long, default_value_t = 1, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     page: i64,
     /// Filter by platform: iphone (iOS), ipad (iPadOS), appletv (tvOS), visionos, or macos
     #[arg(long, default_value = "")]
@@ -169,8 +173,6 @@ impl Store for StoreSession<'_> {
         platform: Option<Platform>,
     ) -> AppResult<Vec<App>> {
         let country = account_country(self, account, "country code is invalid").await?;
-        // Apple caps the result count far below `u32::MAX`.
-        let limit = u32::try_from(limit).unwrap_or(u32::MAX);
         self.client.search(term, &country, limit, platform).await
     }
 
@@ -254,10 +256,11 @@ pub(crate) async fn purchase(
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
+    let platform = parse_platform_filter(&args.platform)?;
     let mut account = store.account_info().await?;
     let mut token_expired = false;
     for attempt in 0..2 {
-        match purchase_attempt(args, store, &mut account, token_expired).await {
+        match purchase_attempt(args, platform, store, &mut account, token_expired).await {
             Ok(already_owned) => {
                 out.info(json!({ "alreadyOwned": already_owned, "success": true }));
                 return Ok(());
@@ -274,6 +277,7 @@ pub(crate) async fn purchase(
 /// One run of Go's `purchaseCmd` retry callback; `Ok(true)` when the app is already owned.
 async fn purchase_attempt(
     args: &PurchaseArgs,
+    platform: Option<Platform>,
     store: &impl Store,
     account: &mut Account,
     login: bool,
@@ -290,11 +294,11 @@ async fn purchase_attempt(
             .lookup(
                 account,
                 &LookupQuery::BundleId(args.bundle_identifier.clone()),
-                args.platform,
+                platform,
             )
             .await?;
     }
-    match store.purchase(account, &app, args.platform).await {
+    match store.purchase(account, &app, platform).await {
         Ok(()) => Ok(false),
         Err(error) if error.is_license_already_exists() => Ok(true),
         Err(error) => Err(error),
@@ -375,6 +379,7 @@ pub(crate) async fn download(
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
+    let platform = parse_platform_filter(&args.platform)?;
     let mut state = DownloadState {
         account: store.account_info().await?,
         token_expired: false,
@@ -382,17 +387,18 @@ pub(crate) async fn download(
         purchased: false,
     };
     for attempt in 0..3 {
-        let error = match download_attempt(args, store, interactive, out, &mut state).await {
-            Ok(output) => {
-                out.info(json!({
-                    "output": output.destination_path.display().to_string(),
-                    "purchased": state.purchased,
-                    "success": true,
-                }));
-                return Ok(());
-            }
-            Err(error) => error,
-        };
+        let error =
+            match download_attempt(args, platform, store, interactive, out, &mut state).await {
+                Ok(output) => {
+                    out.info(json!({
+                        "output": output.destination_path.display().to_string(),
+                        "purchased": state.purchased,
+                        "success": true,
+                    }));
+                    return Ok(());
+                }
+                Err(error) => error,
+            };
         state.token_expired = error.is_password_token_expired();
         let license_required = error.is_license_required();
         // Like Go, a pending purchase stays pending until one succeeds.
@@ -408,6 +414,7 @@ pub(crate) async fn download(
 /// One run of Go's `downloadCmd` retry callback.
 async fn download_attempt(
     args: &DownloadArgs,
+    platform: Option<Platform>,
     store: &impl Store,
     interactive: bool,
     out: &Output,
@@ -426,7 +433,7 @@ async fn download_attempt(
             .lookup(
                 &state.account,
                 &LookupQuery::BundleId(args.bundle_identifier.clone()),
-                args.platform,
+                platform,
             )
             .await
         {
@@ -437,9 +444,7 @@ async fn download_attempt(
         }
     }
     if state.purchase_required {
-        if let Err(error) = store
-            .purchase(&mut state.account, &app, args.platform)
-            .await
+        if let Err(error) = store.purchase(&mut state.account, &app, platform).await
             && !error.is_license_already_exists()
         {
             return Err(error);
@@ -458,10 +463,10 @@ async fn download_attempt(
             output_path: args.output.clone(),
             progress,
             external_version_id: args.external_version_id.clone(),
-            platform: args.platform,
+            platform,
         })
         .await?;
-    replicate_download_sinf(store, args.platform, &output).await?;
+    replicate_download_sinf(store, platform, &output).await?;
     Ok(output)
 }
 

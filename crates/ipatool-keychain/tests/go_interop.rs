@@ -37,10 +37,12 @@ async fn secret_service_round_trip() {
     ring.set("account", b"two").await.unwrap();
     assert_eq!(ring.get("account").await.unwrap(), b"two");
     ring.remove("account").await.unwrap();
-    assert!(matches!(
-        ring.get("account").await,
-        Err(ipatool_keychain::Error::NotFound)
-    ));
+    let error = ring.get("account").await.unwrap_err();
+    assert!(error.is_not_found());
+    assert_eq!(
+        error.to_string(),
+        "failed to get item: The specified item could not be found in the keyring"
+    );
 }
 
 #[tokio::test]

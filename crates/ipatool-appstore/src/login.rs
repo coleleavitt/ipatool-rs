@@ -389,7 +389,7 @@ impl<B: LoginBackend> Login<'_, B> {
                     return Ok(saved.store_front);
                 }
             }
-            Err(ipatool_keychain::Error::NotFound) => {}
+            Err(err) if err.is_not_found() => {}
             Err(err) => return Err(Error::from(err).context("failed to get account")),
         }
         result

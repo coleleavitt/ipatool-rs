@@ -16,6 +16,7 @@ clap.workspace = true
 futures-util = { version = "0.3", default-features = false }
 ipatool-appstore.workspace = true
 ipatool-keychain.workspace = true
+ipatool-store.workspace = true
 rmcp = { version = "3.11", default-features = false, features = ["server", "transport-io"] }
 rustix = { version = "1", features = ["termios"] }
 schemars = "1.2"

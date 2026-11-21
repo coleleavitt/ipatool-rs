@@ -211,8 +211,9 @@ fn download_args(
         bundle_identifier: bundle.to_owned(),
         output: String::new(),
         external_version_id: String::new(),
-        platform,
+        platform: platform.map_or_default(|platform| platform.to_string()),
         purchase,
+        _ignored: crate::cobra::IgnoredArgs::default(),
     }
 }
 
@@ -323,7 +324,8 @@ async fn requires_an_app_before_reading_the_account() {
     let purchase_args = PurchaseArgs {
         app_id: 0,
         bundle_identifier: String::new(),
-        platform: None,
+        platform: String::new(),
+        _ignored: crate::cobra::IgnoredArgs::default(),
     };
     let error = purchase(&purchase_args, &fake, &out()).await.unwrap_err();
     assert_eq!(error.to_string(), MISSING_APP);
@@ -568,7 +570,8 @@ fn purchase_args(app_id: i64, bundle: &str, platform: Option<Platform>) -> Purch
     PurchaseArgs {
         app_id,
         bundle_identifier: bundle.to_owned(),
-        platform,
+        platform: platform.map_or_default(|platform| platform.to_string()),
+        _ignored: crate::cobra::IgnoredArgs::default(),
     }
 }
 
@@ -870,7 +873,7 @@ fn exposes_the_go_flags() {
     assert_eq!(parsed.download.bundle_identifier, "com.example.app");
     assert_eq!(parsed.download.output, "/tmp/out");
     assert_eq!(parsed.download.external_version_id, "9");
-    assert_eq!(parsed.download.platform, Some(Platform::MacOs));
+    assert_eq!(parsed.download.platform, "macos");
     assert!(parsed.download.purchase);
     let help = Wrapper::command().render_long_help().to_string();
     assert!(help.contains("macos"));

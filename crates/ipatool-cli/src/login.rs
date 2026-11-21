@@ -20,6 +20,8 @@ pub struct LoginArgs {
     /// 2FA code for the Apple ID
     #[arg(long, default_value = "", hide_default_value = true)]
     pub auth_code: String,
+    #[command(flatten)]
+    pub _ignored: crate::cobra::IgnoredArgs,
 }
 
 /// Runs the login command. `prompt` is Go's `readPrompt` (text, masked); `login` is
@@ -35,6 +37,7 @@ pub async fn run(
         mut email,
         mut password,
         mut auth_code,
+        ..
     } = args;
     if email.is_empty() {
         if !interactive {
@@ -121,6 +124,7 @@ mod tests {
             email: email.to_owned(),
             password: password.to_owned(),
             auth_code: String::new(),
+            ..LoginArgs::default()
         }
     }
 

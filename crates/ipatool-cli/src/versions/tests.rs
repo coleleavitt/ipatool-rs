@@ -262,8 +262,8 @@ async fn get_version_metadata_passes_the_platform_and_exact_version() {
     }
 }
 
-#[test]
-fn rejects_unknown_as_a_platform() {
+#[tokio::test]
+async fn rejects_unknown_as_a_platform_before_reading_the_account() {
     for args in [
         &["list-versions", "-i", "42", "--platform", "unknown"][..],
         &[
@@ -276,11 +276,23 @@ fn rejects_unknown_as_a_platform() {
             "unknown",
         ],
     ] {
-        let error = parse(args).err().unwrap().to_string();
-        assert!(error.contains(r#"invalid platform "unknown""#), "{error}");
+        let fake = Fake::default();
+        let error = execute(&fake, args, None).await.unwrap_err();
+        assert_eq!(error.to_string(), r#"invalid platform "unknown""#);
+        assert!(fake.lookups.borrow().is_empty());
     }
-    let error = parse(&["get-version-metadata", "-i", "42"]).err().unwrap();
-    assert!(error.to_string().contains("--external-version-id"));
+}
+
+#[tokio::test]
+async fn checks_the_required_flag_before_the_app() {
+    // Cobra validates required flags before `RunE` checks the app.
+    let error = execute(&Fake::default(), &["get-version-metadata"], None)
+        .await
+        .unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        r#"required flag(s) "external-version-id" not set"#
+    );
 }
 
 #[tokio::test]

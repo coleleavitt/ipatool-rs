@@ -1,5 +1,6 @@
 //! `ipatool` command line interface (Rust port of the Go `cmd` package).
 
+mod cobra;
 mod commerce;
 mod login;
 mod mcp;
@@ -12,9 +13,9 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, CommandFactory as _, Parser, Subcommand};
 use ipatool_appstore::storeauth::EmulatorStoreAmd;
-use ipatool_appstore::{Account, Client, CookieJar, CountryCode, LookupQuery, Platform, keys};
+use ipatool_appstore::{Account, Client, CookieJar, CountryCode, LookupQuery, keys};
 use ipatool_keychain::{Config, Keychain};
 use serde_json::json;
 
@@ -23,7 +24,8 @@ use crate::output::{Format, Output};
 #[derive(Parser)]
 #[command(
     name = "ipatool",
-    version,
+    // Cobra prints `ipatool version <version>`.
+    version = concat!("version ", env!("CARGO_PKG_VERSION")),
     about = "A cli tool for interacting with Apple's ipa files"
 )]
 struct Cli {
@@ -31,10 +33,10 @@ struct Cli {
     #[arg(long, global = true, value_enum, default_value_t = Format::Text)]
     format: Format,
     /// Enables verbose logs.
-    #[arg(long, global = true)]
+    #[arg(long, global = true, num_args = 0..=1, require_equals = true, default_missing_value = "true", default_value = "false", value_parser = crate::cobra::parse_bool)]
     verbose: bool,
     /// Run in a non-interactive session.
-    #[arg(long, global = true)]
+    #[arg(long, global = true, num_args = 0..=1, require_equals = true, default_missing_value = "true", default_value = "false", value_parser = crate::cobra::parse_bool)]
     non_interactive: bool,
     /// Passphrase for unlocking the file keychain.
     #[arg(long, global = true, default_value = "")]
@@ -50,10 +52,12 @@ enum Command {
     Auth(AuthCommand),
     /// Search for apps available on the App Store.
     Search {
-        term: String,
+        /// The search term. Cobra checks the count when the command runs.
+        #[arg(value_name = "TERM")]
+        args: Vec<String>,
         /// Maximum amount of search results to retrieve.
-        #[arg(short, long, default_value_t = 5)]
-        limit: u32,
+        #[arg(short, long, default_value_t = 5, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
+        limit: i64,
         #[command(flatten)]
         store: StoreArgs,
     },
@@ -88,16 +92,16 @@ enum AuthCommand {
     /// Login to the App Store.
     Login(login::LoginArgs),
     /// Show current account info.
-    Info,
+    Info(cobra::IgnoredArgs),
     /// Revoke your App Store credentials.
-    Revoke,
+    Revoke(cobra::IgnoredArgs),
 }
 
 #[derive(Args)]
 struct StoreArgs {
     /// Platform: iphone, ipad, appletv, watchos, visionos, or macos.
-    #[arg(long)]
-    platform: Option<Platform>,
+    #[arg(long, default_value = "")]
+    platform: String,
     /// Storefront country code. Defaults to the logged-in account's storefront.
     #[arg(long)]
     country: Option<CountryCode>,
@@ -110,7 +114,7 @@ struct AppArgs {
     #[arg(short, long)]
     bundle_identifier: Option<String>,
     /// Numeric App Store ID of the target app.
-    #[arg(short = 'i', long)]
+    #[arg(short = 'i', long, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     app_id: Option<i64>,
 }
 
@@ -201,11 +205,12 @@ async fn revoke(keychain: &Keychain) -> Result<(), BoxError> {
     if let Err(err) = keychain.remove(keys::ACCOUNT).await {
         errors.push(format!("failed to remove account from keychain: {err}"));
     }
-    match keychain.remove(keys::KBSYNC).await {
-        Ok(()) | Err(ipatool_keychain::Error::NotFound) => {}
-        Err(err) => errors.push(format!(
+    if let Err(err) = keychain.remove(keys::KBSYNC).await
+        && !err.is_not_found()
+    {
+        errors.push(format!(
             "failed to remove kbsync cache from keychain: {err}"
-        )),
+        ));
     }
     if errors.is_empty() {
         Ok(())
@@ -232,11 +237,11 @@ async fn run_auth(cli: &Cli, command: &AuthCommand, out: &Output) -> Result<(), 
             )
             .await?;
         }
-        AuthCommand::Info => {
+        AuthCommand::Info(_) => {
             let account = account_info(&keychain).await?;
             out.info(json!({ "name": account.name, "email": account.email, "success": true }));
         }
-        AuthCommand::Revoke => {
+        AuthCommand::Revoke(_) => {
             revoke(&keychain).await?;
             out.info(json!({ "success": true }));
         }
@@ -247,22 +252,23 @@ async fn run_auth(cli: &Cli, command: &AuthCommand, out: &Output) -> Result<(), 
 async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
     match &cli.command {
         Command::Auth(command) => run_auth(cli, command, out).await?,
-        Command::Search { term, limit, store } => {
+        Command::Search { args, limit, store } => {
+            let [term] = args.as_slice() else {
+                return Err(format!("accepts 1 arg(s), received {}", args.len()).into());
+            };
             let client = store_client()?;
             let country = country(cli, &client, store).await?;
-            let apps = client
-                .search(term, &country, *limit, store.platform)
-                .await?;
+            let platform = commerce::parse_platform_filter(&store.platform)?;
+            let apps = client.search(term, &country, *limit, platform).await?;
             out.info(json!({ "count": apps.len(), "apps": apps }));
         }
         Command::CatalogVersions { app, store } => {
             let client = store_client()?;
             let country = country(cli, &client, store).await?;
-            let app = client
-                .lookup(&app.query(), &country, store.platform)
-                .await?;
+            let platform = commerce::parse_platform_filter(&store.platform)?;
+            let app = client.lookup(&app.query(), &country, platform).await?;
             let versions = client
-                .catalog_version_history(app.id, &country, store.platform)
+                .catalog_version_history(app.id, &country, platform)
                 .await?;
             out.info(json!({ "app": app, "count": versions.len(), "versions": versions }));
         }
@@ -301,9 +307,33 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
     Ok(())
 }
 
+/// Reports a command line clap rejected the way cobra does.
+fn usage_error(error: &clap::Error) -> ExitCode {
+    let argv: Vec<String> = std::env::args_os()
+        .skip(1)
+        .map(|arg| arg.to_string_lossy().into_owned())
+        .collect();
+    match cobra::usage(error, &argv, &Cli::command()) {
+        Some(cobra::Usage::Help(help)) => {
+            print!("{help}");
+            ExitCode::SUCCESS
+        }
+        Some(cobra::Usage::Error { message, json }) => {
+            let format = if json { Format::Json } else { Format::Text };
+            let error: BoxError = message.into();
+            Output::new(format, false).error(error.as_ref());
+            ExitCode::FAILURE
+        }
+        None => error.exit(),
+    }
+}
+
 #[tokio::main]
 async fn main() -> ExitCode {
-    let cli = Cli::parse();
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(error) => return usage_error(&error),
+    };
     let out = if matches!(cli.command, Command::Mcp) {
         Output::mcp(cli.verbose)
     } else {

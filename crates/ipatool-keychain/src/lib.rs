@@ -49,6 +49,15 @@ enum Backend {
     File(file::FileKeyring),
 }
 
+// Only the Secret Service backend awaits; the API stays async on every platform.
+#[cfg_attr(
+    not(all(unix, not(target_os = "macos"))),
+    allow(
+        clippy::unused_async,
+        clippy::unused_async_trait_impl,
+        reason = "async only for the Secret Service backend"
+    )
+)]
 impl Keychain {
     /// Opens the first available backend, in the Go order: macOS Keychain, Secret
     /// Service, encrypted files.
@@ -96,43 +105,48 @@ impl Keychain {
         }
     }
 
+    /// Errors read `failed to get item: …`, as Go's `keychain.Get` wraps them.
+    ///
     /// # Errors
-    /// [`Error::NotFound`] when the key is not stored, or a backend error.
+    /// [`Error::is_not_found`] when the key is not stored, or a backend error.
     pub async fn get(&self, key: &str) -> Result<Vec<u8>> {
-        match &self.backend {
+        let result = match &self.backend {
             #[cfg(target_os = "macos")]
             Backend::MacOs(ring) => ring.get(key),
             #[cfg(all(unix, not(target_os = "macos")))]
             Backend::SecretService(ring) => ring.get(key).await,
             Backend::File(ring) => ring.get(key),
-        }
+        };
+        result.map_err(Error::op("get"))
     }
 
     /// # Errors
-    /// A backend error.
+    /// A backend error, as `failed to set item: …`.
     pub async fn set(&self, key: &str, data: &[u8]) -> Result<()> {
         let item = item::StoredItem::new(key, data, &self.label);
-        match &self.backend {
+        let result = match &self.backend {
             #[cfg(target_os = "macos")]
             Backend::MacOs(ring) => ring.set(&item),
             #[cfg(all(unix, not(target_os = "macos")))]
             Backend::SecretService(ring) => ring.set(&item).await,
             Backend::File(ring) => ring.set(&item),
-        }
+        };
+        result.map_err(Error::op("set"))
     }
 
-    /// Like Go, removing a missing key is [`Error::NotFound`] except on Secret
-    /// Service, where it succeeds once the collection exists.
+    /// Like Go, removing a missing key is not found except on Secret Service, where it
+    /// succeeds once the collection exists.
     ///
     /// # Errors
-    /// [`Error::NotFound`] or a backend error.
+    /// [`Error::is_not_found`] or a backend error, as `failed to remove item: …`.
     pub async fn remove(&self, key: &str) -> Result<()> {
-        match &self.backend {
+        let result = match &self.backend {
             #[cfg(target_os = "macos")]
             Backend::MacOs(ring) => ring.remove(key),
             #[cfg(all(unix, not(target_os = "macos")))]
             Backend::SecretService(ring) => ring.remove(key).await,
             Backend::File(ring) => ring.remove(key),
-        }
+        };
+        result.map_err(Error::op("remove"))
     }
 }

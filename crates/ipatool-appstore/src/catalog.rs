@@ -73,7 +73,7 @@ struct ItunesResults {
 pub(crate) fn search_url(
     term: &str,
     country: &CountryCode,
-    limit: u32,
+    limit: i64,
     platform: Option<Platform>,
 ) -> Result<Url> {
     let entity = Platform::search_entity(platform)?;
@@ -219,7 +219,7 @@ impl Client {
         &self,
         term: &str,
         country: &CountryCode,
-        limit: u32,
+        limit: i64,
         platform: Option<Platform>,
     ) -> Result<Vec<App>> {
         if platform == Some(Platform::VisionOs) {

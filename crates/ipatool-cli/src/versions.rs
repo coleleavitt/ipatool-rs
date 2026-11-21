@@ -14,46 +14,50 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
 use crate::BoxError;
-use crate::commerce::{AppResult, MISSING_APP, Store};
+use crate::commerce::{AppResult, MISSING_APP, Store, parse_platform_filter};
 use crate::output::Output;
 
 #[derive(Args, Clone)]
 pub struct ListVersionsArgs {
     /// ID of the target app (required).
-    #[arg(short = 'i', long, default_value_t = 0)]
+    #[arg(short = 'i', long, default_value_t = 0, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     app_id: i64,
     /// The bundle identifier of the target app (overrides the app ID).
     #[arg(short, long, default_value = "")]
     bundle_identifier: String,
     /// Platform to list versions for: iphone (iOS), ipad (iPadOS), appletv (tvOS), watchos,
     /// visionos, or macos.
-    #[arg(long)]
-    platform: Option<Platform>,
+    #[arg(long, default_value = "")]
+    platform: String,
     /// Also fetch the display version and release date of every version (recent versions
     /// come from the public catalog in one request; older versions are cached locally
     /// after the first fetch).
-    #[arg(long)]
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", default_value = "false", value_parser = crate::cobra::parse_bool)]
     with_metadata: bool,
     /// Number of version metadata requests to run at once (with --with-metadata).
-    #[arg(long, default_value_t = 4, allow_negative_numbers = true)]
+    #[arg(long, default_value_t = 4, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     concurrency: i64,
+    #[command(flatten)]
+    _ignored: crate::cobra::IgnoredArgs,
 }
 
 #[derive(Args, Clone)]
 pub struct GetVersionMetadataArgs {
     /// ID of the target app (required).
-    #[arg(short = 'i', long, default_value_t = 0)]
+    #[arg(short = 'i', long, default_value_t = 0, allow_hyphen_values = true, value_parser = crate::cobra::parse_int)]
     app_id: i64,
     /// The bundle identifier of the target app (overrides the app ID).
     #[arg(short, long, default_value = "")]
     bundle_identifier: String,
     /// External version identifier of the target app (required).
     #[arg(long)]
-    external_version_id: String,
+    external_version_id: Option<String>,
     /// Platform to retrieve metadata for: iphone (iOS), ipad (iPadOS), appletv (tvOS),
     /// watchos, visionos, or macos.
-    #[arg(long)]
-    platform: Option<Platform>,
+    #[arg(long, default_value = "")]
+    platform: String,
+    #[command(flatten)]
+    _ignored: crate::cobra::IgnoredArgs,
 }
 
 /// Go's retry of both commands (with fork fix aee638e): the account is read once; two
@@ -110,16 +114,17 @@ pub(crate) async fn list_versions(
         .ok()
         .filter(|&concurrency| concurrency >= 1)
         .ok_or("concurrency must be at least 1")?;
+    let platform = parse_platform_filter(&args.platform)?;
     let fields = with_login(store, async |account: &Account| {
         let app = target_app(
             store,
             account,
             args.app_id,
             &args.bundle_identifier,
-            args.platform,
+            platform,
         )
         .await?;
-        let listed = store.list_versions(account, &app, args.platform).await?;
+        let listed = store.list_versions(account, &app, platform).await?;
         let mut fields = serde_json::Map::new();
         fields.insert(
             "externalVersionIdentifiers".to_owned(),
@@ -131,7 +136,7 @@ pub(crate) async fn list_versions(
                 store,
                 account,
                 &app,
-                args.platform,
+                platform,
                 &listed.external_version_identifiers,
                 concurrency,
                 cache_path,
@@ -154,20 +159,25 @@ pub(crate) async fn get_version_metadata(
     store: &impl Store,
     out: &Output,
 ) -> Result<(), BoxError> {
+    // Cobra checks required flags before the command runs.
+    let Some(external_version_id) = &args.external_version_id else {
+        return Err(r#"required flag(s) "external-version-id" not set"#.into());
+    };
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
+    let platform = parse_platform_filter(&args.platform)?;
     let metadata = with_login(store, async |account: &Account| {
         let app = target_app(
             store,
             account,
             args.app_id,
             &args.bundle_identifier,
-            args.platform,
+            platform,
         )
         .await?;
         store
-            .get_version_metadata(account, &app, &args.external_version_id, args.platform)
+            .get_version_metadata(account, &app, external_version_id, platform)
             .await
     })
     .await?;
