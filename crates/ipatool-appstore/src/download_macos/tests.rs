@@ -399,6 +399,8 @@ fn rejects_conflicting_dp_info_values() {
     assert_eq!(mac_dp_info(&same).expect("dpInfo"), b"one");
 }
 
+/// The OS text differs per platform (Go prints Windows' own text there too).
+#[cfg(unix)]
 #[test]
 fn os_errors_use_go_text() {
     let missing = Path::new("/nonexistent/ipatool");
