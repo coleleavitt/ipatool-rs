@@ -1325,6 +1325,7 @@ dependencies = [
  "clap",
  "futures-util",
  "ipatool-appstore",
+ "ipatool-decrypt",
  "ipatool-keychain",
  "ipatool-store",
  "rmcp",
@@ -1336,6 +1337,21 @@ dependencies = [
  "time",
  "tokio",
  "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "ipatool-decrypt"
+version = "0.1.0"
+dependencies = [
+ "aes",
+ "cbc",
+ "cipher",
+ "ipatool-appstore",
+ "md-5",
+ "plist",
+ "serde_json",
+ "tempfile",
+ "thiserror",
 ]
 
 [[package]]
