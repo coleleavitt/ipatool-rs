@@ -57,7 +57,7 @@ pub use client::Client;
 pub use commerce::{CommerceRequest, Payload, StoreResponse, StoreResult, StoreTransport};
 pub use cookies::{CookieJar, CookieJarError};
 pub use download_types::{
-    DownloadInput, DownloadItem, DownloadOutput, DownloadProduct, DownloadResult, Progress,
+    DownloadInput, DownloadItem, DownloadOutput, DownloadProduct, DownloadResult, Phase, Progress,
     ProgressHandle, Sinf,
 };
 pub use error::{Error, MachineAction, Result, TransportError, UnexpectedResponseError};

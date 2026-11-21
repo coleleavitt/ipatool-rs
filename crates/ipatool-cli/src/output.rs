@@ -7,6 +7,15 @@ use serde_json::{Map, Value};
 use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 
+/// zerolog's default `time` field: RFC 3339 in whole seconds, local time.
+pub(crate) fn zerolog_time() -> String {
+    OffsetDateTime::now_local()
+        .unwrap_or_else(|_| OffsetDateTime::now_utc())
+        .truncate_to_second()
+        .format(&Rfc3339)
+        .unwrap_or_default()
+}
+
 #[derive(Clone, Copy, ValueEnum)]
 pub enum Format {
     Text,
@@ -36,6 +45,10 @@ impl Output {
             verbose,
             stderr: true,
         }
+    }
+
+    pub fn is_json(&self) -> bool {
+        matches!(self.format, Format::Json)
     }
 
     fn print(&self, line: &str) {
@@ -86,14 +99,7 @@ impl Output {
                 let mut line = Map::new();
                 line.insert("level".into(), level.into());
                 line.extend(fields);
-                // zerolog's default time format is RFC 3339 in whole seconds.
-                let now = OffsetDateTime::now_local()
-                    .unwrap_or_else(|_| OffsetDateTime::now_utc())
-                    .truncate_to_second();
-                line.insert(
-                    "time".into(),
-                    now.format(&Rfc3339).unwrap_or_default().into(),
-                );
+                line.insert("time".into(), zerolog_time().into());
                 if let Some(message) = message {
                     line.insert("message".into(), message.into());
                 }

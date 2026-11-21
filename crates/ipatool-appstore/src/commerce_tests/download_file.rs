@@ -141,10 +141,15 @@ impl Download {
     }
 
     fn run(&self, progress: Option<ProgressHandle>) -> crate::Result<()> {
+        self.run_with(progress, true)
+    }
+
+    fn run_with(&self, progress: Option<ProgressHandle>, parallel: bool) -> crate::Result<()> {
         self.world.client.download_file_blocking(
             "https://cdn.example/app.ipa",
             &self.path,
             progress.as_ref(),
+            parallel,
         )
     }
 
@@ -185,6 +190,8 @@ struct Counter {
 }
 
 impl Progress for Counter {
+    fn phase(&self, _phase: crate::Phase) {}
+
     fn set_total(&self, total: i64) {
         self.total.store(total, Ordering::SeqCst);
     }
@@ -218,6 +225,35 @@ fn uses_four_requests_at_the_threshold_and_counts_progress_once() {
     }
     assert_eq!(counter.current.load(Ordering::SeqCst), download.size);
     assert_eq!(counter.total.load(Ordering::SeqCst), download.size);
+}
+
+/// The fork's "uses one request when parallel downloads are disabled".
+#[test]
+fn no_parallel_uses_one_request() {
+    let download = Download::new(PARALLEL_THRESHOLD * 2, None);
+    let counter = Arc::new(Counter::default());
+    download
+        .run_with(Some(Arc::clone(&counter) as ProgressHandle), false)
+        .unwrap();
+    download.expect_contents(1);
+    let requests = download.requests();
+    assert_eq!(requests.len(), 1);
+    assert_eq!(requests[0].range, "bytes=0-");
+    assert_eq!(counter.current.load(Ordering::SeqCst), download.size);
+}
+
+/// The fork's `TestDownloadFileReportsCompletedDownload`.
+#[test]
+fn reports_a_completed_download() {
+    let download = Download::new(7, None);
+    download.write_prefix(7);
+    let counter = Arc::new(Counter::default());
+    download
+        .run(Some(Arc::clone(&counter) as ProgressHandle))
+        .unwrap();
+    assert_eq!(download.requests().len(), 1);
+    assert_eq!(counter.total.load(Ordering::SeqCst), 7);
+    assert_eq!(counter.current.load(Ordering::SeqCst), 7);
 }
 
 #[test]

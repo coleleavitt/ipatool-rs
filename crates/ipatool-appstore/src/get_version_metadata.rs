@@ -51,7 +51,7 @@ impl StoreSession<'_> {
                 &hardware_id,
                 &app.bundle_id,
                 async |url: &str, path: &std::path::Path| {
-                    self.client.download_file(url, path, None).await
+                    self.client.download_file(url, path, None, true).await
                 },
             )
             .await

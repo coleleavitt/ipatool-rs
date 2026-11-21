@@ -836,6 +836,54 @@ keychain entries and JSON output stay as before.
     failing network: the key URL must be `https://wkms-public.apple.com`, so a local fake
     server cannot stand in for it.
 
+- [x] majd/ipatool#669, `download --no-parallel`, from chrismessina's
+  `feat/no-parallel-download` (f54a90d). Same flag name and help text. The flag sets
+  `DownloadInput.disable_parallel_download` (Go: `DisableParallelDownload`).
+  `Client::download_file` and `download_file_blocking` take `parallel` (Go:
+  `downloadFileWithOptions`). macOS packages pass it through `download_mac_package`.
+  `get-version-metadata` and MCP keep parallel ranges, as in the patch. The fork's test is
+  ported: a 256 MiB fixture with the flag off makes one `bytes=0-` request, assembles the
+  right bytes, leaves no `.ipatool-parts`, and counts all bytes.
+- [x] majd/ipatool#649, download progress modes, from NSExceptional's
+  `download-progress-modes` (d8088ad, 1867a8e, f35f080). `--progress
+  auto|bar|json|plain|none` on `download`, or `IPATOOL_PROGRESS` (the flag wins). `auto`
+  gives `none` with `--format json`, `bar` when interactive and stdout is a terminal,
+  else `plain`. `json` and `plain` write to stderr with the fork's throttling (JSON 250 ms;
+  plain every 1 % at least 30 ms apart, a 15 s heartbeat). They also use the fork's line
+  shapes and byte format (SI, one decimal).
+  - Phases: `resolving` at each attempt and in `Download`, `purchasing`, `downloading`,
+    `patching` (iOS), `decrypting` (macOS, after the encrypted package download).
+  - `Progress` (`ipatool-appstore`) gained `phase`. The fork replaced the progress bar type
+    with `Phase`/`Bytes`. Here the existing `set_total`/`set`/`add` stay, because the
+    parallel ranges already add to one shared counter. The reporters turn them into the
+    fork's `Bytes(current, total)`.
+  - The fork's branch predates parallel ranges, so its `downloadFile` changes were applied to
+    the current download code. One addition from the fork is kept: a finished resume (416)
+    reports its size.
+  - The bar moved to `progress.rs` and starts at the `downloading` phase, as the fork's
+    `barProgress` does.
+  - The fork's tests are ported (`progress/tests.rs`: mode table, unknown mode, plain and
+    JSON throttling with a fake clock, unknown totals, byte format; `commerce/tests.rs`:
+    phases in plain mode, also with the purchase retry, the invalid mode checked after the
+    app check and before the account read, `--no-parallel` reaching `DownloadInput`; the
+    resume-complete case in `commerce_tests/download_file.rs`).
+  - Behavior change, as in the fork: with `auto`, a non-interactive text run, or a run whose
+    stdout is not a terminal, now prints plain progress on stderr. `--progress none` gives
+    the old output. JSON output is unchanged unless `--progress json` is asked for.
+  - The fork's second branch, `no-color-off-tty` (1eac401), is already satisfied: this
+    port's text lines never contain ANSI colors (open question 3), so nothing changed. The
+    bar is the only output with control characters, and `auto` picks it only for a
+    terminal.
+  - Live: `download -b jp.co.sony.audio.companion --no-parallel --progress plain
+    --non-interactive --format json` (7.7.0, 73.9 MB) printed 104 stderr lines (`resolving`,
+    `downloading`, 0 % to 100 % one per percent, `patching`) and one JSON line on stdout. The
+    IPA has 743 entries, passes CRC checks, and its `Info.plist` says 7.7.0. Sony is below the
+    128 MiB threshold, so this run used one connection either way. The large-package path
+    with the flag is covered by the fixture test only.
+  - Untested: `--progress bar` and `auto` in a real terminal (the bar code itself did not
+    change), the `decrypting` phase live (no owned Mac app in the allowed set), and the
+    `json` mode live.
+
 ## Open questions for the user
 
 1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and

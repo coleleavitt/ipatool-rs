@@ -7,6 +7,7 @@ mod decrypt;
 mod login;
 mod mcp;
 mod output;
+mod progress;
 mod prompt;
 mod state;
 mod versions;

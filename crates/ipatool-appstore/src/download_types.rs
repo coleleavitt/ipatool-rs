@@ -49,8 +49,35 @@ pub struct DownloadOutput {
     pub sinfs: Vec<Sinf>,
 }
 
-/// Go's `progressbar.ProgressBar` as the downloader drives it.
+/// A stage of a download, reported through [`Progress::phase`] (the fork's progress
+/// modes, majd/ipatool#649). It may repeat the current phase.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Phase {
+    Resolving,
+    Purchasing,
+    Downloading,
+    Decrypting,
+    Patching,
+}
+
+impl Phase {
+    /// The name the progress output prints.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Resolving => "resolving",
+            Self::Purchasing => "purchasing",
+            Self::Downloading => "downloading",
+            Self::Decrypting => "decrypting",
+            Self::Patching => "patching",
+        }
+    }
+}
+
+/// Go's `progressbar.ProgressBar` as the downloader drives it, plus the phases of the
+/// fork's `appstore.Progress`.
 pub trait Progress: Send + Sync {
+    fn phase(&self, phase: Phase);
     /// `ChangeMax64`.
     fn set_total(&self, total: i64);
     /// `Set64`.
@@ -62,6 +89,13 @@ pub trait Progress: Send + Sync {
 /// A shared progress bar; the parallel ranges write to it from their own threads.
 pub type ProgressHandle = Arc<dyn Progress>;
 
+/// The fork's `reportPhase`: a missing progress disables reporting.
+pub(crate) fn report_phase(progress: Option<&ProgressHandle>, phase: Phase) {
+    if let Some(progress) = progress {
+        progress.phase(phase);
+    }
+}
+
 /// Go's `DownloadInput`.
 #[derive(Clone, Default)]
 pub struct DownloadInput {
@@ -71,6 +105,9 @@ pub struct DownloadInput {
     pub progress: Option<ProgressHandle>,
     pub external_version_id: String,
     pub platform: Option<crate::Platform>,
+    /// Keeps a large package on one connection, so all bytes land in the destination's
+    /// `.tmp` file as they arrive (the fork's `--no-parallel`, majd/ipatool#669).
+    pub disable_parallel_download: bool,
 }
 
 impl std::fmt::Debug for DownloadInput {
@@ -80,6 +117,7 @@ impl std::fmt::Debug for DownloadInput {
             .field("output_path", &self.output_path)
             .field("external_version_id", &self.external_version_id)
             .field("platform", &self.platform)
+            .field("disable_parallel_download", &self.disable_parallel_download)
             .finish_non_exhaustive()
     }
 }

@@ -1,24 +1,22 @@
 //! `purchase`, `download` and `list-purchases` (Go `cmd/purchase.go`, `cmd/download.go`,
 //! `cmd/purchases.go`).
 
-use std::io::Write as _;
+use std::io::IsTerminal as _;
 use std::path::PathBuf;
-use std::sync::Arc;
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use clap::Args;
 use ipatool_appstore::storeauth::EmulatorStoreAmd;
 use ipatool_appstore::{
     Account, App, CatalogVersion, CountryCode, DEFAULT_OWNED_APPS_LIMIT, DownloadInput,
     DownloadOutput, ListVersionsOutput, LoginInput, LookupQuery, MAX_OWNED_APPS_LIMIT,
-    OwnedAppsInput, OwnedAppsOutput, Platform, Progress, ProgressHandle, Sinf, StoreSession,
+    OwnedAppsInput, OwnedAppsOutput, Phase, Platform, ProgressHandle, Sinf, StoreSession,
     VersionMetadata,
 };
 use serde_json::json;
 
-use crate::BoxError;
 use crate::output::Output;
+use crate::{BoxError, progress};
 
 #[derive(Args, Clone)]
 pub struct PurchaseArgs {
@@ -58,6 +56,14 @@ pub struct DownloadArgs {
     /// Obtain a license for the app if needed.
     #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", default_value = "false", value_parser = crate::cobra::parse_bool)]
     purchase: bool,
+    /// Download large packages over a single connection instead of parallel ranges.
+    #[arg(long, num_args = 0..=1, require_equals = true, default_missing_value = "true", default_value = "false", value_parser = crate::cobra::parse_bool)]
+    no_parallel: bool,
+    #[arg(
+        long,
+        help = "Progress output: auto, bar, json, plain, or none (also settable with IPATOOL_PROGRESS) [default: auto]"
+    )]
+    progress: Option<String>,
     #[command(flatten)]
     _ignored: crate::cobra::IgnoredArgs,
 }
@@ -79,6 +85,8 @@ impl DownloadArgs {
             external_version_id,
             platform: String::new(),
             purchase,
+            no_parallel: false,
+            progress: None,
             _ignored: crate::cobra::IgnoredArgs::default(),
         }
     }
@@ -420,6 +428,30 @@ pub(crate) async fn download_run(
         return Err(MISSING_APP.into());
     }
     let platform = parse_platform_filter(&args.platform)?;
+    let mode = progress::resolve_progress_mode(
+        args.progress.as_deref(),
+        std::env::var(progress::PROGRESS_ENVIRONMENT_VARIABLE)
+            .ok()
+            .as_deref(),
+        &progress::ProgressEnvironment {
+            json: out.is_json(),
+            interactive,
+            stdout_is_terminal: std::io::stdout().is_terminal(),
+        },
+    )?;
+    let progress =
+        progress::new_progress(mode, Box::new(std::io::stderr()), Box::new(Instant::now));
+    download_with_progress(args, platform, store, progress, out).await
+}
+
+/// [`download_run`] after the flag checks, reporting to `progress`.
+pub(crate) async fn download_with_progress(
+    args: &DownloadArgs,
+    platform: Option<Platform>,
+    store: &impl Store,
+    progress: Option<ProgressHandle>,
+    out: &Output,
+) -> Result<(DownloadOutput, bool), BoxError> {
     let mut state = DownloadState {
         account: store.account_info().await?,
         token_expired: false,
@@ -428,7 +460,8 @@ pub(crate) async fn download_run(
     };
     for attempt in 0..3 {
         let error =
-            match download_attempt(args, platform, store, interactive, out, &mut state).await {
+            match download_attempt(args, platform, store, progress.as_ref(), out, &mut state).await
+            {
                 Ok(output) => return Ok((output, state.purchased)),
                 Err(error) => error,
             };
@@ -449,10 +482,11 @@ async fn download_attempt(
     args: &DownloadArgs,
     platform: Option<Platform>,
     store: &impl Store,
-    interactive: bool,
+    progress: Option<&ProgressHandle>,
     out: &Output,
     state: &mut DownloadState,
 ) -> AppResult<DownloadOutput> {
+    report_phase(progress, Phase::Resolving);
     if state.token_expired {
         state.account = store.login(&state.account).await?;
     }
@@ -477,6 +511,7 @@ async fn download_attempt(
         }
     }
     if state.purchase_required {
+        report_phase(progress, Phase::Purchasing);
         if let Err(error) = store.purchase(&mut state.account, &app, platform).await
             && !error.is_license_already_exists()
         {
@@ -488,19 +523,25 @@ async fn download_attempt(
         state.purchased = true;
         out.verbose(json!({ "success": true }), "purchase");
     }
-    let progress = interactive.then(|| Arc::new(ProgressBar::new("downloading")) as ProgressHandle);
     let output = store
         .download(DownloadInput {
             account: state.account.clone(),
             app,
             output_path: args.output.clone(),
-            progress,
+            progress: progress.cloned(),
             external_version_id: args.external_version_id.clone(),
             platform,
+            disable_parallel_download: args.no_parallel,
         })
         .await?;
     replicate_download_sinf(store, platform, &output).await?;
     Ok(output)
+}
+
+fn report_phase(progress: Option<&ProgressHandle>, phase: Phase) {
+    if let Some(progress) = progress {
+        progress.phase(phase);
+    }
 }
 
 /// Go's `replicateDownloadSinf`.
@@ -515,138 +556,6 @@ pub(crate) async fn replicate_download_sinf(
     store
         .replicate_sinf(output.sinfs.clone(), output.destination_path.clone())
         .await
-}
-
-/// A terminal progress bar in the spirit of Go's `progressbar` options: description,
-/// percentage, bar, byte counts and rate, redrawn at most every 65 ms and cleared when
-/// done.
-struct ProgressBar {
-    description: &'static str,
-    state: Mutex<BarState>,
-}
-
-struct BarState {
-    total: i64,
-    position: i64,
-    started: Instant,
-    drawn: Option<Instant>,
-    visible: bool,
-}
-
-const THROTTLE: Duration = Duration::from_millis(65);
-const BAR_WIDTH: usize = 20;
-
-impl ProgressBar {
-    fn new(description: &'static str) -> Self {
-        Self {
-            description,
-            state: Mutex::new(BarState {
-                total: 1,
-                position: 0,
-                started: Instant::now(),
-                drawn: None,
-                visible: false,
-            }),
-        }
-    }
-
-    fn draw(&self, state: &mut BarState, force: bool) {
-        let now = Instant::now();
-        if !force && state.drawn.is_some_and(|drawn| now - drawn < THROTTLE) {
-            return;
-        }
-        state.drawn = Some(now);
-        let mut stdout = std::io::stdout().lock();
-        if state.total > 0 && state.position >= state.total {
-            // OptionClearOnFinish.
-            if state.visible {
-                let _ = write!(stdout, "\r\x1b[K");
-                let _ = stdout.flush();
-                state.visible = false;
-            }
-            return;
-        }
-        #[allow(clippy::cast_precision_loss, reason = "display only")]
-        let fraction = if state.total > 0 {
-            (state.position as f64 / state.total as f64).clamp(0.0, 1.0)
-        } else {
-            0.0
-        };
-        #[allow(
-            clippy::cast_possible_truncation,
-            clippy::cast_sign_loss,
-            clippy::cast_precision_loss,
-            reason = "0..=width"
-        )]
-        let filled = (fraction * BAR_WIDTH as f64) as usize;
-        let elapsed = now.duration_since(state.started).as_secs_f64().max(0.001);
-        #[allow(clippy::cast_precision_loss, reason = "display only")]
-        let rate = state.position as f64 / elapsed;
-        let _ = write!(
-            stdout,
-            "\r{} {:3.0}% |{}{}| ({}/{}, {}/s)\x1b[K",
-            self.description,
-            fraction * 100.0,
-            "█".repeat(filled),
-            " ".repeat(BAR_WIDTH - filled),
-            bytes(state.position),
-            bytes(state.total),
-            bytes_f(rate),
-        );
-        let _ = stdout.flush();
-        state.visible = true;
-    }
-}
-
-#[allow(clippy::cast_precision_loss, reason = "display only")]
-fn bytes(value: i64) -> String {
-    bytes_f(value.max(0) as f64)
-}
-
-fn bytes_f(value: f64) -> String {
-    const UNITS: [&str; 5] = ["B", "kB", "MB", "GB", "TB"];
-    let mut value = value;
-    let mut unit = 0;
-    while value >= 1000.0 && unit < UNITS.len() - 1 {
-        value /= 1000.0;
-        unit += 1;
-    }
-    if unit == 0 {
-        format!("{value:.0} {}", UNITS[unit])
-    } else {
-        format!("{value:.1} {}", UNITS[unit])
-    }
-}
-
-impl Progress for ProgressBar {
-    fn set_total(&self, total: i64) {
-        let mut state = self
-            .state
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        state.total = total;
-        self.draw(&mut state, true);
-    }
-
-    fn set(&self, position: i64) {
-        let mut state = self
-            .state
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        state.position = position;
-        state.started = Instant::now();
-        self.draw(&mut state, true);
-    }
-
-    fn add(&self, bytes: u64) {
-        let mut state = self
-            .state
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        state.position += i64::try_from(bytes).unwrap_or(i64::MAX);
-        let done = state.position >= state.total;
-        self.draw(&mut state, done);
-    }
 }
 
 #[cfg(test)]

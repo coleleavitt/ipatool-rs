@@ -275,6 +275,7 @@ pub(crate) async fn download(
             progress: None,
             external_version_id: input.external_version_id.clone(),
             platform,
+            disable_parallel_download: false,
         };
         let mut output = store.download(download_input.clone()).await;
         if let Err(error) = &output

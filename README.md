@@ -32,6 +32,27 @@ $ ipatool list-versions -b ai.perplexity.app --with-metadata --format json
 request, fetches older ones from the store (`--concurrency`, default 4), and caches them in
 `version-metadata.json` in the state directory.
 
+### Download progress
+
+`download` reports progress according to `--progress` or the `IPATOOL_PROGRESS` environment
+variable (the flag wins), as proposed upstream in majd/ipatool#649:
+
+| Mode | Output |
+|---|---|
+| `auto` (default) | `none` with `--format json`, `bar` in an interactive terminal, otherwise `plain` |
+| `bar` | Progress bar on stdout |
+| `json` | JSON lines on stderr at most four times per second, such as `{"level":"info","event":"progress","phase":"downloading","bytes":1048576,"total":52428800,"time":"..."}` |
+| `plain` | One line per phase on stderr (`resolving`, `purchasing`, `downloading`, `decrypting`, `patching`), plus the downloaded size every 1% (fewer for downloads shorter than 3 seconds) and at least every 15 seconds |
+| `none` | No progress output |
+
+Coding agents and other tools that capture output should use `--non-interactive --progress
+plain`: short output without control characters. Text log lines never contain colors.
+
+Packages of 128 MiB or more download over four parallel ranges; only the first is written to
+`<name>.tmp`, the others are staged and appended at the end. `--no-parallel` keeps the whole
+download on one connection, so a tool that watches the `.tmp` file sees it grow steadily
+(majd/ipatool#669).
+
 ## Compatibility with Go ipatool
 
 The Rust tool uses the same state directory (`$XDG_STATE_HOME/ipatool`, `$XDG_DATA_HOME/ipatool`

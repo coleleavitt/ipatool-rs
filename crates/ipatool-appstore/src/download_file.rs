@@ -180,6 +180,8 @@ fn io_error(context: &str) -> impl FnOnce(io::Error) -> Error + '_ {
 impl Client {
     /// Go's `downloadFile`: resumes `dst` from its length; a failed parallel attempt is
     /// retried once over a single connection with the first attempt's validator.
+    /// `parallel` false is the fork's `downloadFileWithOptions(..., false)`: one
+    /// connection whatever the size (majd/ipatool#669).
     ///
     /// # Errors
     /// Go's request, range and file errors; both attempts' errors when the fallback fails.
@@ -188,11 +190,12 @@ impl Client {
         src: &str,
         dst: &Path,
         progress: Option<ProgressHandle>,
+        parallel: bool,
     ) -> Result<()> {
         let client = self.clone();
         let (src, dst) = (src.to_owned(), dst.to_owned());
         tokio::task::spawn_blocking(move || {
-            client.download_file_blocking(&src, &dst, progress.as_ref())
+            client.download_file_blocking(&src, &dst, progress.as_ref(), parallel)
         })
         .await
         .map_err(|error| Error::Invalid(format!("download task failed: {error}")))?
@@ -207,8 +210,9 @@ impl Client {
         src: &str,
         dst: &Path,
         progress: Option<&ProgressHandle>,
+        parallel: bool,
     ) -> Result<()> {
-        match self.download_attempt(src, dst, progress, true, "") {
+        match self.download_attempt(src, dst, progress, parallel, "") {
             Ok(()) => Ok(()),
             Err(AttemptError::Other(error)) => Err(error),
             Err(AttemptError::Parallel(failure)) => {
@@ -273,6 +277,11 @@ impl Client {
             local_size,
         )?;
         if range.complete {
+            // The fork reports a finished resume too, so a progress reader sees 100%.
+            if let Some(progress) = progress {
+                progress.set_total(range.total);
+                progress.set(range.offset);
+            }
             return Ok(());
         }
         if response.status == 200 {

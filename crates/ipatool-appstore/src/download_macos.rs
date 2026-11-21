@@ -10,7 +10,9 @@ use std::sync::Arc;
 
 use ipatool_sap::machine::StoreAgent;
 
-use crate::download_types::{DownloadItem, DownloadOutput, ProgressHandle, Sinf};
+use crate::download_types::{
+    DownloadItem, DownloadOutput, Phase, ProgressHandle, Sinf, report_phase,
+};
 use crate::xar;
 use crate::{Client, Error, Result};
 
@@ -109,13 +111,20 @@ impl Client {
         destination: &Path,
         hardware_id: &[u8],
         progress: Option<ProgressHandle>,
+        parallel: bool,
     ) -> Result<DownloadOutput> {
         MacPackageDownload::default()
             .run(
                 item,
                 destination,
                 hardware_id,
-                async |url: &str, path: &Path| self.download_file(url, path, progress).await,
+                async |url: &str, path: &Path| {
+                    self.download_file(url, path, progress.clone(), parallel)
+                        .await?;
+                    // Decryption follows the download in `run`.
+                    report_phase(progress.as_ref(), Phase::Decrypting);
+                    Ok(())
+                },
             )
             .await
     }
