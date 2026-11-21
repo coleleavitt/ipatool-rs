@@ -63,7 +63,7 @@ impl Drop for Emulating {
 
 /// Creates an arm64 engine with Unicorn's most capable CPU model and a bounded JIT buffer,
 /// forcing Unicorn's lazy initialization before it is returned.
-pub fn new<D>(data: D) -> Result<Unicorn<'static, D>> {
+pub fn new<'a, D: 'a>(data: D) -> Result<Unicorn<'a, D>> {
     let mut engine = Unicorn::new_with_data(Arch::ARM64, Mode::ARM, data)
         .map_err(|error| prefixed("create arm64 emulator", error))?;
     engine

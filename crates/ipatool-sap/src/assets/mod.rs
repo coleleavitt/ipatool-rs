@@ -5,6 +5,10 @@
 
 mod remote;
 
+pub use remote::{
+    Dependency, DependencyKind, Export, ImageSection, ImageSegment, StoreCache, StoreImage,
+};
+
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};

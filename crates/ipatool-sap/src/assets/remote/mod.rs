@@ -9,6 +9,11 @@ mod kernel;
 mod lzbitmap;
 mod lzvn;
 mod macho;
+mod store;
+
+pub use store::{
+    Dependency, DependencyKind, Export, ImageSection, ImageSegment, StoreCache, StoreImage,
+};
 
 use std::io::{Read, Seek, SeekFrom};
 
@@ -79,9 +84,9 @@ impl ReadAt for Section<'_> {
 
 /// `Read + Seek` over a `ReadAt`, for the zip reader.
 pub(super) struct Cursor<'a> {
-    source: &'a dyn ReadAt,
-    size: u64,
-    position: u64,
+    pub(super) source: &'a dyn ReadAt,
+    pub(super) size: u64,
+    pub(super) position: u64,
 }
 
 impl Read for Cursor<'_> {
@@ -115,8 +120,8 @@ pub(super) type Archive<'a> = zip::ZipArchive<Cursor<'a>>;
 /// A member that matched its pinned method and sizes.
 pub(super) struct ZipEntry {
     index: usize,
-    data_offset: u64,
-    compressed_size: u64,
+    pub(super) data_offset: u64,
+    pub(super) compressed_size: u64,
 }
 
 /// Returns the frameworks as stored in the restore image (universal binaries intact).
@@ -189,9 +194,10 @@ fn extract_apple_media_services(
         )));
     }
     let extractor = apfs::Extractor::open(&image, image.size())?;
-    let opener = |suffix: &str| -> Result<apfs::File<'_>> {
+    let opener = |suffix: &str| -> Result<dyld::MemberFile<'_>> {
         extractor
             .open_file(&format!("{ARM64_CACHE_PATH}{suffix}"))
+            .map(Into::into)
             .with_context(|| format!("open arm64e shared-cache member {suffix:?}"))
     };
     dyld::extract_dyld_image_from_files(&opener, APPLE_MEDIA_SERVICES_IMAGE)

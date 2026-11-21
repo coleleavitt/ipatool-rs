@@ -49,7 +49,8 @@ ipatool-cli ──> ipatool-appstore ──> ipatool-sap ──> unicorn-engine
 | `ipatool-sap` | Unicorn engine wrapper, Mach-O image loader, IPSW asset loader, SAP/ADI/kbsync machine, anisette provisioning |
 | `ipatool-store` | Objective-C runtime bridge and Store profile |
 | `ipatool-cli` | clap commands, prompts, output, MCP server, state directory |
-| `xtask` | dev tools: parity runner, profile extraction/generation |
+| `ipatool-profilegen` | dev tool: regenerates the Store profile (`profilegen` binary) |
+| `xtask` | dev tools: parity runner, profile extraction |
 
 Only `ipatool-appstore` and `ipatool-cli` exist now. Add a crate when its phase starts.
 
@@ -67,8 +68,8 @@ Only `ipatool-appstore` and `ipatool-cli` exist now. Add a crate when its phase 
 | `internal/store/emulator` | 6987 | 480 | ipatool-store::emulator | 5 |
 | `internal/store/profile` | 55648 | 134 | ipatool-store::profile (generated data) | 5 |
 | `internal/store/profile/format` | 63 | 0 | ipatool-store::profile | 5 |
-| `internal/store/profilegen` | 3328 | 415 | xtask profilegen (dev tool) | 9 |
-| `internal/store/profilegen/cmd/profilegen` | 146 | 0 | xtask profilegen | 9 |
+| `internal/store/profilegen` | 3328 | 415 | ipatool-profilegen (dev tool) | 9 |
+| `internal/store/profilegen/cmd/profilegen` | 146 | 0 | ipatool-profilegen (bin `profilegen`) | 9 |
 | `internal/store/terms` | 37 | 0 | ipatool-store::terms | 5 |
 | `internal/storeauth` | 647 | 50 | ipatool-appstore::storeauth | 4 |
 | `pkg/appstore` | 7400 | 11734 | ipatool-appstore | 0–7 |
@@ -483,7 +484,45 @@ parity check for the commands it touches.
 ### Phase 9 — parity, release
 
 - [ ] Parity suite over all commands (offline fixtures + opt-in live).
-- [ ] `profilegen` port, CI (Linux, macOS, Windows), release builds, iOS build.
+- [x] `profilegen` port (branch `phase9-profilegen`): Go `internal/store/profilegen` and its
+      `cmd/profilegen` as the `ipatool-profilegen` crate (binary `profilegen`, not built into
+      `ipatool`). One module per Go file (`source`, `symbols`, `discover`, `objc`, `vm`,
+      `realize`, `swift_metadata`, `features`, `collect`, `references`, `classes`, `validate`,
+      `emit`). Go's `assets/store.go` and `store_images.go` are `ipatool_sap::assets::StoreCache`
+      (`assets/remote/store.rs`) on the existing dyld, APFS, AEA and HTTP-range readers:
+      `open_local` (cache files plus host `/System` feature plists) and `with_remote` (Apple's
+      restore image), `page` with per-page slide memo, `contains`, `address_range`, `images`,
+      `open_image` (load commands, sections, segments, dependency kinds and dylib-use flags,
+      UUID) and `dyld_exports` (export trie). The bootstrap VM is `ipatool_sap::engine` with its
+      state in the Unicorn data slot; Go's panics are an `Error::Panic` variant that context
+      wrappers pass through and `generate`/`validate` turn into Go's one-prefix error.
+      The binary writes the three zstd files the Rust profile embeds (`--output`, default
+      `crates/ipatool-store/profile`), `--check` compares, and an artifact whose decoded
+      bytes already match is not rewritten, so the committed frames from Go stay.
+      Oracle (same local inputs: the 80 arm64e cache members and the three FeatureFlags
+      plists, copied from the pinned restore image with Go's own extractor; Go's run had
+      the plists at `/System` through a `bwrap` bind mount): Go's generator reproduced the
+      committed `data_generated.go` byte for byte (2 min 21 s), and the Rust generator's
+      decoded artifacts are byte-identical to it (35 s): metadata 4 807 917 bytes
+      `5e92717743272aa84343bd25f6bab6401155f88ade51b704ec535d3e6b5bd421`, pages 20 893 696
+      bytes `4fd8cf193ca6e71d52a2d6e68d9ca76907332ff33dade332351c97efe5f0caed`, plugin
+      138 088 bytes `e33fff05a6e6593dd91e33fd103b5d3068b62a787c680df33b859f19b3acc4ea`.
+      `profilegen --check` against the committed profile reports it up to date. The zstd
+      frames differ: Go uses klauspost's best level, `ruzstd` only has its fastest level, so
+      a regenerated changed artifact would be larger (metadata 1.26 MB vs 0.72 MB, pages
+      6.9 MB vs 4.2 MB, plugin 55 KB vs 32 KB) but decodes to the same bytes.
+      Tests: every `It` of the Go suite except "honors cancellation before encoding" (Rust
+      has no context argument; a Ctrl-C ends the process) — `classes`, `references`
+      (9 cases), `discover` (records, GOT references, witness and foreign metadata
+      returns), `emit`, `validate`, and the VM cases (ADRP, RCpc lowering, heap overflow,
+      ranges, CAS, CASP, 32-bit LDADD) on a synthetic one-mapping cache; plus mangled-name
+      lengths, zone allocations with options, Go JSON escaping, the `StoreCache` reads and
+      `version()` equal to `PINNED_INPUTS`.
+      Differences: no `context` cancellation (Go checks it every 4096 guest steps; each guest
+      call keeps Go's 30 s and 20 M-instruction bounds); the output is the three `.zst` files,
+      not Go source. Untested: `--cache`-less remote generation end to end (see below),
+      `validate` against a native-exported profile (Go has no caller in the repository either).
+- [ ] CI (Linux, macOS, Windows), release builds, iOS build.
 
 ## Open questions for the user
 
