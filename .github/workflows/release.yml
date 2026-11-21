@@ -32,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-latest, macos-latest]
+        runner: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
@@ -62,6 +62,16 @@ jobs:
             arch: amd64
             runner: macos-latest
             target: x86_64-apple-darwin
+          - os: windows
+            arch: amd64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+            ext: .exe
+          - os: windows
+            arch: arm64
+            runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            ext: .exe
     env:
       FILE: ipatool-${{ needs.get_version.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
     steps:
@@ -75,13 +85,16 @@ jobs:
       - run: cargo build --release --locked -p ipatool-cli --target ${{ matrix.target }}
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
-      # The same layout as the Go release: bin/<file> inside <file>.tar.gz, plus its SHA-256.
-      - run: |
+      # The same layout as the Go release: bin/<file> (bin/<file>.exe on Windows) inside
+      # <file>.tar.gz, plus its SHA-256.
+      - shell: bash
+        run: |
           mkdir bin
-          cp "target/${{ matrix.target }}/release/ipatool" "bin/$FILE"
-          chmod +x "bin/$FILE"
-          tar -czvf "$FILE.tar.gz" "bin/$FILE"
-          shasum -a 256 "$FILE.tar.gz" | cut -d ' ' -f 1 > "$FILE.tar.gz.sha256sum"
+          cp "target/${{ matrix.target }}/release/ipatool${{ matrix.ext }}" "bin/$FILE${{ matrix.ext }}"
+          chmod +x "bin/$FILE${{ matrix.ext }}"
+          tar -czvf "$FILE.tar.gz" "bin/$FILE${{ matrix.ext }}"
+          if command -v sha256sum >/dev/null; then sum=sha256sum; else sum="shasum -a 256"; fi
+          $sum "$FILE.tar.gz" | cut -d ' ' -f 1 > "$FILE.tar.gz.sha256sum"
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ env.FILE }}

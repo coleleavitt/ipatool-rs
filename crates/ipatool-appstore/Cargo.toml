@@ -24,7 +24,6 @@ psl = "2"
 regex = "1"
 reqwest = { workspace = true, features = ["cookies"] }
 roxmltree = "0.21"
-rustix = { version = "1", features = ["fs"] }
 # Only to recognize reqwest's unknown-issuer TLS error; same version reqwest links.
 rustls = { version = "0.23", default-features = false }
 serde.workspace = true
@@ -37,6 +36,22 @@ time = { workspace = true, features = ["local-offset"] }
 tokio = { workspace = true, features = ["sync", "time"] }
 url.workspace = true
 x509-cert = "0.3"
+
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", features = ["fs", "process"] }
+
+[target.'cfg(any(target_vendor = "apple", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd", target_os = "dragonfly"))'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_NetworkManagement_Ndis",
+    "Win32_Networking_WinSock",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Threading",
+] }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["fs", "io-util", "net"] }

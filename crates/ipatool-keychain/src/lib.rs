@@ -2,9 +2,9 @@
 //! `github.com/byteness/keyring`. The same service name and keys give access to the
 //! same entries from either tool:
 //!
-//! - macOS: a generic password per key in the login Keychain (service = service name,
+//! - macOS and iOS: a generic password per key in the Keychain (service = service name,
 //!   account = key);
-//! - other Unix: a Secret Service collection named after the service, one item per key
+//! - Linux: a Secret Service collection named after the service, one item per key
 //!   with attribute `profile=<key>`; the secret is the JSON of the Go `keyring.Item`;
 //! - fallback: one JWE file per key in the state directory, encrypted with a passphrase
 //!   (`PBES2-HS256+A128KW` + `A256GCM`, as `jose2go` writes it).
@@ -16,9 +16,9 @@ mod error;
 mod file;
 mod item;
 mod jwe;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "ios"))]
 mod macos;
-#[cfg(all(unix, not(target_os = "macos")))]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 mod secret_service;
 
 use std::path::{Path, PathBuf};
@@ -42,16 +42,16 @@ pub struct Keychain {
 }
 
 enum Backend {
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     MacOs(macos::MacKeychain),
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     SecretService(secret_service::SecretServiceKeyring),
     File(file::FileKeyring),
 }
 
 // Only the Secret Service backend awaits; the API stays async on every platform.
 #[cfg_attr(
-    not(all(unix, not(target_os = "macos"))),
+    not(any(target_os = "linux", target_os = "android")),
     allow(
         clippy::unused_async,
         clippy::unused_async_trait_impl,
@@ -63,7 +63,7 @@ impl Keychain {
     /// Service, encrypted files.
     pub async fn open(config: Config) -> Self {
         let label = config.service_name.clone();
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", target_os = "ios"))]
         {
             let _ = &config.file_dir;
             return Self {
@@ -71,14 +71,14 @@ impl Keychain {
                 label,
             };
         }
-        #[cfg(all(unix, not(target_os = "macos")))]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         if let Some(ring) = secret_service::SecretServiceKeyring::open(&config.service_name).await {
             return Self {
                 backend: Backend::SecretService(ring),
                 label,
             };
         }
-        #[allow(unreachable_code, reason = "macOS always returns above")]
+        #[allow(unreachable_code, reason = "Apple targets always return above")]
         Self {
             backend: Backend::File(file::FileKeyring::new(config.file_dir, config.passphrase)),
             label,
@@ -97,9 +97,9 @@ impl Keychain {
     #[must_use]
     pub fn backend_name(&self) -> &'static str {
         match self.backend {
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(_) => "keychain",
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(any(target_os = "linux", target_os = "android"))]
             Backend::SecretService(_) => "secret-service",
             Backend::File(_) => "file",
         }
@@ -111,9 +111,9 @@ impl Keychain {
     /// [`Error::is_not_found`] when the key is not stored, or a backend error.
     pub async fn get(&self, key: &str) -> Result<Vec<u8>> {
         let result = match &self.backend {
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(ring) => ring.get(key),
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(any(target_os = "linux", target_os = "android"))]
             Backend::SecretService(ring) => ring.get(key).await,
             Backend::File(ring) => ring.get(key),
         };
@@ -125,9 +125,9 @@ impl Keychain {
     pub async fn set(&self, key: &str, data: &[u8]) -> Result<()> {
         let item = item::StoredItem::new(key, data, &self.label);
         let result = match &self.backend {
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(ring) => ring.set(&item),
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(any(target_os = "linux", target_os = "android"))]
             Backend::SecretService(ring) => ring.set(&item).await,
             Backend::File(ring) => ring.set(&item),
         };
@@ -141,9 +141,9 @@ impl Keychain {
     /// [`Error::is_not_found`] or a backend error, as `failed to remove item: …`.
     pub async fn remove(&self, key: &str) -> Result<()> {
         let result = match &self.backend {
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(ring) => ring.remove(key),
-            #[cfg(all(unix, not(target_os = "macos")))]
+            #[cfg(any(target_os = "linux", target_os = "android"))]
             Backend::SecretService(ring) => ring.remove(key).await,
             Backend::File(ring) => ring.remove(key),
         };

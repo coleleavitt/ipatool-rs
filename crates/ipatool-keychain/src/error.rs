@@ -45,10 +45,14 @@ pub enum Error {
     Decrypt,
     #[error("failed to generate random bytes: {0}")]
     Random(String),
-    #[cfg(all(unix, not(target_os = "macos")))]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     #[error(transparent)]
     SecretService(#[from] ::secret_service::Error),
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
     #[error(transparent)]
     MacOs(#[from] security_framework::base::Error),
+    /// `cmd/keyring_ios.go` wraps a failed update.
+    #[cfg(target_os = "ios")]
+    #[error("update iOS keyring item: {0}")]
+    IosUpdate(security_framework::base::Error),
 }

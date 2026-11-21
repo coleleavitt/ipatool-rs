@@ -40,6 +40,7 @@ mod session;
 mod store;
 pub mod storeauth;
 mod storefront;
+mod sys;
 mod version_lookup;
 mod vision_search;
 mod xar;

@@ -534,6 +534,7 @@ fn remove_all(path: &Path) -> io::Result<()> {
 
 /// `os.Mkdir(path, 0700)`.
 fn create_private_dir(path: &Path) -> io::Result<()> {
+    #[cfg_attr(not(unix), expect(unused_mut, reason = "only Unix sets a mode"))]
     let mut builder = fs::DirBuilder::new();
     #[cfg(unix)]
     std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);

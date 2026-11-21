@@ -12,8 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The keychain and machine code differ between Linux and macOS.
-        runner: [ubuntu-latest, macos-latest]
+        # The keychain, machine and file code differ between Linux, macOS and Windows.
+        runner: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
       # The port builds with the newest compiler (rustc-master locally), not a stable pin.

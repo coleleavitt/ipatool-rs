@@ -1,6 +1,6 @@
 [package]
 name = "ipatool-keychain"
-description = "Credential storage compatible with the Go ipatool keyring (Secret Service, macOS Keychain, encrypted files)"
+description = "Credential storage compatible with the Go ipatool keyring (Secret Service, Apple Keychain, encrypted files)"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -19,12 +19,15 @@ sha2 = "0.11"
 thiserror.workspace = true
 time.workspace = true
 
-[target.'cfg(all(unix, not(target_os = "macos")))'.dependencies]
+[target.'cfg(any(target_os = "linux", target_os = "android"))'.dependencies]
 secret-service = { version = "5.2", features = ["rt-tokio-crypto-rust"] }
 zbus = { version = "5", default-features = false, features = ["tokio"] }
 
-[target.'cfg(target_os = "macos")'.dependencies]
+[target.'cfg(any(target_os = "macos", target_os = "ios"))'.dependencies]
 security-framework = "3.7"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+core-foundation = "0.10"
 
 [dev-dependencies]
 tempfile = "3"

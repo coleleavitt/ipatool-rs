@@ -2,7 +2,6 @@ use std::fmt::Write as _;
 use std::fs;
 use std::io::ErrorKind;
 use std::io::Write;
-use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
@@ -28,10 +27,12 @@ impl FileKeyring {
     fn dir(&self) -> Result<&Path> {
         match fs::metadata(&self.dir) {
             Err(err) if err.kind() == ErrorKind::NotFound => {
-                fs::DirBuilder::new()
-                    .recursive(true)
-                    .mode(0o700)
-                    .create(&self.dir)?;
+                let mut builder = fs::DirBuilder::new();
+                builder.recursive(true);
+                // Go's `os.MkdirAll(dir, 0700)`; Windows has no mode bits.
+                #[cfg(unix)]
+                std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+                builder.create(&self.dir)?;
             }
             Err(err) => return Err(err.into()),
             Ok(meta) if !meta.is_dir() => {
@@ -71,12 +72,11 @@ impl FileKeyring {
         let payload = serde_json::to_vec(item)?;
         let created = time::OffsetDateTime::now_utc().to_string();
         let token = jwe::encrypt(&payload, self.passphrase()?, &created)?;
-        let mut file = fs::OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .mode(0o600)
-            .open(self.path(&item.key)?)?;
+        let mut options = fs::OpenOptions::new();
+        options.write(true).create(true).truncate(true);
+        #[cfg(unix)]
+        std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+        let mut file = options.open(self.path(&item.key)?)?;
         file.write_all(token.as_bytes())?;
         Ok(())
     }
@@ -125,13 +125,16 @@ mod tests {
         ring.set(&StoredItem::new("account", b"data", "svc"))
             .unwrap();
         assert_eq!(ring.get("account").unwrap(), b"data");
-        let mode = fs::metadata(dir.path().join("account"))
-            .unwrap()
-            .permissions();
-        assert_eq!(
-            std::os::unix::fs::PermissionsExt::mode(&mode) & 0o777,
-            0o600
-        );
+        #[cfg(unix)]
+        {
+            let mode = fs::metadata(dir.path().join("account"))
+                .unwrap()
+                .permissions();
+            assert_eq!(
+                std::os::unix::fs::PermissionsExt::mode(&mode) & 0o777,
+                0o600
+            );
+        }
         ring.remove("account").unwrap();
         assert!(matches!(ring.remove("account"), Err(Error::NotFound)));
     }

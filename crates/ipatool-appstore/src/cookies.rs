@@ -2,14 +2,14 @@
 //! (`github.com/juju/persistent-cookiejar`), so a session started by either tool
 //! carries over. Only persistent cookies (with `Expires` or `Max-Age`) are saved.
 //!
-//! Saving locks `<file>.lock` with an `fcntl` write lock like Go, merges the file's
+//! Saving locks `<file>.lock` like Go's `go4/lock` (an `fcntl` write lock where Go uses
+//! one, else its portable owner-PID file), merges the file's
 //! entries (the newer `Updated` wins), drops entries expired for over a day, and
 //! rewrites the file.
 
 use std::collections::HashMap;
 use std::fs;
 use std::io::{ErrorKind, Read, Seek, Write};
-use std::os::unix::fs::OpenOptionsExt;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::time::{Duration as StdDuration, Instant};
@@ -117,13 +117,11 @@ impl CookieJar {
     /// The lock cannot be taken or the file cannot be written.
     pub fn save(&self) -> Result<(), CookieJarError> {
         let _lock = FileLock::acquire(&lock_path(&self.path))?;
-        let mut file = fs::OpenOptions::new()
-            .read(true)
-            .write(true)
-            .create(true)
-            .truncate(false)
-            .mode(0o600)
-            .open(&self.path)?;
+        let mut options = fs::OpenOptions::new();
+        options.read(true).write(true).create(true).truncate(false);
+        #[cfg(unix)]
+        std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+        let mut file = options.open(&self.path)?;
         let mut data = Vec::new();
         file.read_to_end(&mut data)?;
         // Go logs and ignores a corrupt file here.
@@ -364,10 +362,11 @@ fn lock_path(path: &Path) -> PathBuf {
     name.into()
 }
 
-/// The `go4.org/lock` fcntl lock: a zero-size file, write-locked, removed on release.
+/// The `go4.org/lock` lock Go's cookie jar takes on `<file>.lock`, released (and the
+/// file removed) on drop.
 struct FileLock {
     path: PathBuf,
-    _file: fs::File,
+    file: Option<fs::File>,
 }
 
 impl FileLock {
@@ -375,8 +374,13 @@ impl FileLock {
         let started = Instant::now();
         let mut delay = StdDuration::from_micros(100);
         loop {
-            match Self::try_acquire(path) {
-                Ok(lock) => return Ok(lock),
+            match go4_lock::try_lock(path) {
+                Ok(file) => {
+                    return Ok(Self {
+                        path: path.to_owned(),
+                        file: Some(file),
+                    });
+                }
                 Err(err) if started.elapsed() >= LOCK_TIMEOUT => {
                     return Err(if err.kind() == ErrorKind::WouldBlock {
                         CookieJarError::LockTimeout
@@ -391,8 +395,49 @@ impl FileLock {
             }
         }
     }
+}
 
-    fn try_acquire(path: &Path) -> std::io::Result<Self> {
+impl Drop for FileLock {
+    fn drop(&mut self) {
+        // Go removes an fcntl lock file before closing it, and closes a portable one
+        // first because Windows cannot remove an open file. A failed removal leaves a
+        // file the next lock reuses (fcntl) or finds stale (portable).
+        if go4_lock::CLOSE_BEFORE_REMOVE {
+            drop(self.file.take());
+        }
+        let _ignored = fs::remove_file(&self.path);
+    }
+}
+
+// `go4/lock` uses fcntl only in `lock_linux_amd64.go`, `lock_linux_arm.go`,
+// `lock_darwin_amd64.go` and `lock_freebsd.go`, and `lockPortable` everywhere else
+// (Windows, Apple silicon, arm64 Linux).
+#[cfg(any(
+    all(target_os = "linux", any(target_arch = "x86_64", target_arch = "arm")),
+    all(target_os = "macos", target_arch = "x86_64"),
+    target_os = "freebsd"
+))]
+use fcntl_lock as go4_lock;
+#[cfg(not(any(
+    all(target_os = "linux", any(target_arch = "x86_64", target_arch = "arm")),
+    all(target_os = "macos", target_arch = "x86_64"),
+    target_os = "freebsd"
+)))]
+use portable_lock as go4_lock;
+
+#[cfg(any(
+    all(target_os = "linux", any(target_arch = "x86_64", target_arch = "arm")),
+    all(target_os = "macos", target_arch = "x86_64"),
+    target_os = "freebsd"
+))]
+mod fcntl_lock {
+    use std::fs;
+    use std::path::Path;
+
+    pub(super) const CLOSE_BEFORE_REMOVE: bool = false;
+
+    /// `lockFcntl`: a zero-size file, write-locked.
+    pub(super) fn try_lock(path: &Path) -> std::io::Result<fs::File> {
         if fs::metadata(path).is_ok_and(|meta| meta.len() > 0) {
             return Err(std::io::Error::other(format!(
                 "can't Lock file {}: has non-zero size",
@@ -401,18 +446,105 @@ impl FileLock {
         }
         let file = fs::File::create(path)?;
         rustix::fs::fcntl_lock(&file, rustix::fs::FlockOperation::NonBlockingLockExclusive)?;
-        Ok(Self {
-            path: path.to_owned(),
-            _file: file,
-        })
+        Ok(file)
     }
 }
 
-impl Drop for FileLock {
-    fn drop(&mut self) {
-        // Go removes the lock file before closing it; a failure leaves a zero-size
-        // file that the next lock reuses.
-        let _ignored = fs::remove_file(&self.path);
+#[cfg(any(
+    test,
+    not(any(
+        all(target_os = "linux", any(target_arch = "x86_64", target_arch = "arm")),
+        all(target_os = "macos", target_arch = "x86_64"),
+        target_os = "freebsd"
+    ))
+))]
+mod portable_lock {
+    use std::fs;
+    use std::io::{Error, ErrorKind, Write as _};
+    use std::path::Path;
+
+    use serde::{Deserialize, Serialize};
+
+    #[cfg_attr(
+        test,
+        allow(dead_code, reason = "tests build this module beside the fcntl lock")
+    )]
+    pub(super) const CLOSE_BEFORE_REMOVE: bool = true;
+
+    #[derive(Serialize, Deserialize)]
+    struct PidLockMeta {
+        #[serde(rename = "OwnerPID", default)]
+        owner_pid: i64,
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    pub(super) enum Status {
+        Invalid,
+        Locked,
+        Unlocked,
+        Stale,
+    }
+
+    /// `portableLockStatus`.
+    pub(super) fn status(path: &Path, alive: impl Fn(i64) -> bool) -> Status {
+        let Ok(data) = fs::read(path) else {
+            return Status::Unlocked;
+        };
+        match serde_json::Deserializer::from_slice(&data)
+            .into_iter::<PidLockMeta>()
+            .next()
+        {
+            Some(Ok(meta)) if meta.owner_pid != 0 => {
+                if alive(meta.owner_pid) {
+                    Status::Locked
+                } else {
+                    Status::Stale
+                }
+            }
+            _ => Status::Invalid,
+        }
+    }
+
+    /// A file holding the owner's PID as JSON; a lock whose owner is gone is stale.
+    pub(super) fn try_lock(path: &Path) -> std::io::Result<fs::File> {
+        if fs::metadata(path).is_ok_and(|meta| meta.len() > 0) {
+            match status(path, crate::sys::process_alive) {
+                Status::Locked => {
+                    return Err(Error::new(
+                        ErrorKind::WouldBlock,
+                        format!("file {:?} already locked", path.display().to_string()),
+                    ));
+                }
+                Status::Stale => {
+                    let _ignored = fs::remove_file(path);
+                }
+                Status::Invalid => {
+                    return Err(Error::other(format!(
+                        "can't Lock file {:?}: has invalid contents",
+                        path.display().to_string()
+                    )));
+                }
+                Status::Unlocked => {}
+            }
+        }
+        let mut file = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(path)
+            .map_err(|err| {
+                Error::new(
+                    err.kind(),
+                    format!("failed to create lock file {} {err}", path.display()),
+                )
+            })?;
+        let mut owner = serde_json::to_vec(&PidLockMeta {
+            owner_pid: i64::from(std::process::id()),
+        })?;
+        owner.push(b'\n');
+        file.write_all(&owner)
+            .map_err(|err| Error::new(err.kind(), format!("cannot write owner pid: {err}")))?;
+        Ok(file)
     }
 }
 
@@ -517,5 +649,57 @@ mod tests {
                 .as_deref(),
             Some("p=1; q=3")
         );
+    }
+
+    /// `go4/lock`'s `TestLockPortable` cases, plus the stale and invalid owner files.
+    #[test]
+    fn portable_lock_like_go() {
+        use portable_lock::{Status, status, try_lock};
+
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("cookies.lock");
+        let file = try_lock(&path).unwrap();
+        assert_eq!(
+            fs::read_to_string(&path).unwrap(),
+            format!("{{\"OwnerPID\":{}}}\n", std::process::id())
+        );
+        let held = try_lock(&path).unwrap_err();
+        assert_eq!(held.kind(), ErrorKind::WouldBlock);
+        assert_eq!(
+            held.to_string(),
+            format!("file {:?} already locked", path.display().to_string())
+        );
+        drop(file);
+        fs::remove_file(&path).unwrap();
+        drop(try_lock(&path).unwrap());
+
+        assert_eq!(
+            status(&dir.path().join("missing"), |_| true),
+            Status::Unlocked
+        );
+        for contents in ["", "garbage", "{\"OwnerPID\":0}", "{}"] {
+            fs::write(&path, contents).unwrap();
+            assert_eq!(status(&path, |_| true), Status::Invalid, "{contents}");
+        }
+        fs::write(&path, "{\"OwnerPID\":42}\n{").unwrap();
+        assert_eq!(status(&path, |pid| pid == 42), Status::Locked);
+        assert_eq!(status(&path, |_| false), Status::Stale);
+
+        fs::write(&path, "{\"OwnerPID\":2147483647}").unwrap();
+        drop(try_lock(&path).unwrap());
+        fs::write(&path, "x").unwrap();
+        assert_eq!(
+            try_lock(&path).unwrap_err().to_string(),
+            format!(
+                "can't Lock file {:?}: has invalid contents",
+                path.display().to_string()
+            )
+        );
+    }
+
+    #[test]
+    fn process_liveness() {
+        assert!(crate::sys::process_alive(i64::from(std::process::id())));
+        assert!(!crate::sys::process_alive(i64::from(i32::MAX)));
     }
 }
