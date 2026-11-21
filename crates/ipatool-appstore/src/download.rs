@@ -9,7 +9,9 @@ use plist::{Dictionary, Value};
 
 use crate::download_package::download_package_platform;
 use crate::download_product::{failure, store_error};
-use crate::download_types::{DownloadInput, DownloadItem, DownloadOutput, sprint};
+use crate::download_types::{
+    DownloadInput, DownloadItem, DownloadOutput, Phase, report_phase, sprint,
+};
 use crate::session::StoreSession;
 use crate::version_lookup::{PLATFORM_APP_NOT_FOUND, PLATFORM_OFFERS_NOT_FOUND};
 use crate::zipfile::{self, Archive, Writer};
@@ -249,6 +251,7 @@ impl StoreSession<'_> {
     /// # Errors
     /// [`Error::PasswordTokenExpired`], [`Error::LicenseRequired`] and Go's other errors.
     pub async fn download(&self, input: DownloadInput) -> Result<DownloadOutput> {
+        report_phase(input.progress.as_ref(), Phase::Resolving);
         let mac_address =
             (self.mac_address)().map_err(|error| error.context("failed to get mac address"))?;
         let mut guid = mac_address.to_uppercase().replace(':', "");
@@ -322,10 +325,12 @@ impl StoreSession<'_> {
         let destination =
             resolve_destination_path(&input.app, &version, &input.output_path, package_platform)
                 .map_err(|error| error.context("failed to resolve destination path"))?;
+        report_phase(input.progress.as_ref(), Phase::Downloading);
+        let parallel = !input.disable_parallel_download;
         if package_platform == Some(Platform::MacOs) {
             return self
                 .client
-                .download_mac_package(item, &destination, &machine_guid, input.progress)
+                .download_mac_package(item, &destination, &machine_guid, input.progress, parallel)
                 .await;
         }
 
@@ -333,9 +338,10 @@ impl StoreSession<'_> {
         tmp.push(".tmp");
         let tmp = PathBuf::from(tmp);
         self.client
-            .download_file(&item.url, &tmp, input.progress.clone())
+            .download_file(&item.url, &tmp, input.progress.clone(), parallel)
             .await
             .map_err(|error| error.context("failed to download file"))?;
+        report_phase(input.progress.as_ref(), Phase::Patching);
         let client = self.client.clone();
         let (item, account) = (item.clone(), input.account.clone());
         let output_destination = destination.clone();

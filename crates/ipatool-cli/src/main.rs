@@ -7,6 +7,7 @@ mod decrypt;
 mod login;
 mod mcp;
 mod output;
+mod progress;
 mod prompt;
 mod state;
 mod versions;
@@ -43,6 +44,11 @@ struct Cli {
     /// Passphrase for unlocking the file keychain.
     #[arg(long, global = true, default_value = "")]
     keychain_passphrase: String,
+    /// Keep this login apart from the default one: keychain entries `<key>/<ID>` and the
+    /// cookie file `cookies-<ID>` (letters, digits, '.', '_', '@', '+', '-'; an email
+    /// address works).
+    #[arg(long, global = true, default_value = "")]
+    keychain_id: String,
     #[command(subcommand)]
     command: Command,
 }
@@ -152,9 +158,34 @@ pub(crate) fn state_dir() -> Result<PathBuf, BoxError> {
     Ok(state::prepare(&home, |name| std::env::var(name).ok())?)
 }
 
-/// A client sharing the Go tool's cookie jar (`cmd/common.go` `newCookieJar`).
-fn store_client() -> Result<Client, BoxError> {
-    let jar = CookieJar::open(state_dir()?.join(COOKIE_JAR_FILE_NAME))?;
+/// `--keychain-id`: `None` for the Go tool's entries. The ID becomes part of keychain
+/// keys and of a file name, so it is limited to characters that are safe in both.
+fn keychain_id(cli: &Cli) -> Result<Option<&str>, BoxError> {
+    let id = cli.keychain_id.as_str();
+    if id.is_empty() {
+        return Ok(None);
+    }
+    let valid = !id.starts_with('.')
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '@' | '+' | '-'));
+    if !valid {
+        return Err(format!(
+            "invalid keychain ID {id:?}: use letters, digits, '.', '_', '@', '+' or '-', not starting with '.'"
+        )
+        .into());
+    }
+    Ok(Some(id))
+}
+
+/// A client sharing the Go tool's cookie jar (`cmd/common.go` `newCookieJar`); a
+/// `--keychain-id` login keeps its own jar, so sessions of two accounts never mix.
+fn store_client(cli: &Cli) -> Result<Client, BoxError> {
+    let name = match keychain_id(cli)? {
+        None => COOKIE_JAR_FILE_NAME.to_owned(),
+        Some(id) => format!("{COOKIE_JAR_FILE_NAME}-{id}"),
+    };
+    let jar = CookieJar::open(state_dir()?.join(name))?;
     Ok(Client::with_cookie_jar(Arc::new(jar))?)
 }
 
@@ -178,11 +209,13 @@ fn interactive(cli: &Cli) -> bool {
 
 /// The Go keychain setup (`cmd/common.go` `newKeychain`).
 async fn open_keychain(cli: &Cli) -> Result<Keychain, BoxError> {
+    let id = keychain_id(cli)?.map(str::to_owned);
     let state_dir = state_dir()?;
     let passphrase = cli.keychain_passphrase.clone();
     let interactive = interactive(cli);
     Ok(Keychain::open(Config {
         service_name: KEYCHAIN_SERVICE_NAME.to_owned(),
+        id,
         file_dir: state_dir,
         passphrase: Box::new(move |dir| {
             if !passphrase.is_empty() {
@@ -236,7 +269,7 @@ async fn run_auth(cli: &Cli, command: &AuthCommand, out: &Output) -> Result<(), 
     let keychain = open_keychain(cli).await?;
     match command {
         AuthCommand::Login(args) => {
-            let client = store_client()?;
+            let client = store_client(cli)?;
             login::run(
                 args.clone(),
                 !cli.non_interactive,
@@ -269,14 +302,14 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
             let [term] = args.as_slice() else {
                 return Err(format!("accepts 1 arg(s), received {}", args.len()).into());
             };
-            let client = store_client()?;
+            let client = store_client(cli)?;
             let country = country(cli, &client, store).await?;
             let platform = commerce::parse_platform_filter(&store.platform)?;
             let apps = client.search(term, &country, *limit, platform).await?;
             out.info(json!({ "count": apps.len(), "apps": apps }));
         }
         Command::CatalogVersions { app, store } => {
-            let client = store_client()?;
+            let client = store_client(cli)?;
             let country = country(cli, &client, store).await?;
             let platform = commerce::parse_platform_filter(&store.platform)?;
             let app = client.lookup(&app.query(), &country, platform).await?;
@@ -286,39 +319,39 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
             out.info(json!({ "app": app, "count": versions.len(), "versions": versions }));
         }
         Command::Purchase(args) => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             commerce::purchase(args, &session, out).await?;
         }
         Command::Download(args) => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             commerce::download(args, &session, !cli.non_interactive, out).await?;
         }
         Command::ListPurchases(args) => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             commerce::list_purchases(args, &session, out).await?;
         }
         Command::ListVersions(args) => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             let cache = state_dir()?.join(versions::VERSION_METADATA_CACHE_FILE_NAME);
             versions::list_versions(args, &session, Some(&cache), out).await?;
         }
         Command::GetVersionMetadata(args) => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             versions::get_version_metadata(args, &session, out).await?;
         }
         Command::Mcp => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             Box::pin(mcp::serve(&session, rmcp::transport::stdio_pipes())).await?;
         }
         #[cfg(feature = "decrypt")]
         Command::Decrypt(args) => {
-            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let (client, keychain) = (store_client(cli)?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             decrypt::run(args, &session, !cli.non_interactive, out).await?;
         }
@@ -364,5 +397,44 @@ async fn main() -> ExitCode {
             out.error(error.as_ref());
             ExitCode::FAILURE
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn cli(args: &[&str]) -> Cli {
+        Cli::try_parse_from(std::iter::once("ipatool").chain(args.iter().copied())).unwrap()
+    }
+
+    #[test]
+    fn keychain_id_is_a_global_flag_that_defaults_to_the_go_entries() {
+        assert_eq!(keychain_id(&cli(&["auth", "info"])).unwrap(), None);
+        for args in [
+            &["--keychain-id", "work@example.com", "auth", "info"][..],
+            &["auth", "info", "--keychain-id", "work@example.com"],
+            &["download", "-i", "1", "--keychain-id=work@example.com"],
+        ] {
+            assert_eq!(
+                keychain_id(&cli(args)).unwrap(),
+                Some("work@example.com"),
+                "{args:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn rejects_keychain_ids_unsafe_in_keys_or_file_names() {
+        for id in ["a/b", "..", ".hidden", "a b", "a\\b", "é"] {
+            let error = keychain_id(&cli(&["--keychain-id", id, "auth", "info"])).unwrap_err();
+            assert!(
+                error
+                    .to_string()
+                    .starts_with(&format!("invalid keychain ID {id:?}")),
+                "{error}"
+            );
+        }
+        assert!(keychain_id(&cli(&["--keychain-id", "A.b_c+d-1@x", "auth", "info"])).is_ok());
     }
 }

@@ -237,6 +237,7 @@ impl StoreAmd for FakeAmd {
 pub(crate) fn keychain(dir: &tempfile::TempDir) -> Keychain {
     Keychain::open_file(Config {
         service_name: "ipatool-test.service".to_owned(),
+        id: None,
         file_dir: dir.path().to_owned(),
         passphrase: Box::new(|_| Ok("test".to_owned())),
     })

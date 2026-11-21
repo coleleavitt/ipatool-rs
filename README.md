@@ -32,11 +32,51 @@ $ ipatool list-versions -b ai.perplexity.app --with-metadata --format json
 request, fetches older ones from the store (`--concurrency`, default 4), and caches them in
 `version-metadata.json` in the state directory.
 
+### Download progress
+
+`download` reports progress according to `--progress` or the `IPATOOL_PROGRESS` environment
+variable (the flag wins), as proposed upstream in majd/ipatool#649. Without either, it behaves
+like Go ipatool: a progress bar on stdout in interactive sessions, nothing with
+`--non-interactive`.
+
+| Mode | Output |
+|---|---|
+| `auto` | `none` with `--format json`, `bar` in an interactive terminal, otherwise `plain` |
+| `bar` | Progress bar on stdout |
+| `json` | JSON lines on stderr at most four times per second, such as `{"level":"info","event":"progress","phase":"downloading","bytes":1048576,"total":52428800,"time":"..."}` |
+| `plain` | One line per phase on stderr (`resolving`, `purchasing`, `downloading`, `decrypting`, `patching`), plus the downloaded size every 1% (fewer for downloads shorter than 3 seconds) and at least every 15 seconds |
+| `none` | No progress output |
+
+Coding agents and other tools that capture output should use `--non-interactive --progress
+plain`: short output without control characters. Text log lines never contain colors.
+
+Packages of 128 MiB or more download over four parallel ranges; only the first is written to
+`<name>.tmp`, the others are staged and appended at the end. `--no-parallel` keeps the whole
+download on one connection, so a tool that watches the `.tmp` file sees it grow steadily
+(majd/ipatool#669).
+
+### Several accounts
+
+The global `--keychain-id <ID>` keeps a login apart from the default one
+(majd/ipatool#235): its keychain entries are named `<key>/<ID>` (for example `account/<ID>`)
+and its cookies go to `cookies-<ID>` in the state directory. Without the flag the tool uses
+the Go tool's entries, unchanged. An email address works as the ID.
+
+```console
+$ ipatool --keychain-id work@example.com auth login -e work@example.com
+$ ipatool --keychain-id work@example.com download -b com.example.app
+$ ipatool auth info                      # the default login, shared with Go ipatool
+```
+
+The first login under a new ID also sets up its own anisette state, as a first login does.
+
 ## Compatibility with Go ipatool
 
 The Rust tool uses the same state directory (`$XDG_STATE_HOME/ipatool`, `$XDG_DATA_HOME/ipatool`
 or `~/.ipatool`), the same keyring entries (service `ipatool-auth.service`) and the same cookie
-jar, so one login works for both tools. Sign-in uses the same Store emulator as Go (Apple's
+jar, so one login works for both tools. On Linux the Secret Service collection is found by
+its D-Bus path as Go does, else by its label, which also finds it on oo7-daemon (Fedora 45,
+majd/ipatool#679). Sign-in uses the same Store emulator as Go (Apple's
 binaries run under Unicorn); the Apple framework files it needs are downloaded once from
 Apple's restore image and checked against pinned SHA-256 digests.
 

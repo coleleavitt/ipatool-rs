@@ -10,7 +10,8 @@
 //!   (`PBES2-HS256+A128KW` + `A256GCM`, as `jose2go` writes it).
 //!
 //! As in Go, the backend is picked once when the keychain is opened: the first one
-//! that is available wins.
+//! that is available wins. [`Config::id`] stores every key as `<key>/<id>` instead, so
+//! several logins can live beside the Go entries.
 
 mod error;
 mod file;
@@ -21,6 +22,7 @@ mod macos;
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod secret_service;
 
+use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 pub use error::{Error, Result};
@@ -31,6 +33,9 @@ pub type PassphrasePrompt = Box<dyn Fn(&Path) -> Result<String, String> + Send +
 pub struct Config {
     /// Service name; Go uses `ipatool-auth.service`. Also stored as each item's label.
     pub service_name: String,
+    /// Selects an independent set of entries, so several logins can be kept: every key
+    /// is stored as `<key>/<id>`. `None` uses the Go tool's keys (majd/ipatool#235).
+    pub id: Option<String>,
     /// Directory of the encrypted-file fallback (the state directory).
     pub file_dir: PathBuf,
     pub passphrase: PassphrasePrompt,
@@ -39,6 +44,7 @@ pub struct Config {
 pub struct Keychain {
     backend: Backend,
     label: String,
+    id: Option<String>,
 }
 
 enum Backend {
@@ -62,13 +68,14 @@ impl Keychain {
     /// Opens the first available backend, in the Go order: macOS Keychain, Secret
     /// Service, encrypted files.
     pub async fn open(config: Config) -> Self {
-        let label = config.service_name.clone();
+        let (label, id) = (config.service_name.clone(), config.id.clone());
         #[cfg(any(target_os = "macos", target_os = "ios"))]
         {
             let _ = &config.file_dir;
             return Self {
                 backend: Backend::MacOs(macos::MacKeychain::new(config.service_name)),
                 label,
+                id,
             };
         }
         #[cfg(any(target_os = "linux", target_os = "android"))]
@@ -76,12 +83,14 @@ impl Keychain {
             return Self {
                 backend: Backend::SecretService(ring),
                 label,
+                id,
             };
         }
         #[allow(unreachable_code, reason = "Apple targets always return above")]
         Self {
             backend: Backend::File(file::FileKeyring::new(config.file_dir, config.passphrase)),
             label,
+            id,
         }
     }
 
@@ -90,7 +99,16 @@ impl Keychain {
     pub fn open_file(config: Config) -> Self {
         Self {
             label: config.service_name,
+            id: config.id,
             backend: Backend::File(file::FileKeyring::new(config.file_dir, config.passphrase)),
+        }
+    }
+
+    /// The stored key: `key`, or `key/id` with [`Config::id`].
+    fn key<'a>(&self, key: &'a str) -> Cow<'a, str> {
+        match &self.id {
+            None => Cow::Borrowed(key),
+            Some(id) => Cow::Owned(format!("{key}/{id}")),
         }
     }
 
@@ -110,6 +128,7 @@ impl Keychain {
     /// # Errors
     /// [`Error::is_not_found`] when the key is not stored, or a backend error.
     pub async fn get(&self, key: &str) -> Result<Vec<u8>> {
+        let key = &*self.key(key);
         let result = match &self.backend {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(ring) => ring.get(key),
@@ -123,7 +142,7 @@ impl Keychain {
     /// # Errors
     /// A backend error, as `failed to set item: …`.
     pub async fn set(&self, key: &str, data: &[u8]) -> Result<()> {
-        let item = item::StoredItem::new(key, data, &self.label);
+        let item = item::StoredItem::new(&self.key(key), data, &self.label);
         let result = match &self.backend {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(ring) => ring.set(&item),
@@ -140,6 +159,7 @@ impl Keychain {
     /// # Errors
     /// [`Error::is_not_found`] or a backend error, as `failed to remove item: …`.
     pub async fn remove(&self, key: &str) -> Result<()> {
+        let key = &*self.key(key);
         let result = match &self.backend {
             #[cfg(any(target_os = "macos", target_os = "ios"))]
             Backend::MacOs(ring) => ring.remove(key),

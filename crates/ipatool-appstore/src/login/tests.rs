@@ -143,6 +143,7 @@ impl Harness {
         let dir = tempfile::tempdir().unwrap();
         let keychain = Keychain::open_file(Config {
             service_name: "ipatool-test.service".to_owned(),
+            id: None,
             file_dir: dir.path().to_owned(),
             passphrase: Box::new(|_| Ok("test-passphrase".to_owned())),
         });

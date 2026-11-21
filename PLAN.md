@@ -878,6 +878,139 @@ fairplay-decrypt's Python. The crate stays GPL-3.0-or-later; ipadecrypt's MIT no
 - Related: a `.supf` ranks ahead of a `.supp`, and a rejected `.supf` fails the binary even when
   the `.supp` next to it would decrypt it. Not changed in the port (no case left that needs it).
 
+### Upstream issues (fork fixes)
+
+Branch `upstream-issues`. Fixes for open majd/ipatool issues, following the design in each
+issue or its linked fork branch where it is sound. Without the new flags, the commands,
+keychain entries and JSON output stay as before.
+
+- [x] majd/ipatool#679, Secret Service collection on oo7-daemon (Fedora 45).
+  - Problem: the spec leaves collection paths to the daemon. GNOME Keyring escapes `-` and
+    `.` (`ipatool_2dauth_2eservice`), but oo7-daemon replaces them with `_`
+    (`ipatool_auth_service`). Go's `byteness/keyring` (and this port) only decoded the path,
+    so on oo7 every `get` failed with "not found" and every `set` created a new collection.
+  - Fix (`secret_service.rs`): match the decoded path first, as Go does. Else match the
+    collection's `Label`, compared without ASCII case. The case rule comes from reading
+    oo7-daemon 0.7.2: after a daemon restart it reloads a collection from
+    `keyrings/v1/<label lowercased>.keyring` and sets the label to the capitalized file name
+    (`Ipatool-auth.service`). An exact label match (the issue's suggestion) would fail after
+    every reboot.
+  - Verified:
+    - oo7-daemon 0.7.2 (`cargo install oo7-daemon`) on a private D-Bus bus
+      (`dbus-run-session --config-file` with one `unix:dir` listen address), with a
+      pre-created `ipatool-rust-test.service` keyring unlocked by `--login`. That is the
+      after-restart state: path `.../ipatool_rust_test_service`, label
+      `Ipatool-rust-test.service`. The old code did not find the collection, tried
+      `CreateCollection` and waited on a prompt nobody answers (killed after 20 s). The
+      fixed `IPATOOL_TEST_SECRET_SERVICE=1` round trip passed twice in a row.
+    - The same live test passes on GNOME Keyring (Cole's session, throwaway collection).
+    - Unit test for the path rule.
+  - Untested: a collection created through oo7's `CreateCollection` (that needs a prompter,
+    which a private bus does not have; oo7 then keeps the exact label), and KWallet's
+    Secret Service.
+  - Warning for local testing: `/etc/dbus-1/session-local.conf` on this machine adds
+    `unix:runtime=yes`, so a plain `dbus-run-session` binds `/run/user/1000/bus` and takes
+    over the real session bus path. Always pass a private `--config-file`.
+
+- [x] majd/ipatool#671, FCS key download retried. Go's `resolveAEASymmetricKey`
+  (`aea.rs` `resolve_aea_symmetric_key`) fetched `wkms-public.apple.com` once, so one
+  transient EOF ended the whole download, while every range read of the same image is
+  retried. Now up to 5 attempts, waiting 1, 2, 3 and 4 s, as the issue's patch does. A
+  transport error, a non-200 status or a body read error is retried. The last attempt's
+  error text is returned unchanged. The issue's patch also sets `User-Agent: Mozilla/5.0`
+  on this request. That is not taken: the reporter got the key with and without it, so it
+  is not part of the fix, and Go's request has no such header.
+  - Verified: unit tests with an injected sleep (success on the third attempt; five
+    failures give the wait sequence 1, 2, 3, 4 and the last error). Not tested against a
+    failing network: the key URL must be `https://wkms-public.apple.com`, so a local fake
+    server cannot stand in for it.
+
+- [x] majd/ipatool#669, `download --no-parallel`, from chrismessina's
+  `feat/no-parallel-download` (f54a90d). Same flag name and help text. The flag sets
+  `DownloadInput.disable_parallel_download` (Go: `DisableParallelDownload`).
+  `Client::download_file` and `download_file_blocking` take `parallel` (Go:
+  `downloadFileWithOptions`). macOS packages pass it through `download_mac_package`.
+  `get-version-metadata` and MCP keep parallel ranges, as in the patch. The fork's test is
+  ported: a 256 MiB fixture with the flag off makes one `bytes=0-` request, assembles the
+  right bytes, leaves no `.ipatool-parts`, and counts all bytes.
+- [x] majd/ipatool#649, download progress modes, from NSExceptional's
+  `download-progress-modes` (d8088ad, 1867a8e, f35f080). `--progress
+  auto|bar|json|plain|none` on `download`, or `IPATOOL_PROGRESS` (the flag wins). `auto`
+  gives `none` with `--format json`, `bar` when interactive and stdout is a terminal,
+  else `plain`. Unlike the fork, `auto` is not the default: with neither the flag nor the
+  variable, the behavior is upstream Go's (the bar whenever the session is interactive,
+  also into a pipe or beside JSON output; nothing with `--non-interactive`). `json` and `plain` write to stderr with the fork's throttling (JSON 250 ms;
+  plain every 1 % at least 30 ms apart, a 15 s heartbeat). They also use the fork's line
+  shapes and byte format (SI, one decimal).
+  - Phases: `resolving` at each attempt and in `Download`, `purchasing`, `downloading`,
+    `patching` (iOS), `decrypting` (macOS, after the encrypted package download).
+  - `Progress` (`ipatool-appstore`) gained `phase`. The fork replaced the progress bar type
+    with `Phase`/`Bytes`. Here the existing `set_total`/`set`/`add` stay, because the
+    parallel ranges already add to one shared counter. The reporters turn them into the
+    fork's `Bytes(current, total)`.
+  - The fork's branch predates parallel ranges, so its `downloadFile` changes were applied to
+    the current download code. One addition from the fork is kept: a finished resume (416)
+    reports its size.
+  - The bar moved to `progress.rs` and starts at the `downloading` phase, as the fork's
+    `barProgress` does.
+  - The fork's tests are ported (`progress/tests.rs`: mode table, unknown mode, plain and
+    JSON throttling with a fake clock, unknown totals, byte format; `commerce/tests.rs`:
+    phases in plain mode, also with the purchase retry, the invalid mode checked after the
+    app check and before the account read, `--no-parallel` reaching `DownloadInput`; the
+    resume-complete case in `commerce_tests/download_file.rs`).
+  - No behavior change by default: the fork's `auto` (plain lines on stderr for
+    non-interactive or piped runs, nothing beside JSON) applies only with `--progress auto`
+    or `IPATOOL_PROGRESS=auto`. Tests cover the Go default, also for an interactive
+    session with JSON output.
+  - The fork's second branch, `no-color-off-tty` (1eac401), is already satisfied: this
+    port's text lines never contain ANSI colors (open question 3), so nothing changed. The
+    bar is the only output with control characters; `--progress auto` picks it only for a
+    terminal.
+  - Live: `download -b jp.co.sony.audio.companion --no-parallel --progress plain
+    --non-interactive --format json` (7.7.0, 73.9 MB) printed 104 stderr lines (`resolving`,
+    `downloading`, 0 % to 100 % one per percent, `patching`) and one JSON line on stdout. The
+    IPA has 743 entries, passes CRC checks, and its `Info.plist` says 7.7.0. Sony is below the
+    128 MiB threshold, so this run used one connection either way. The large-package path
+    with the flag is covered by the fixture test only.
+  - Untested: `--progress bar` and `auto` in a real terminal (the bar code itself did not
+    change), the `decrypting` phase live (no owned Mac app in the allowed set), and the
+    `json` mode live.
+
+- [x] majd/ipatool#235, several accounts. Design from the issue comments (dvcrn:
+  "specify the keychain entry ... `--keychain-id`").
+  - The closed PR majd/ipatool#420 is not followed: it rewrote the `account` entry into an
+    account list, which breaks Go-compatible entries.
+  - A global `--keychain-id <ID>` makes `ipatool_keychain::Config::id` store every key as
+    `<key>/<ID>`: `account/<ID>`, `kbsync-v1/<ID>`, `anisette-v4/<ID>`. These are
+    ordinary Go-format entries under other names. The file backend percent-encodes the `/`
+    as Go's does.
+  - The cookie jar is `cookies-<ID>` in the state directory. Apple's session cookies (pod,
+    DSID) must not mix between accounts; #420 cleared the jar on every switch for the same
+    reason.
+  - Scoping the anisette state as well means a new ID provisions its own anisette at its
+    first login, which is the normal first-login path. Sharing it would also work (Go keeps
+    it across `auth revoke` and the next login), but then one ID's keychain would depend on
+    another's.
+  - The ID allows ASCII letters, digits and `.` `_` `@` `+` `-`, and must not start with `.`
+    (it is part of a file name). An email address works. Without the flag, keys, cookie
+    file and output are unchanged. `version-metadata.json` is shared, since version data
+    does not depend on the account.
+  - Tests: key mapping and isolation on the file backend; Go's `byteness/keyring` helper
+    reads `account/work` written by the port (`IPATOOL_GO_KEYRING`); the flag is global
+    and validated (`main.rs` tests).
+  - Live (read-only): `auth info` still reads the default entry, `--keychain-id
+    nobody@example.com auth info` gives Go's "not found" error line, and a bad ID is
+    rejected.
+  - Untested: a second real login (account-changing; not run), and two accounts'
+    downloads side by side.
+
+Verification of `upstream-issues`: `cargo fmt --all --check`; `env -u CLIPPY_CONF_DIR cargo
+clippy --workspace --all-targets -- -D warnings` with and without `--features
+ipatool-cli/decrypt`; `cargo test --workspace` with and without the feature (676 tests
+pass, 3 ignored); `IPATOOL_TEST_SECRET_SERVICE=1` and `IPATOOL_GO_KEYRING` keychain tests;
+`scripts/parity.sh` offline: 0 differences. Live Apple traffic: one Sony Music Center
+download and one `auth info`.
+
 ## Open questions for the user
 
 1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and

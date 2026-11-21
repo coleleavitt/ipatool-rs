@@ -37,6 +37,8 @@ struct Fake {
     downloads: RefCell<VecDeque<AppResult<DownloadOutput>>>,
     replicate_error: RefCell<Option<Error>>,
     owned: RefCell<VecDeque<AppResult<OwnedAppsOutput>>>,
+    /// Per download: whether it had a progress and had parallel ranges turned off.
+    download_options: RefCell<Vec<(bool, bool)>>,
 }
 
 impl Fake {
@@ -137,7 +139,9 @@ impl Store for Fake {
             input.account.password_token.clone(),
             input.account.store_front.clone(),
         ));
-        assert!(input.progress.is_none());
+        self.download_options
+            .borrow_mut()
+            .push((input.progress.is_some(), input.disable_parallel_download));
         self.downloads
             .borrow_mut()
             .pop_front()
@@ -213,8 +217,115 @@ fn download_args(
         external_version_id: String::new(),
         platform: platform.map_or_default(|platform| platform.to_string()),
         purchase,
+        no_parallel: false,
+        progress: None,
         _ignored: crate::cobra::IgnoredArgs::default(),
     }
+}
+
+#[tokio::test]
+async fn keeps_parallel_downloads_and_no_progress_by_default_with_json() {
+    let fake = Fake::default();
+    fake.account("t", "143441");
+    fake.output(1);
+    run_download(&fake, &download_args(42, "", None, false))
+        .await
+        .unwrap();
+    assert_eq!(*fake.download_options.borrow(), [(false, false)]);
+}
+
+/// Without `--progress` an interactive session gets Go's bar, even with JSON output.
+#[tokio::test]
+async fn keeps_the_go_bar_in_interactive_sessions_by_default() {
+    let fake = Fake::default();
+    fake.account("t", "143441");
+    fake.output(1);
+    download(&download_args(42, "", None, false), &fake, true, &out())
+        .await
+        .unwrap();
+    assert_eq!(*fake.download_options.borrow(), [(true, false)]);
+}
+
+/// The fork's `--no-parallel` (majd/ipatool#669).
+#[tokio::test]
+async fn no_parallel_turns_off_parallel_ranges() {
+    let fake = Fake::default();
+    fake.account("t", "143441");
+    fake.output(1);
+    let mut args = download_args(42, "", None, false);
+    args.no_parallel = true;
+    run_download(&fake, &args).await.unwrap();
+    assert_eq!(*fake.download_options.borrow(), [(false, true)]);
+}
+
+/// The fork's "rejects an invalid mode": checked before the account is read.
+#[tokio::test]
+async fn rejects_an_invalid_progress_mode() {
+    let fake = Fake::default();
+    let mut args = download_args(42, "", None, false);
+    args.progress = Some("fancy".to_owned());
+    let error = run_download(&fake, &args).await.unwrap_err();
+    assert_eq!(
+        error.to_string(),
+        "invalid progress mode 'fancy'; use auto, bar, json, plain, or none"
+    );
+    assert!(fake.calls().is_empty());
+    // The app check still comes first, as in Go.
+    let error = run_download(&fake, &download_args(0, "", None, false))
+        .await
+        .unwrap_err();
+    assert_eq!(error.to_string(), MISSING_APP);
+}
+
+fn plain_progress() -> (ProgressHandle, crate::progress::tests::Buffer) {
+    let out = crate::progress::tests::Buffer::default();
+    let progress = crate::progress::new_progress(
+        crate::progress::ProgressMode::Plain,
+        Box::new(out.clone()),
+        Box::new(Instant::now),
+    )
+    .unwrap();
+    (progress, out)
+}
+
+/// The fork's "reports phases in plain mode", with the purchase retry.
+#[tokio::test]
+async fn reports_phases_in_plain_mode() {
+    let fake = Fake::default();
+    fake.account("t", "143441");
+    fake.output(1);
+    let (progress, lines) = plain_progress();
+    download_with_progress(
+        &download_args(42, "", None, false),
+        None,
+        &fake,
+        Some(progress),
+        &out(),
+    )
+    .await
+    .unwrap();
+    assert_eq!(lines.text(), "resolving\n");
+    assert_eq!(*fake.download_options.borrow(), [(true, false)]);
+
+    let fake = Fake::default();
+    fake.account("t", "143441");
+    fake.account("t", "143441");
+    fake.downloads
+        .borrow_mut()
+        .push_back(Err(Error::LicenseRequired));
+    fake.purchases.borrow_mut().push_back(Ok(()));
+    fake.output(1);
+    let (progress, lines) = plain_progress();
+    download_with_progress(
+        &download_args(42, "", None, true),
+        None,
+        &fake,
+        Some(progress),
+        &out(),
+    )
+    .await
+    .unwrap();
+    assert_eq!(lines.text(), "resolving\npurchasing\n");
 }
 
 async fn run_download(fake: &Fake, args: &DownloadArgs) -> Result<(), BoxError> {
