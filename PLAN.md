@@ -858,7 +858,11 @@ fairplay-decrypt's Python. The crate stays GPL-3.0-or-later; ipadecrypt's MIT no
     `.supp` v01. ipadecrypt fails ("unsupported SUPF format"); with 405 added (a one-line patch
     to a scratch copy) it decrypts 2 / 6384 and passes its own `--extra-verify` (12 Mach-Os
     source-matched). The Rust output is byte-identical to that patched oracle: 2 / 6384 / 12.
-  Live cost: 3 list-versions, 7 get-version-metadata and 3 downloads (owned apps, no purchase).
+  - End to end through the download path: `ipatool decrypt -b jp.co.sony.audio.companion
+    --external-version-id 83633433` (after merging main) downloaded Sony 1.0.0 again and wrote
+    an IPA identical in every member to ipadecrypt's output from the first download (the
+    per-download SINF is in `SC_Info`, which the output leaves out).
+  Live cost: 3 list-versions, 7 get-version-metadata and 4 downloads (owned apps, no purchase).
 - Exercised by real inputs: plain arm64 thin, armv7 chosen from armv7+armv7s, arm64 chosen from
   armv7+arm64, SUPP v01 (Sony 1.0.0), SUPF v3 405 (Google Home 1.25) and 507 (Sony 5.15),
   SUPF v5 612 (the 2026 apps ship all four key files, format 612, and `.v5.supf` wins), the
