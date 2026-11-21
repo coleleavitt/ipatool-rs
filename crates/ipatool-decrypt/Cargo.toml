@@ -3,6 +3,7 @@ name = "ipatool-decrypt"
 description = "Offline FairPlay decryption of App Store IPAs (GPL-3.0-or-later)"
 edition.workspace = true
 license = "GPL-3.0-or-later"
+readme = "README.md"
 repository.workspace = true
 rust-version.workspace = true
 version.workspace = true
