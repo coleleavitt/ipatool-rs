@@ -121,11 +121,11 @@ parity check for the commands it touches.
 - [x] Machine GUID from the MAC address, Linux sysfs selection (same address as Go here).
       The macOS IOKit and Windows `GetIfEntry2Ex` lookups were ported in phase 9.
 - [x] `search`/`catalog-versions` take the account storefront; `--country` overrides it.
-- [ ] Failure types and the plist login/purchase envelopes move to phase 4 with their users.
+- [x] Failure types and the plist login/purchase envelopes move to phase 4 with their users (done in phases 4 and 6).
 
 ### Phase 3 — SAP emulator (highest risk)
 
-- [ ] Engine: `unicorn-engine` crate built from source (replaces Go's runtime download of
+- [x] Engine: `unicorn-engine` crate built from source (replaces Go's runtime download of
       a pinned `libunicorn` wheel and `purego`). Hooks, memory guard, timeouts, clock.
 - [x] `machimage`: Mach-O image mapping, shared regions, preparation cache. Mach-O load
       commands come from the `object` crate; the go-macho pieces Go relies on (symbol table,
@@ -163,13 +163,15 @@ parity check for the commands it touches.
       Untested against Go: modern ADI provisioning, keybag import, XPC exchange and
       StoreAgent decryption (need live Apple provisioning data or a purchased `.pkg`;
       `.pkg` decryption is now checked live in phase 6, byte-identical to Go).
-- [ ] Oracle: a Go test harness (`xtask`) that records inputs/outputs of each guest call
+- [x] Oracle: a Go test harness (`xtask`) that records inputs/outputs of each guest call
       from the Go implementation; Rust must produce identical bytes for the same inputs.
-      Done as scripts for `machimage` and `machine`; `assets` and `xtask` remain.
+      Done as per-module scripts (`machimage`, `machine`, macOS package, MCP) instead of one
+      `xtask`; `assets` is checked by the pinned SHA-256 of every extracted file, and
+      `profilegen --check` covers the Store profile.
 
 ### Phase 4 — authentication
 
-- [ ] Anisette provisioning and Store AMD state (with the skip-unchanged-write fix).
+- [x] Anisette provisioning and Store AMD state (with the skip-unchanged-write fix; Store AMD in phase 5).
   - [x] `ipatool_appstore::storeauth`: `anisette.go`, `store_provisioning.go`, `http_client.go`
         and the state handling of `store_amd.go`. `AnisetteState` JSON, identity headers, the
         header set and the XML plist request bodies match a Go oracle
@@ -196,7 +198,7 @@ parity check for the commands it touches.
       the XML plist payload itself and sends the body signature in `X-Apple-ActionSignature`,
       as Go did before the emulator (`abd86cb`). The emulator's own login parameters and
       headers are not added.
-- [ ] Legacy and native login, 2FA prompt, `5005` handling and re-prompt, retries.
+- [x] Legacy and native login, 2FA prompt, `5005` handling and re-prompt, retries.
       Legacy login is done (`ipatool_appstore::login`, `Client::login`): 2FA code
       normalization, redirects (max 4), request retries (3 attempts, 10 s doubling to 30 s,
       `Retry-After`), dialog and machine-action errors, DSID from header or cookie,
@@ -211,7 +213,7 @@ parity check for the commands it touches.
       phase-3 machine, finish Store provisioning, then log in with a Store AMD proof. The
       `anisette-v4` state is written only when it changes. Tested with a fake backend.
       Until phase 5 an `SP` answer ends with "prepare Store AMD proof: ... not ported yet".
-- [ ] `auth login` end to end with a real account (manual, opt-in).
+- [x] `auth login` end to end with a real account (manual, opt-in): done 2026-11-20 through the Store AMD emulator.
 
 ### Phase 5 — Store engine emulator
 

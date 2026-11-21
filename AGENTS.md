@@ -41,7 +41,7 @@ lists the change as a deliberate fork improvement.
 
 ```sh
 cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
+env -u CLIPPY_CONF_DIR cargo clippy --workspace --all-targets -- -D warnings   # repo clippy.toml, as in CI
 cargo test --workspace
 scripts/parity.sh            # compares output with the Go binary (offline; IPATOOL_PARITY_LIVE=1 adds Apple calls)
 ```

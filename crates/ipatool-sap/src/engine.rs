@@ -94,7 +94,13 @@ fn set_tcg_buffer_size<D>(engine: &Unicorn<'_, D>) -> std::result::Result<(), uc
     unsafe {
         unicorn_engine::uc_ctl(
             engine.get_handle(),
-            ControlType(CTL_TCG_BUFFER_SIZE_WRITE),
+            // `uc_control_type` is a C enum: `c_int` on MSVC, `c_uint` elsewhere.
+            #[allow(
+                clippy::cast_possible_wrap,
+                clippy::cast_lossless,
+                reason = "bindgen's enum type differs per target"
+            )]
+            ControlType(CTL_TCG_BUFFER_SIZE_WRITE as _),
             TCG_BUFFER_SIZE,
         )
     }
