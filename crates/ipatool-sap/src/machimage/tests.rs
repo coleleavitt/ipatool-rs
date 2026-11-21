@@ -234,8 +234,9 @@ fn read_u64(data: &[u8], offset: usize) -> u64 {
 fn shares_instruction_patches_and_isolates_relocation_and_source_bytes() {
     let source = shared_fixture();
     let original = source.clone();
-    let mut first = Image::open_shared("first", &source).expect("open first");
-    let mut second = Image::open_shared("second", &source).expect("open second");
+    let cache = PreparationCache::new();
+    let mut first = Image::open_shared_in("first", &source, &cache).expect("open first");
+    let mut second = Image::open_shared_in("second", &source, &cache).expect("open second");
     assert!(std::ptr::eq(first.data.as_ptr(), source.as_ptr()));
     assert!(Arc::ptr_eq(&first.instructions, &second.instructions));
     assert!(first.modified.as_ref().is_some_and(HashMap::is_empty));
@@ -288,12 +289,13 @@ fn keeps_concurrent_guests_independent_while_sharing_preparation() {
     let mut source = shared_fixture();
     let length = source.len();
     source[length - 2] = 77;
+    let cache = PreparationCache::new();
     std::thread::scope(|scope| {
         let guests: Vec<_> = (1..=8u64)
             .map(|n| {
-                let source = &source;
+                let (source, cache) = (&source, &cache);
                 scope.spawn(move || {
-                    let mut image = Image::open_shared("concurrent", source)?;
+                    let mut image = Image::open_shared_in("concurrent", source, cache)?;
                     image.binds = target_bind();
                     let expected = n * 4096;
                     image.relocate(n << 32, &mut |_| Ok(expected))?;
@@ -370,18 +372,20 @@ fn overlays_patches_across_unaligned_page_segment_and_chunk_boundaries() {
 #[test]
 fn invalidates_preparation_when_any_source_byte_changes() {
     let source = shared_fixture();
-    let first = Image::open_shared("first", &source).expect("open first");
+    let cache = PreparationCache::new();
+    let first = Image::open_shared_in("first", &source, &cache).expect("open first");
     let mut changed = source.clone();
     let last = changed.len() - 1;
     changed[last] = 1;
-    let second = Image::open_shared("second", &changed).expect("open second");
+    let second = Image::open_shared_in("second", &changed, &cache).expect("open second");
     assert!(!Arc::ptr_eq(&first.instructions, &second.instructions));
 }
 
 #[test]
 fn preserves_write_errors_and_rejects_fixups_outside_the_image() {
     let source = shared_fixture();
-    let mut image = Image::open_shared("image", &source).expect("open");
+    let cache = PreparationCache::new();
+    let mut image = Image::open_shared_in("image", &source, &cache).expect("open");
     let base = image.base();
     image
         .relocate(base, &mut |name| {

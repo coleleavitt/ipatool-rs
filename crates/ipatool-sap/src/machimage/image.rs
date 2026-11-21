@@ -8,7 +8,9 @@ use crate::error::{Context, Error, Result};
 
 use super::fixups::{self, ChainedFixups, Kind};
 use super::macho::{self, Bind, DyldInfo, Rebase, Section, Segment, Symbol};
-use super::preparation_cache::{ChainedRelocation, IMAGE_PREPARATIONS, Instructions, Preparation};
+use super::preparation_cache::{
+    ChainedRelocation, IMAGE_PREPARATIONS, Instructions, Preparation, PreparationCache,
+};
 use super::{Memory, PAGE_SIZE, POINTER_SIZE, add, align, arm64_slice};
 
 const MAX_IMAGE_SPAN: u64 = 1 << 30;
@@ -41,7 +43,7 @@ impl Image<'static> {
     /// Opens a private copy of the arm64e image in `input`.
     pub fn open(name: &str, input: &[u8]) -> Result<Self> {
         let data = arm64_slice(input).with_context(|| format!("open {name}"))?;
-        Image::open_image(name, Cow::Owned(data.to_vec()), None)
+        Image::open_image(name, Cow::Owned(data.to_vec()), None, &IMAGE_PREPARATIONS)
     }
 }
 
@@ -49,8 +51,23 @@ impl<'a> Image<'a> {
     /// Borrows immutable image bytes and copies only pages changed by relocation.
     /// Instruction patches are applied while loading into guest memory.
     pub fn open_shared(name: &str, input: &'a [u8]) -> Result<Self> {
+        Image::open_shared_in(name, input, &IMAGE_PREPARATIONS)
+    }
+
+    /// [`Image::open_shared`] with its own preparation cache, so tests do not depend on
+    /// what other tests left in the process-wide one.
+    pub(super) fn open_shared_in(
+        name: &str,
+        input: &'a [u8],
+        preparations: &PreparationCache,
+    ) -> Result<Self> {
         let data = arm64_slice(input).with_context(|| format!("open {name}"))?;
-        Image::open_image(name, Cow::Borrowed(data), Some(HashMap::new()))
+        Image::open_image(
+            name,
+            Cow::Borrowed(data),
+            Some(HashMap::new()),
+            preparations,
+        )
     }
 
     pub(super) fn empty(
@@ -81,6 +98,7 @@ impl<'a> Image<'a> {
         name: &str,
         data: Cow<'a, [u8]>,
         modified: Option<HashMap<u64, Vec<u8>>>,
+        preparations: &PreparationCache,
     ) -> Result<Self> {
         let shared = modified.is_some();
         let mut image = Image::empty(name, data, modified);
@@ -89,7 +107,7 @@ impl<'a> Image<'a> {
         let mut preparation = None;
         if shared {
             key = Sha256::digest(&image.data).into();
-            preparation = IMAGE_PREPARATIONS.get(&key);
+            preparation = preparations.get(&key);
         }
 
         let file = macho::File::parse(&image.data, preparation.is_none())
@@ -125,7 +143,7 @@ impl<'a> Image<'a> {
                 image.fixups = Arc::new(image.decode_chained_relocations()?);
                 image.chained = None;
             }
-            IMAGE_PREPARATIONS.put(
+            preparations.put(
                 key,
                 Preparation {
                     instructions: Arc::clone(&image.instructions),
