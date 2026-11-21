@@ -823,6 +823,19 @@ keychain entries and JSON output stay as before.
     `unix:runtime=yes`, so a plain `dbus-run-session` binds `/run/user/1000/bus` and takes
     over the real session bus path. Always pass a private `--config-file`.
 
+- [x] majd/ipatool#671, FCS key download retried. Go's `resolveAEASymmetricKey`
+  (`aea.rs` `resolve_aea_symmetric_key`) fetched `wkms-public.apple.com` once, so one
+  transient EOF ended the whole download, while every range read of the same image is
+  retried. Now up to 5 attempts, waiting 1, 2, 3 and 4 s, as the issue's patch does. A
+  transport error, a non-200 status or a body read error is retried. The last attempt's
+  error text is returned unchanged. The issue's patch also sets `User-Agent: Mozilla/5.0`
+  on this request. That is not taken: the reporter got the key with and without it, so it
+  is not part of the fix, and Go's request has no such header.
+  - Verified: unit tests with an injected sleep (success on the third attempt; five
+    failures give the wait sequence 1, 2, 3, 4 and the last error). Not tested against a
+    failing network: the key URL must be `https://wkms-public.apple.com`, so a local fake
+    server cannot stand in for it.
+
 ## Open questions for the user
 
 1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and

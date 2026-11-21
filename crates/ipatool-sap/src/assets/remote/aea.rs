@@ -3,6 +3,7 @@
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
+use std::time::Duration;
 
 use aes::Aes256;
 use base64::Engine as _;
@@ -34,6 +35,7 @@ const AEA_SHA256_CHECKSUM: u8 = 2;
 const AEA_DECODED_SEGMENT_CACHE_COUNT: usize = 64;
 const MAX_AEA_AUTH_DATA_SIZE: u32 = 1 << 20;
 const MAX_FCS_KEY_SIZE: u64 = 64 << 10;
+const FCS_KEY_ATTEMPTS: u64 = 5;
 
 const AEA_HEADER_SIZE: usize = 12;
 const ENCRYPTED_ROOT_HEADER_SIZE: usize = 32 + 48 + 32;
@@ -486,22 +488,9 @@ fn resolve_aea_symmetric_key(
         .ok()
         .filter(|url| url.scheme() == "https" && url.host_str() == Some("wkms-public.apple.com"))
         .ok_or_else(|| Error::msg(format!("invalid Apple FCS key URL {key_url_text:?}")))?;
-    let response = client
-        .get(key_url.as_str())
-        .send()
-        .context("download Apple FCS key")?;
-    if response.status() != StatusCode::OK {
-        return Err(Error::msg(format!(
-            "download Apple FCS key: server returned {}",
-            response.status()
-        )));
-    }
-    let mut pem_data = Vec::new();
-    std::io::Read::read_to_end(
-        &mut std::io::Read::take(response, MAX_FCS_KEY_SIZE + 1),
-        &mut pem_data,
-    )
-    .context("read Apple FCS key")?;
+    let pem_data = retry_fcs_key(FCS_KEY_ATTEMPTS, std::thread::sleep, || {
+        fetch_fcs_key(client, key_url.as_str())
+    })?;
     if pem_data.len() as u64 > MAX_FCS_KEY_SIZE {
         return Err(Error::msg("apple FCS key response is too large"));
     }
@@ -537,6 +526,40 @@ fn resolve_aea_symmetric_key(
         &[],
     )
     .map_err(|error| Error::msg(format!("unwrap AEA symmetric key: {error}")))
+}
+
+/// One transient failure here used to end the whole download while every range read
+/// of the same image is retried (majd/ipatool#671). Attempts wait 1, 2, 3 and 4 s, as the
+/// issue's patch does; the last attempt's error is returned unchanged.
+fn retry_fcs_key(
+    attempts: u64,
+    mut sleep: impl FnMut(Duration),
+    mut fetch: impl FnMut() -> Result<Vec<u8>>,
+) -> Result<Vec<u8>> {
+    for attempt in 1..attempts {
+        if let Ok(data) = fetch() {
+            return Ok(data);
+        }
+        sleep(Duration::from_secs(attempt));
+    }
+    fetch()
+}
+
+fn fetch_fcs_key(client: &Client, url: &str) -> Result<Vec<u8>> {
+    let response = client.get(url).send().context("download Apple FCS key")?;
+    if response.status() != StatusCode::OK {
+        return Err(Error::msg(format!(
+            "download Apple FCS key: server returned {}",
+            response.status()
+        )));
+    }
+    let mut pem_data = Vec::new();
+    std::io::Read::read_to_end(
+        &mut std::io::Read::take(response, MAX_FCS_KEY_SIZE + 1),
+        &mut pem_data,
+    )
+    .context("read Apple FCS key")?;
+    Ok(pem_data)
 }
 
 fn info_with_index(info: &str, index: u32) -> Vec<u8> {
@@ -618,6 +641,50 @@ mod tests {
         let metadata = parse_aea_metadata(&data).unwrap();
         assert_eq!(metadata["first"], b"value");
         assert_eq!(metadata["second"], b"another");
+    }
+
+    #[test]
+    fn retries_the_fcs_key_download_with_a_growing_wait() {
+        let mut waits = Vec::new();
+        let mut calls = 0;
+        let data = retry_fcs_key(
+            5,
+            |wait| waits.push(wait.as_secs()),
+            || {
+                calls += 1;
+                if calls < 3 {
+                    Err(Error::msg("download Apple FCS key: EOF"))
+                } else {
+                    Ok(b"pem".to_vec())
+                }
+            },
+        )
+        .unwrap();
+        assert_eq!(data, b"pem");
+        assert_eq!(calls, 3);
+        assert_eq!(waits, [1, 2]);
+    }
+
+    #[test]
+    fn returns_the_last_fcs_key_error_after_five_attempts() {
+        let mut waits = Vec::new();
+        let mut calls = 0;
+        let error = retry_fcs_key(
+            5,
+            |wait| waits.push(wait.as_secs()),
+            || {
+                calls += 1;
+                Err(Error::msg(format!(
+                    "download Apple FCS key: server returned {calls}"
+                )))
+            },
+        )
+        .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "download Apple FCS key: server returned 5"
+        );
+        assert_eq!(waits, [1, 2, 3, 4]);
     }
 
     #[test]
