@@ -39,7 +39,7 @@ url.workspace = true
 x509-cert = "0.3"
 
 [dev-dependencies]
-tokio = { workspace = true, features = ["io-util", "net"] }
+tokio = { workspace = true, features = ["fs", "io-util", "net"] }
 webpki-root-certs = "1"
 
 [lints]

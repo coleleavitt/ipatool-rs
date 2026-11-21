@@ -1,6 +1,10 @@
 //! Machine identity from the network adapters (`pkg/util/machine`, `machine_id.go`).
 //! Apple keys the bag GUID, anisette and kbsync state to it, so it must match the Go
 //! tool on the same machine or the shared login state stops working.
+#![cfg_attr(
+    not(target_os = "linux"),
+    allow(dead_code, reason = "only the Linux adapter lookup is ported")
+)]
 
 use std::path::Path;
 use std::sync::OnceLock;
