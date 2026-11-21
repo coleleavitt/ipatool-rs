@@ -1357,6 +1357,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ipatool-profilegen"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "ipatool-sap",
+ "ipatool-store",
+ "plist",
+ "ruzstd",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tempfile",
+ "thiserror",
+ "unicorn-engine",
+]
+
+[[package]]
 name = "ipatool-sap"
 version = "0.1.0"
 dependencies = [

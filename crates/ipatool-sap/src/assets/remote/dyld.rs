@@ -1,5 +1,7 @@
 //! Port of Go `assets/dyld.go`: one image exported from the arm64e dyld shared cache.
 
+use std::collections::HashMap;
+
 use super::apfs::File;
 use super::macho;
 use super::{ReadAt, le32, le64};
@@ -63,35 +65,57 @@ struct Rebase {
     target: u64,
 }
 
-pub(super) fn extract_dyld_image_from_files<'f>(
-    opener: &dyn Fn(&str) -> Result<File<'f>>,
+/// One opened shared-cache member file.
+pub(super) struct MemberFile<'a> {
+    pub(super) reader: Box<dyn ReadAt + 'a>,
+    pub(super) size: u64,
+}
+
+impl<'a> From<File<'a>> for MemberFile<'a> {
+    fn from(file: File<'a>) -> Self {
+        Self {
+            size: file.size,
+            reader: Box::new(file),
+        }
+    }
+}
+
+/// Opens the member with the given suffix (`""` is the primary cache file).
+pub(super) type Opener<'o, 'a> = dyn Fn(&str) -> Result<MemberFile<'a>> + 'o;
+
+pub(super) fn extract_dyld_image_from_files(
+    opener: &Opener<'_, '_>,
     image_path: &str,
 ) -> Result<Vec<u8>> {
-    let cache = Cache::open(opener).context("open shared cache")?;
-    let image = cache
-        .image(image_path)
-        .with_context(|| format!("find {image_path} in shared cache"))?;
-    let mut file = cache
-        .open_image(&image)
-        .with_context(|| format!("read {image_path} from shared cache"))?;
-    cache
-        .image_symbols(&image, &mut file)
-        .with_context(|| format!("read {image_path} symbols"))?;
-    let reader = CacheReader {
-        cache: &cache,
-        linkedit_member: cache.linkedit_member(&image)?,
-    };
-    let mut exported = file
-        .export(&reader, &[])
-        .with_context(|| format!("export {image_path} from shared cache"))?;
-    cache
-        .apply_slide(&mut exported)
-        .with_context(|| format!("apply {image_path} shared-cache pointers"))?;
-    Ok(exported)
+    Cache::open(opener)
+        .context("open shared cache")?
+        .extract_image(image_path)
 }
 
 impl<'a> Cache<'a> {
-    fn open<'f: 'a>(opener: &dyn Fn(&str) -> Result<File<'f>>) -> Result<Self> {
+    /// Go's `extractDyldImageFromFiles` after the cache is open.
+    pub(super) fn extract_image(&self, image_path: &str) -> Result<Vec<u8>> {
+        let image = self
+            .image(image_path)
+            .with_context(|| format!("find {image_path} in shared cache"))?;
+        let mut file = self
+            .open_image(&image)
+            .with_context(|| format!("read {image_path} from shared cache"))?;
+        self.image_symbols(&image, &mut file)
+            .with_context(|| format!("read {image_path} symbols"))?;
+        let reader = CacheReader {
+            cache: self,
+            linkedit_member: self.linkedit_member(&image)?,
+        };
+        let mut exported = file
+            .export(&reader, &[])
+            .with_context(|| format!("export {image_path} from shared cache"))?;
+        self.apply_slide(&mut exported)
+            .with_context(|| format!("apply {image_path} shared-cache pointers"))?;
+        Ok(exported)
+    }
+
+    pub(super) fn open(opener: &Opener<'_, 'a>) -> Result<Self> {
         let (primary, header) = open_member(opener, "", 0)?;
         let mut members = vec![primary];
         let subcache_offset = u64::from(le32(&header[392..]));
@@ -208,7 +232,121 @@ impl<'a> Cache<'a> {
         Err(Error::msg("image was not found"))
     }
 
-    fn open_image(&self, image: &Image) -> Result<macho::File> {
+    /// Go `StoreCache.AddressRange`: the unslid range covered by every mapping.
+    pub(super) fn address_range(&self) -> (u64, u64) {
+        let mappings = self.members.iter().flat_map(|member| &member.mappings);
+        let start = mappings
+            .clone()
+            .map(|m| m.address)
+            .min()
+            .unwrap_or(u64::MAX);
+        let end = mappings.map(|m| m.address + m.size).max().unwrap_or(0);
+        (start, end.wrapping_sub(start))
+    }
+
+    /// Go `StoreCache.Contains`: the range lies inside one mapping.
+    pub(super) fn contains(&self, address: u64, size: u64) -> bool {
+        self.members
+            .iter()
+            .flat_map(|member| &member.mappings)
+            .any(|m| {
+                address >= m.address
+                    && address - m.address <= m.size
+                    && size <= m.size - (address - m.address)
+            })
+    }
+
+    /// Go `StoreCache.Images`: every image install name and its header address.
+    pub(super) fn image_addresses(&self) -> Result<HashMap<String, u64>> {
+        let primary = &self.members[0];
+        let mut header = vec![0u8; DYLD_HEADER_SIZE];
+        primary
+            .file
+            .read_at(&mut header, 0)
+            .context("read Store cache header")?;
+        let offset = u64::from(le32(&header[448..]));
+        let count = u64::from(le32(&header[452..]));
+        if count == 0
+            || count > DYLD_MAXIMUM_IMAGES
+            || !valid_range(primary.size, offset, count * DYLD_IMAGE_INFO_SIZE)
+        {
+            return Err(Error::msg("invalid Store image table"));
+        }
+        let mut data = vec![0u8; to_usize(count * DYLD_IMAGE_INFO_SIZE)?];
+        primary
+            .file
+            .read_at(&mut data, offset)
+            .context("read Store image table")?;
+        let mut images = HashMap::with_capacity(data.len() / DYLD_IMAGE_INFO_LENGTH);
+        for entry in data.as_chunks::<DYLD_IMAGE_INFO_LENGTH>().0 {
+            let name = read_cstring(
+                primary.file.as_ref(),
+                primary.size,
+                u64::from(le32(&entry[24..])),
+            )?;
+            images.insert(name, le64(entry));
+        }
+        Ok(images)
+    }
+
+    /// The image whose Mach-O header is at `address`.
+    pub(super) fn image_at(&self, address: u64) -> Result<Image> {
+        let mapping = self.mapping_for_address(address)?;
+        Ok(Image {
+            member: mapping.member,
+            offset: mapping.file_offset + address - mapping.address,
+        })
+    }
+
+    /// Reads `__LINKEDIT` data of `image` at a load-command file offset.
+    pub(super) fn read_linkedit(&self, image: &Image, data: &mut [u8], offset: u64) -> Result<()> {
+        self.members[self.linkedit_member(image)?]
+            .file
+            .read_at(data, offset)
+    }
+
+    /// Go `StoreCache.Page`: one unslid 4 KiB page with its shared-cache pointers applied.
+    /// `slides` memoizes each slide page's rebases, like Go's `StoreCache.slides`.
+    pub(super) fn page(
+        &self,
+        address: u64,
+        slides: &mut HashMap<u64, HashMap<u64, u64>>,
+    ) -> Result<Vec<u8>> {
+        if address & 4095 != 0 {
+            return Err(Error::msg("unaligned Store page"));
+        }
+        let mapping = self.mapping_for_address(address)?;
+        let mut data = vec![0u8; 4096];
+        let reader = CacheReader {
+            cache: self,
+            linkedit_member: 0,
+        };
+        macho::Source::read_at_address(&reader, &mut data, address).context("read Store page")?;
+        if mapping.slide_info_size == 0 {
+            return Ok(data);
+        }
+        let page_size = u64::from(self.read_slide_info5(&mapping)?.page_size);
+        let index = (address - mapping.address) / page_size;
+        let base = mapping.address + index * page_size;
+        let rebases = match slides.entry(base) {
+            std::collections::hash_map::Entry::Occupied(entry) => entry.into_mut(),
+            std::collections::hash_map::Entry::Vacant(entry) => entry.insert(
+                self.rebases(&mapping, index, index + 1)?
+                    .into_iter()
+                    .map(|rebase| (rebase.address, rebase.target))
+                    .collect(),
+            ),
+        };
+        for (&location, &target) in rebases.iter() {
+            if location >= address && location + 8 <= address + 4096 {
+                let start = to_usize(location - address)?;
+                data[start..start + 8].copy_from_slice(&target.to_le_bytes());
+            }
+        }
+        Ok(data)
+    }
+
+    pub(super) fn open_image(&self, image: &Image) -> Result<macho::File> {
         let member = &self.members[image.member];
         let header = self.image_header(image)?;
         let commands_size = u64::from(le32(&header[20..]));
@@ -458,13 +596,12 @@ impl SlideInfo5 {
     }
 }
 
-fn open_member<'a, 'f: 'a>(
-    opener: &dyn Fn(&str) -> Result<File<'f>>,
+fn open_member<'a>(
+    opener: &Opener<'_, 'a>,
     suffix: &str,
     index: usize,
 ) -> Result<(Member<'a>, Vec<u8>)> {
-    let file = opener(suffix)?;
-    let size = file.size;
+    let MemberFile { reader: file, size } = opener(suffix)?;
     if size < DYLD_HEADER_SIZE as u64 {
         return Err(Error::msg("shared-cache member is too small"));
     }
@@ -514,7 +651,7 @@ fn open_member<'a, 'f: 'a>(
     }
     Ok((
         Member {
-            file: Box::new(file),
+            file,
             size,
             uuid,
             mappings,

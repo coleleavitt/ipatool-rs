@@ -16,11 +16,12 @@ const LC_SEGMENT_64: u32 = 0x19;
 const LC_SYMTAB: u32 = 0x2;
 const LC_DYSYMTAB: u32 = 0xb;
 const LC_ID_DYLIB: u32 = 0xd;
-const LC_LOAD_DYLIB: u32 = 0xc;
-const LC_LOAD_WEAK_DYLIB: u32 = 0x8000_0018;
-const LC_REEXPORT_DYLIB: u32 = 0x8000_001f;
-const LC_LOAD_UPWARD_DYLIB: u32 = 0x8000_0023;
-const LC_LAZY_LOAD_DYLIB: u32 = 0x20;
+const LC_UUID: u32 = 0x1b;
+pub(super) const LC_LOAD_DYLIB: u32 = 0xc;
+pub(super) const LC_LOAD_WEAK_DYLIB: u32 = 0x8000_0018;
+pub(super) const LC_REEXPORT_DYLIB: u32 = 0x8000_001f;
+pub(super) const LC_LOAD_UPWARD_DYLIB: u32 = 0x8000_0023;
+pub(super) const LC_LAZY_LOAD_DYLIB: u32 = 0x20;
 const LC_CODE_SIGNATURE: u32 = 0x1d;
 const LC_SEGMENT_SPLIT_INFO: u32 = 0x1e;
 const LC_FUNCTION_STARTS: u32 = 0x26;
@@ -163,16 +164,16 @@ struct Header {
 }
 
 #[derive(Clone)]
-struct Section {
-    name: String,
-    segment: String,
-    address: u64,
-    size: u64,
+pub(super) struct Section {
+    pub(super) name: String,
+    pub(super) segment: String,
+    pub(super) address: u64,
+    pub(super) size: u64,
     offset: u32,
     align: u32,
     relocation_offset: u32,
     relocation_count: u32,
-    flags: u32,
+    pub(super) flags: u32,
     reserved: [u32; 3],
 }
 
@@ -180,7 +181,7 @@ struct Section {
 pub(super) struct Segment {
     command: u32,
     length: u32,
-    name: String,
+    pub(super) name: String,
     pub(super) address: u64,
     pub(super) memory_size: u64,
     pub(super) offset: u64,
@@ -552,8 +553,49 @@ impl File {
         })
     }
 
-    fn segment(&self, name: &str) -> Option<&Segment> {
+    pub(super) fn segment(&self, name: &str) -> Option<&Segment> {
         self.segments().find(|segment| segment.name == name)
+    }
+
+    /// Every section in load-command order, like go-macho's `File.Sections`.
+    pub(super) fn sections(&self) -> &[Section] {
+        &self.sections
+    }
+
+    /// The first `LC_UUID`, like go-macho's `File.UUID`.
+    pub(super) fn uuid(&self) -> Option<[u8; 16]> {
+        self.loads.iter().find_map(|load| match load {
+            Load::Raw(raw) if le32(raw) == LC_UUID && raw.len() >= 24 => {
+                let mut uuid = [0u8; 16];
+                uuid.copy_from_slice(&raw[8..24]);
+                Some(uuid)
+            }
+            _ => None,
+        })
+    }
+
+    /// The dependent-library commands (everything but `LC_ID_DYLIB`) with their command,
+    /// name and dylib-use flags (0 for classic commands).
+    pub(super) fn dependencies(&self) -> impl Iterator<Item = (u32, &str, u32)> {
+        self.loads.iter().filter_map(|load| match load {
+            Load::Dylib { raw, name, flags } if le32(raw) != LC_ID_DYLIB => {
+                Some((le32(raw), name.as_str(), flags.unwrap_or_default()))
+            }
+            _ => None,
+        })
+    }
+
+    /// The `LC_DYLD_EXPORTS_TRIE` data offset and size.
+    pub(super) fn exports_trie(&self) -> Option<(u32, u32)> {
+        self.loads.iter().find_map(|load| match load {
+            Load::LinkEdit {
+                command: LC_DYLD_EXPORTS_TRIE,
+                offset,
+                size,
+                ..
+            } => Some((*offset, *size)),
+            _ => None,
+        })
     }
 
     fn segment_mut(&mut self, name: &str) -> Option<&mut Segment> {
@@ -630,7 +672,7 @@ impl File {
         }
     }
 
-    fn base_address(&self) -> u64 {
+    pub(super) fn base_address(&self) -> u64 {
         self.segment("__TEXT").map_or(0, |segment| segment.address)
     }
 
@@ -1170,11 +1212,11 @@ pub(super) fn decode_symbol(entry: &[u8], name_at: impl Fn(u64) -> Option<String
     }
 }
 
-struct TrieExport {
-    name: String,
+pub(super) struct TrieExport {
+    pub(super) name: String,
     reexport: String,
-    flags: u64,
-    address: u64,
+    pub(super) flags: u64,
+    pub(super) address: u64,
 }
 
 impl TrieExport {
@@ -1182,13 +1224,13 @@ impl TrieExport {
         self.flags & EXPORT_SYMBOL_FLAGS_KIND_MASK == EXPORT_SYMBOL_FLAGS_KIND_REGULAR
     }
 
-    fn is_reexport(&self) -> bool {
+    pub(super) fn is_reexport(&self) -> bool {
         self.flags == EXPORT_SYMBOL_FLAGS_REEXPORT
     }
 }
 
 /// go-macho `trie.ParseTrieExports`: every terminal node in depth-first order.
-fn parse_trie_exports(data: &[u8], load_address: u64) -> Result<Vec<TrieExport>> {
+pub(super) fn parse_trie_exports(data: &[u8], load_address: u64) -> Result<Vec<TrieExport>> {
     let mut nodes = Vec::new();
     parse_trie(data, 0, &mut Vec::new(), &mut nodes, 0).context("could not parse trie")?;
     nodes
