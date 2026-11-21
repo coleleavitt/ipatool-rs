@@ -53,6 +53,21 @@ Packages of 128 MiB or more download over four parallel ranges; only the first i
 download on one connection, so a tool that watches the `.tmp` file sees it grow steadily
 (majd/ipatool#669).
 
+### Several accounts
+
+The global `--keychain-id <ID>` keeps a login apart from the default one
+(majd/ipatool#235): its keychain entries are named `<key>/<ID>` (for example `account/<ID>`)
+and its cookies go to `cookies-<ID>` in the state directory. Without the flag the tool uses
+the Go tool's entries, unchanged. An email address works as the ID.
+
+```console
+$ ipatool --keychain-id work@example.com auth login -e work@example.com
+$ ipatool --keychain-id work@example.com download -b com.example.app
+$ ipatool auth info                      # the default login, shared with Go ipatool
+```
+
+The first login under a new ID also sets up its own anisette state, as a first login does.
+
 ## Compatibility with Go ipatool
 
 The Rust tool uses the same state directory (`$XDG_STATE_HOME/ipatool`, `$XDG_DATA_HOME/ipatool`

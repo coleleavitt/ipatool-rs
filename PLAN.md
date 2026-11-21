@@ -884,6 +884,41 @@ keychain entries and JSON output stay as before.
     change), the `decrypting` phase live (no owned Mac app in the allowed set), and the
     `json` mode live.
 
+- [x] majd/ipatool#235, several accounts. Design from the issue comments (dvcrn:
+  "specify the keychain entry ... `--keychain-id`").
+  - The closed PR majd/ipatool#420 is not followed: it rewrote the `account` entry into an
+    account list, which breaks Go-compatible entries.
+  - A global `--keychain-id <ID>` makes `ipatool_keychain::Config::id` store every key as
+    `<key>/<ID>`: `account/<ID>`, `kbsync-v1/<ID>`, `anisette-v4/<ID>`. These are
+    ordinary Go-format entries under other names. The file backend percent-encodes the `/`
+    as Go's does.
+  - The cookie jar is `cookies-<ID>` in the state directory. Apple's session cookies (pod,
+    DSID) must not mix between accounts; #420 cleared the jar on every switch for the same
+    reason.
+  - Scoping the anisette state as well means a new ID provisions its own anisette at its
+    first login, which is the normal first-login path. Sharing it would also work (Go keeps
+    it across `auth revoke` and the next login), but then one ID's keychain would depend on
+    another's.
+  - The ID allows ASCII letters, digits and `.` `_` `@` `+` `-`, and must not start with `.`
+    (it is part of a file name). An email address works. Without the flag, keys, cookie
+    file and output are unchanged. `version-metadata.json` is shared, since version data
+    does not depend on the account.
+  - Tests: key mapping and isolation on the file backend; Go's `byteness/keyring` helper
+    reads `account/work` written by the port (`IPATOOL_GO_KEYRING`); the flag is global
+    and validated (`main.rs` tests).
+  - Live (read-only): `auth info` still reads the default entry, `--keychain-id
+    nobody@example.com auth info` gives Go's "not found" error line, and a bad ID is
+    rejected.
+  - Untested: a second real login (account-changing; not run), and two accounts'
+    downloads side by side.
+
+Verification of `upstream-issues`: `cargo fmt --all --check`; `env -u CLIPPY_CONF_DIR cargo
+clippy --workspace --all-targets -- -D warnings` with and without `--features
+ipatool-cli/decrypt`; `cargo test --workspace` with and without the feature (674 tests
+pass, 3 ignored); `IPATOOL_TEST_SECRET_SERVICE=1` and `IPATOOL_GO_KEYRING` keychain tests;
+`scripts/parity.sh` offline: 0 differences. Live Apple traffic: one Sony Music Center
+download and one `auth info`.
+
 ## Open questions for the user
 
 1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and
