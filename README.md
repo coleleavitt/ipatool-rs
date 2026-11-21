@@ -20,6 +20,7 @@ port's own format. See [`PLAN.md`](PLAN.md) for the per-phase notes and known di
 | `list-purchases` | Apps the account owns |
 | `catalog-versions` | Newest 25 versions with display names, from the public catalog (no login) |
 | `mcp` | The same tools as an MCP server over stdio |
+| `decrypt` | Download (or read a local `.ipa`) and decrypt it offline with a 16-byte credential (opt-in `decrypt` feature; GPL-3) |
 
 ```console
 $ ipatool auth login -e you@example.com
@@ -57,6 +58,28 @@ App Store. `scripts/build-ios.sh` builds a signed binary for jailbroken iOS 15+ 
 Unicorn, `ldid`); it has not been run on a device. Windows arm64 is not supported, because
 Unicorn's C build does not support it.
 
+## Offline FairPlay decryption (opt-in, GPL-3)
+
+The non-default `decrypt` feature adds an `ipatool decrypt` command that produces a decrypted
+IPA like `ipadecrypt`: given a bundle ID, an app ID (`--app-id`), or a path to a local `.ipa`,
+it downloads the app with the normal `download` path (same flags and retry/re-login logic) and
+then decrypts it offline using a 16-byte credential.
+
+```sh
+cargo build --release --features ipatool-cli/decrypt
+ipatool decrypt <bundle-id | --app-id N | path/to/app.ipa> -o out.ipa [--credential credential.bin] [--purchase] [--external-version-id ID]
+```
+
+The credential defaults to `credential.bin` in the ipatool state directory, then
+`./credential.bin`. Only offline decryption is implemented (no credential minting, no
+on-device fallback). The decryption lives in the separate crate `ipatool-decrypt`, a Rust port
+of [EthanArbuckle/fairplay-decrypt](https://github.com/EthanArbuckle/fairplay-decrypt). That
+crate and its port are licensed **GPL-3.0-or-later**, so a binary built with the `decrypt`
+feature is GPL-3. The default build does not enable the feature and does not link the GPL
+crate, so it stays MIT. The release workflow builds without the feature.
+
 ## License
 
-MIT, like the original. See [LICENSE](LICENSE).
+MIT, like the original, except the optional `ipatool-decrypt` crate
+(`crates/ipatool-decrypt`), which is GPL-3.0-or-later; see its `LICENSE`. Binaries built with
+the `decrypt` feature link it and are therefore GPL-3. See [LICENSE](LICENSE).

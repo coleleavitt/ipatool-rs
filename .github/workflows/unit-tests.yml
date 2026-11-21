@@ -23,3 +23,16 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       # Offline tests only; the live tests are #[ignore] and need an Apple account.
       - run: cargo test --workspace --locked
+
+  decrypt_feature:
+    name: Decrypt feature (clippy + tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      # The GPL `ipatool-decrypt` crate and the opt-in `decrypt` feature.
+      - run: cargo clippy --workspace --all-targets --features ipatool-cli/decrypt --locked -- -D warnings
+      - run: cargo test --workspace --features ipatool-cli/decrypt --locked
