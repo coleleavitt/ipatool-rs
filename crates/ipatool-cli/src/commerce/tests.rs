@@ -234,6 +234,18 @@ async fn keeps_parallel_downloads_and_no_progress_by_default_with_json() {
     assert_eq!(*fake.download_options.borrow(), [(false, false)]);
 }
 
+/// Without `--progress` an interactive session gets Go's bar, even with JSON output.
+#[tokio::test]
+async fn keeps_the_go_bar_in_interactive_sessions_by_default() {
+    let fake = Fake::default();
+    fake.account("t", "143441");
+    fake.output(1);
+    download(&download_args(42, "", None, false), &fake, true, &out())
+        .await
+        .unwrap();
+    assert_eq!(*fake.download_options.borrow(), [(true, false)]);
+}
+
 /// The fork's `--no-parallel` (majd/ipatool#669).
 #[tokio::test]
 async fn no_parallel_turns_off_parallel_ranges() {

@@ -35,11 +35,13 @@ request, fetches older ones from the store (`--concurrency`, default 4), and cac
 ### Download progress
 
 `download` reports progress according to `--progress` or the `IPATOOL_PROGRESS` environment
-variable (the flag wins), as proposed upstream in majd/ipatool#649:
+variable (the flag wins), as proposed upstream in majd/ipatool#649. Without either, it behaves
+like Go ipatool: a progress bar on stdout in interactive sessions, nothing with
+`--non-interactive`.
 
 | Mode | Output |
 |---|---|
-| `auto` (default) | `none` with `--format json`, `bar` in an interactive terminal, otherwise `plain` |
+| `auto` | `none` with `--format json`, `bar` in an interactive terminal, otherwise `plain` |
 | `bar` | Progress bar on stdout |
 | `json` | JSON lines on stderr at most four times per second, such as `{"level":"info","event":"progress","phase":"downloading","bytes":1048576,"total":52428800,"time":"..."}` |
 | `plain` | One line per phase on stderr (`resolving`, `purchasing`, `downloading`, `decrypting`, `patching`), plus the downloaded size every 1% (fewer for downloads shorter than 3 seconds) and at least every 15 seconds |

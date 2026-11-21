@@ -31,15 +31,22 @@ pub(crate) struct ProgressEnvironment {
     pub stdout_is_terminal: bool,
 }
 
-/// Go's `resolveProgressMode`: the flag, then the environment variable, then the session.
+/// The fork's `resolveProgressMode`: the flag, then the environment variable. With
+/// neither, upstream Go's behavior stays the default: the bar in an interactive session
+/// (whatever stdout is), else nothing. The fork makes `auto` the default; here it is
+/// only used when asked for.
 pub(crate) fn resolve_progress_mode(
     flag: Option<&str>,
     env: Option<&str>,
     session: &ProgressEnvironment,
 ) -> Result<ProgressMode, String> {
-    let value = flag
-        .or_else(|| env.filter(|value| !value.is_empty()))
-        .unwrap_or("auto");
+    let Some(value) = flag.or_else(|| env.filter(|value| !value.is_empty())) else {
+        return Ok(if session.interactive {
+            ProgressMode::Bar
+        } else {
+            ProgressMode::None
+        });
+    };
     match value {
         "bar" => Ok(ProgressMode::Bar),
         "json" => Ok(ProgressMode::Json),

@@ -61,7 +61,7 @@ pub struct DownloadArgs {
     no_parallel: bool,
     #[arg(
         long,
-        help = "Progress output: auto, bar, json, plain, or none (also settable with IPATOOL_PROGRESS) [default: auto]"
+        help = "Progress output: auto, bar, json, plain, or none (also settable with IPATOOL_PROGRESS). Without either, a progress bar in interactive sessions"
     )]
     progress: Option<String>,
     #[command(flatten)]

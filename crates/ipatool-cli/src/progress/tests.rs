@@ -69,12 +69,48 @@ fn session(json: bool, interactive: bool, stdout_is_terminal: bool) -> ProgressE
 }
 
 #[test]
+fn defaults_to_go_without_a_flag_or_environment_variable() {
+    for (env, session, expected) in [
+        (None, session(false, true, true), ProgressMode::Bar),
+        // Go draws the bar whenever the session is interactive, also into a pipe and
+        // beside JSON output.
+        (None, session(true, true, false), ProgressMode::Bar),
+        (Some(""), session(false, true, true), ProgressMode::Bar),
+        (None, session(false, false, true), ProgressMode::None),
+        (None, session(true, false, false), ProgressMode::None),
+    ] {
+        assert_eq!(resolve_progress_mode(None, env, &session), Ok(expected));
+    }
+}
+
+/// The fork's mode table, with `auto` asked for.
+#[test]
 fn resolves_the_progress_mode() {
     for (flag, env, session, expected) in [
-        (None, None, session(true, true, true), ProgressMode::None),
-        (None, None, session(false, true, true), ProgressMode::Bar),
-        (None, None, session(false, true, false), ProgressMode::Plain),
-        (None, None, session(false, false, true), ProgressMode::Plain),
+        (
+            Some("auto"),
+            None,
+            session(true, true, true),
+            ProgressMode::None,
+        ),
+        (
+            Some("auto"),
+            None,
+            session(false, true, true),
+            ProgressMode::Bar,
+        ),
+        (
+            Some("auto"),
+            None,
+            session(false, true, false),
+            ProgressMode::Plain,
+        ),
+        (
+            Some("auto"),
+            None,
+            session(false, false, true),
+            ProgressMode::Plain,
+        ),
         (
             None,
             Some("none"),
@@ -95,15 +131,15 @@ fn resolves_the_progress_mode() {
         ),
         (
             None,
-            Some("json"),
-            session(true, false, false),
-            ProgressMode::Json,
+            Some("auto"),
+            session(false, false, false),
+            ProgressMode::Plain,
         ),
         (
             None,
-            Some(""),
-            session(false, true, true),
-            ProgressMode::Bar,
+            Some("json"),
+            session(true, false, false),
+            ProgressMode::Json,
         ),
     ] {
         assert_eq!(

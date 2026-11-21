@@ -848,7 +848,9 @@ keychain entries and JSON output stay as before.
   `download-progress-modes` (d8088ad, 1867a8e, f35f080). `--progress
   auto|bar|json|plain|none` on `download`, or `IPATOOL_PROGRESS` (the flag wins). `auto`
   gives `none` with `--format json`, `bar` when interactive and stdout is a terminal,
-  else `plain`. `json` and `plain` write to stderr with the fork's throttling (JSON 250 ms;
+  else `plain`. Unlike the fork, `auto` is not the default: with neither the flag nor the
+  variable, the behavior is upstream Go's (the bar whenever the session is interactive,
+  also into a pipe or beside JSON output; nothing with `--non-interactive`). `json` and `plain` write to stderr with the fork's throttling (JSON 250 ms;
   plain every 1 % at least 30 ms apart, a 15 s heartbeat). They also use the fork's line
   shapes and byte format (SI, one decimal).
   - Phases: `resolving` at each attempt and in `Download`, `purchasing`, `downloading`,
@@ -867,12 +869,13 @@ keychain entries and JSON output stay as before.
     phases in plain mode, also with the purchase retry, the invalid mode checked after the
     app check and before the account read, `--no-parallel` reaching `DownloadInput`; the
     resume-complete case in `commerce_tests/download_file.rs`).
-  - Behavior change, as in the fork: with `auto`, a non-interactive text run, or a run whose
-    stdout is not a terminal, now prints plain progress on stderr. `--progress none` gives
-    the old output. JSON output is unchanged unless `--progress json` is asked for.
+  - No behavior change by default: the fork's `auto` (plain lines on stderr for
+    non-interactive or piped runs, nothing beside JSON) applies only with `--progress auto`
+    or `IPATOOL_PROGRESS=auto`. Tests cover the Go default, also for an interactive
+    session with JSON output.
   - The fork's second branch, `no-color-off-tty` (1eac401), is already satisfied: this
     port's text lines never contain ANSI colors (open question 3), so nothing changed. The
-    bar is the only output with control characters, and `auto` picks it only for a
+    bar is the only output with control characters; `--progress auto` picks it only for a
     terminal.
   - Live: `download -b jp.co.sony.audio.companion --no-parallel --progress plain
     --non-interactive --format json` (7.7.0, 73.9 MB) printed 104 stderr lines (`resolving`,
@@ -914,7 +917,7 @@ keychain entries and JSON output stay as before.
 
 Verification of `upstream-issues`: `cargo fmt --all --check`; `env -u CLIPPY_CONF_DIR cargo
 clippy --workspace --all-targets -- -D warnings` with and without `--features
-ipatool-cli/decrypt`; `cargo test --workspace` with and without the feature (674 tests
+ipatool-cli/decrypt`; `cargo test --workspace` with and without the feature (676 tests
 pass, 3 ignored); `IPATOOL_TEST_SECRET_SERVICE=1` and `IPATOOL_GO_KEYRING` keychain tests;
 `scripts/parity.sh` offline: 0 differences. Live Apple traffic: one Sony Music Center
 download and one `auth info`.
