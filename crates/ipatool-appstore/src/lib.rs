@@ -21,6 +21,7 @@ mod download_product;
 mod download_types;
 mod error;
 mod get_version_metadata;
+pub mod ipa;
 mod list_versions;
 mod login;
 mod login_storefront;
@@ -60,6 +61,7 @@ pub use download_types::{
     ProgressHandle, Sinf,
 };
 pub use error::{Error, MachineAction, Result, TransportError, UnexpectedResponseError};
+pub use ipa::IpaReader;
 pub use ipatool_store::backend::ResponseFormat;
 pub use ipatool_store::emulator::Value;
 pub use ipatool_store::http::{Header, HttpRequest, HttpResponse};
