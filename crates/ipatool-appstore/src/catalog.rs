@@ -9,6 +9,8 @@ use time::OffsetDateTime;
 use time::format_description::well_known::Rfc3339;
 use url::Url;
 
+use ipatool_store::gourl;
+
 use crate::app::ItunesApp;
 use crate::{App, Client, Error, Platform, Result};
 
@@ -70,6 +72,15 @@ struct ItunesResults {
     results: Vec<ItunesApp>,
 }
 
+/// Go's `url.Values.Encode`: keys sorted, `QueryEscape` values.
+fn itunes_url(base: &str, params: &[(&str, &str)]) -> Url {
+    let mut values = gourl::Values::default();
+    for (key, value) in params {
+        values.set(key, *value);
+    }
+    Url::parse(&format!("{base}?{}", values.encode())).expect("constant base URL is valid")
+}
+
 pub(crate) fn search_url(
     term: &str,
     country: &CountryCode,
@@ -77,18 +88,16 @@ pub(crate) fn search_url(
     platform: Option<Platform>,
 ) -> Result<Url> {
     let entity = Platform::search_entity(platform)?;
-    let limit = limit.to_string();
-    Ok(Url::parse_with_params(
+    Ok(itunes_url(
         ITUNES_SEARCH,
-        [
+        &[
             ("entity", entity),
-            ("limit", &limit),
+            ("limit", &limit.to_string()),
             ("media", "software"),
             ("term", term),
             ("country", country.as_str()),
         ],
-    )
-    .expect("constant base URL is valid"))
+    ))
 }
 
 pub(crate) fn lookup_url(
@@ -96,28 +105,36 @@ pub(crate) fn lookup_url(
     country: &CountryCode,
     platform: Option<Platform>,
 ) -> Result<Url> {
-    let entity = Platform::lookup_entity(platform)?;
-    let url = match query {
-        LookupQuery::BundleId(bundle_id) => Url::parse_with_params(
+    match query {
+        LookupQuery::BundleId(bundle_id) => Ok(itunes_url(
             ITUNES_LOOKUP,
-            [
-                ("entity", entity),
+            &[
+                ("entity", Platform::lookup_entity(platform)?),
                 ("limit", "1"),
                 ("media", "software"),
                 ("bundleId", bundle_id),
                 ("country", country.as_str()),
             ],
-        ),
-        LookupQuery::AppId(id) => Url::parse_with_params(
-            ITUNES_LOOKUP,
-            [
-                ("entity", entity),
-                ("id", &id.to_string()),
-                ("country", country.as_str()),
-            ],
-        ),
-    };
-    Ok(url.expect("constant base URL is valid"))
+        )),
+        LookupQuery::AppId(id) => lookup_ids_url(&[*id], country, platform),
+    }
+}
+
+/// Go's `lookupIDsRequest`.
+pub(crate) fn lookup_ids_url(
+    ids: &[i64],
+    country: &CountryCode,
+    platform: Option<Platform>,
+) -> Result<Url> {
+    let ids = ids.iter().map(i64::to_string).collect::<Vec<_>>().join(",");
+    Ok(itunes_url(
+        ITUNES_LOOKUP,
+        &[
+            ("entity", Platform::lookup_entity(platform)?),
+            ("id", &ids),
+            ("country", country.as_str()),
+        ],
+    ))
 }
 
 pub(crate) fn parse_apps(body: &[u8]) -> Result<Vec<App>> {
@@ -214,7 +231,7 @@ impl Client {
     /// Searches the iTunes catalog.
     ///
     /// # Errors
-    /// Network, HTTP status, or decode failures. visionOS search is not ported.
+    /// Network, HTTP status, or decode failures.
     pub async fn search(
         &self,
         term: &str,
@@ -223,7 +240,7 @@ impl Client {
         platform: Option<Platform>,
     ) -> Result<Vec<App>> {
         if platform == Some(Platform::VisionOs) {
-            return Err(Error::NotPorted("visionOS search"));
+            return self.search_vision_os(term, country, limit).await;
         }
         let url = search_url(term, country, limit, platform)?;
         let mut apps = parse_apps(&self.get_ok(self.http.get(url)).await?)?;
@@ -296,7 +313,7 @@ mod tests {
         let url = search_url("perplexity ai", &us(), 5, None).unwrap();
         assert_eq!(
             url.as_str(),
-            "https://itunes.apple.com/search?entity=software%2CiPadSoftware&limit=5&media=software&term=perplexity+ai&country=US"
+            "https://itunes.apple.com/search?country=US&entity=software%2CiPadSoftware&limit=5&media=software&term=perplexity+ai"
         );
     }
 

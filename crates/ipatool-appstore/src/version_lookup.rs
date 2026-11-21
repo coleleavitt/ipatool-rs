@@ -354,7 +354,10 @@ pub(crate) fn vision_external_version_id(body: &[u8], app_id: i64) -> Result<Str
 /// Go's `findVisionExternalVersionID`: the first configuration with a version, else
 /// whether one matched without a version. Go walks object members in map order; this
 /// walks them in document order.
-fn find_vision_external_version_id(value: &serde_json::Value, app_id: i64) -> Option<String> {
+pub(crate) fn find_vision_external_version_id(
+    value: &serde_json::Value,
+    app_id: i64,
+) -> Option<String> {
     let mut matched = false;
     let mut visit = |found: Option<String>| -> Option<String> {
         match found {

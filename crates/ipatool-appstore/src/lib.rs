@@ -41,6 +41,7 @@ mod store;
 pub mod storeauth;
 mod storefront;
 mod version_lookup;
+mod vision_search;
 mod xar;
 mod zipfile;
 
