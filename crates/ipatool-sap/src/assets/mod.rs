@@ -181,7 +181,7 @@ pub(crate) fn cache_directory() -> Result<PathBuf> {
 pub(crate) fn user_cache_dir() -> Result<PathBuf> {
     let missing =
         || Error::msg("find user cache directory: neither $XDG_CACHE_HOME nor $HOME are defined");
-    if cfg!(target_os = "macos") {
+    if cfg!(any(target_os = "macos", target_os = "ios")) {
         let home = std::env::var_os("HOME")
             .filter(|home| !home.is_empty())
             .ok_or_else(missing)?;

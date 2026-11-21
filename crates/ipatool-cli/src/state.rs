@@ -5,7 +5,6 @@
 
 use std::fs::{self, DirBuilder};
 use std::io::{self, ErrorKind};
-use std::os::unix::fs::DirBuilderExt;
 use std::path::{Path, PathBuf};
 
 const LEGACY_DIRECTORY: &str = ".ipatool";
@@ -53,7 +52,12 @@ pub fn prepare(home: &Path, env: impl Fn(&str) -> Option<String>) -> io::Result<
 }
 
 fn create_dir(path: &Path) -> io::Result<()> {
-    DirBuilder::new().recursive(true).mode(0o700).create(path)
+    let mut builder = DirBuilder::new();
+    builder.recursive(true);
+    // Windows has no mode bits; Go's 0700 only affects the read-only attribute there.
+    #[cfg(unix)]
+    std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+    builder.create(path)
 }
 
 #[cfg(test)]

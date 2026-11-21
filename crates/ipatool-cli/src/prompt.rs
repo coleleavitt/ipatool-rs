@@ -147,10 +147,56 @@ impl<F: std::os::fd::AsFd> Drop for RawMode<F> {
     }
 }
 
-#[cfg(not(unix))]
+/// x/term's Windows `MakeRaw` on the stdin console, restored on drop.
+#[cfg(windows)]
+#[allow(unsafe_code, reason = "the console mode calls are FFI")]
+mod console {
+    use std::os::windows::io::AsRawHandle;
+
+    use windows_sys::Win32::System::Console::{
+        CONSOLE_MODE, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT,
+        ENABLE_VIRTUAL_TERMINAL_INPUT, GetConsoleMode, SetConsoleMode,
+    };
+
+    pub(super) struct RawMode {
+        terminal: std::io::Stdin,
+        original: CONSOLE_MODE,
+    }
+
+    impl RawMode {
+        pub(super) fn enable(terminal: std::io::Stdin) -> Result<Self, String> {
+            let configure = |err: std::io::Error| format!("failed to configure terminal: {err}");
+            let handle = terminal.as_raw_handle();
+            let mut original = 0;
+            // SAFETY: the handle is the process's stdin; the mode is written to a local.
+            if unsafe { GetConsoleMode(handle, &raw mut original) } == 0 {
+                return Err(configure(std::io::Error::last_os_error()));
+            }
+            let raw = original & !(ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT)
+                | ENABLE_VIRTUAL_TERMINAL_INPUT;
+            // SAFETY: as above; SetConsoleMode takes the handle and a value.
+            if unsafe { SetConsoleMode(handle, raw) } == 0 {
+                return Err(configure(std::io::Error::last_os_error()));
+            }
+            Ok(Self { terminal, original })
+        }
+    }
+
+    impl Drop for RawMode {
+        fn drop(&mut self) {
+            // SAFETY: restores the mode read from the same stdin handle.
+            unsafe { SetConsoleMode(self.terminal.as_raw_handle(), self.original) };
+        }
+    }
+}
+
+#[cfg(windows)]
+use console::RawMode;
+
+#[cfg(not(any(unix, windows)))]
 struct RawMode;
 
-#[cfg(not(unix))]
+#[cfg(not(any(unix, windows)))]
 impl RawMode {
     fn enable(_terminal: io::Stdin) -> Result<Self, String> {
         Err("failed to configure terminal: masked input is not ported to this platform".to_owned())

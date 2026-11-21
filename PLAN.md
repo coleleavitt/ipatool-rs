@@ -119,7 +119,7 @@ parity check for the commands it touches.
 - [x] URL bag and SAP configuration (`appstore_bag.go`), storefront discovery
       (scoped bags, available-storefronts fallback). Live check: `IPATOOL_TEST_LIVE=1`.
 - [x] Machine GUID from the MAC address, Linux sysfs selection (same address as Go here).
-      macOS IOKit and Windows primary-adapter lookups are not ported yet.
+      The macOS IOKit and Windows `GetIfEntry2Ex` lookups were ported in phase 9.
 - [x] `search`/`catalog-versions` take the account storefront; `--country` overrides it.
 - [ ] Failure types and the plist login/purchase envelopes move to phase 4 with their users.
 
@@ -532,32 +532,62 @@ Branch `phase9-parity`.
       workflow's Homebrew tap update is left out. CI uses the nightly toolchain, since the
       port builds with rustc-master. `actionlint` 1.7.12 (with shellcheck) reports nothing.
       Nothing is pushed and no repository is created (open question 2).
-- Targets, checked locally with `cargo clippy --workspace --all-targets -- -D warnings`
-  per target (rustc-master std installed for these). The C dependencies (Unicorn/QEMU,
-  aws-lc, lzfse) were compiled with zig as the cross C compiler where it could; this
-  machine has no macOS SDK or aarch64 sysroot, so Unicorn's C build was skipped with a
-  `links` override and its bindgen output, and iOS C code was compiled against macOS
-  headers. So this proves the Rust code, not the C cross-builds; CI builds on native
-  runners.
-  - x86_64-unknown-linux-gnu: host, full build and tests.
-  - aarch64-unknown-linux-gnu: clippy clean.
-  - aarch64-apple-darwin: clippy clean after three fixes on this branch (dead code in
-    `machine.rs` off Linux, `tokio::fs` in a test needed the `fs` feature, the keychain's
-    async API without an await off Secret Service). Runtime gap: the MAC address lookup is
-    ported for Linux only (`machine.rs` returns "not ported" elsewhere), so `auth login`
-    and every Store command fail on macOS until Go's `mac_address_darwin.go` is ported.
-  - x86_64-apple-darwin: target std not installed here; not checked (CI cross-builds it
-    on the arm64 runner, as Go does).
-  - x86_64-pc-windows-gnu: does not build. rustc stops in `ipatool-keychain/src/file.rs`
-    (`std::os::unix` at lines 5 and 132, `mode()` at 33 and 78); the same Unix-only calls
-    are in `cookies.rs`, `download_file.rs`, `download_macos.rs`, `xar.rs`
-    (`FileExt::read_at`), `ipatool-cli` `state.rs` and `versions.rs`, and
-    `ipatool-sap/src/assets/mod.rs`. The MAC address lookup is also Linux-only. Windows is
-    left out of CI. MSVC and aarch64 Windows std are not installed here.
-  - aarch64-apple-ios: clippy clean (with the header workaround above). Not releasable:
-    Go's iOS build patches Unicorn for iOS W^X memory and signs with ldid
-    (`tools/build-ios.sh`), uses an iOS keyring wrapper (`cmd/keyring_ios.go`; the port
-    would pick Secret Service there), and the MAC lookup is Linux-only. Left out of CI.
+- [x] Per-OS gaps closed, branch `phase9-platforms`:
+      - `machine.rs` ports `mac_address_darwin.go` (IOKit `IOMACAddress` of the interface
+        or its parents, `en0` first, unredacted network address as fallback),
+        `mac_address_windows.go` (`GetIfEntry2Ex` permanent address, hardware/filter bits,
+        Bluetooth PAN and interface type checks; the entry point is looked up at run time
+        like Go's lazy DLL proc, so older Windows 10 falls back) and
+        `mac_address_default.go` (iOS and the BSDs: the interface address as a fallback),
+        with Go's `net.Interfaces` for each OS (`getifaddrs` `AF_LINK` entries on Apple and
+        the BSDs; `GetAdaptersAddresses` on Windows, with Go's index, name and
+        loopback/point-to-point rules). The selection, the once-per-process cache and the
+        Linux sysfs path are unchanged. The OS calls live in `ipatool-appstore/src/sys.rs`,
+        the crate's one `unsafe` module (`AGENTS.md` updated); Go's `macAddressAPI` is the
+        `IoKit` trait, so its IOKit release-order tests run on every host. Go links IOKit and
+        CoreFoundation with `purego.Dlopen`; the port links the frameworks.
+      - `cmd/keyring_ios.go`: iOS uses the Keychain backend (it picked Secret Service
+        before), and `set` updates first with a class/service/account query (no
+        `kSecMatchLimit`/`kSecReturnAttributes`), adding the item with its label when it
+        does not exist; update errors read `update iOS keyring item: …`. Secret Service is
+        now used on Linux (and Android) only, as keyring's `linux` build tag; the BSDs use
+        the file backend like Go.
+      - Windows builds: file modes are applied on Unix only (Go's modes are ignored there),
+        `xar.rs` reads with `seek_read`, the state directory home is `%HOMEDRIVE%` joined
+        with `%HOMEPATH%` (Go's `machine.HomeDirectory`), masked password input uses x/term's
+        Windows `MakeRaw` (console mode without echo, line and processed input, with VT
+        input), and the cookie-jar lock follows `go4/lock`: fcntl only where Go uses it
+        (linux/amd64, linux/arm, darwin/amd64, freebsd), else Go's portable owner-PID file
+        (`{"OwnerPID":N}`, stale when the owner is gone, closed before removal). That
+        changes the lock on Apple silicon, arm64 Linux and Windows to match Go there.
+      - The SAP cache directory is `~/Library/Caches` on iOS too, as `os.UserCacheDir`.
+      - CI: Windows (`windows-latest`, `windows-11-arm`) added to lint, unit tests, dry
+        build and release (`ipatool-<version>-windows-<arch>.tar.gz` with
+        `bin/<file>.exe`, as Go). `actionlint` 1.7.12 reports nothing.
+- Targets, checked locally with `cargo clippy --workspace --all-targets --target <t> --
+  -D warnings` for every target whose rustc-master std is installed. This proves the Rust
+  code; the C dependencies were built where a cross compiler exists, otherwise Unicorn's
+  build script found a stub `unicorn.pc` (pkg-config, so no QEMU build; clippy does not
+  link) and bindgen read zig's libc headers:
+  - x86_64-unknown-linux-gnu: host, full build and tests; the MAC address equals Go's
+    (`machine.New(...).MacAddress()` from `/tmp/ipa-ref`: `00:16:3e:12:34:56`).
+  - aarch64-unknown-linux-gnu, x86_64-unknown-linux-musl, armv7-unknown-linux-musleabihf:
+    clippy clean (zig cc as the C compiler).
+  - x86_64-pc-windows-gnu: clippy clean, and `cargo build --workspace --all-targets`
+    links (mingw-w64 gcc 15 for C, a real Unicorn cmake build; this mingw toolchain has no
+    `libgcc_eh.a`, its unwinder is in `libgcc.a`, so an empty `libgcc_eh.a` was put on the
+    link path). `ipatool.exe` imports only `GetAdaptersAddresses` from `iphlpapi.dll`.
+    Not run: no Windows machine or wine here. MSVC and aarch64 Windows std are not
+    installed; CI builds those natively.
+  - aarch64-apple-darwin: clippy clean (clang with zig's macOS headers, no SDK). Not
+    linked or run here.
+  - aarch64-apple-ios, aarch64-apple-ios-sim: clippy clean (macOS headers, an empty
+    `SDKROOT` and a declarations-only `CommonCrypto/CommonRandom.h` stub for aws-lc). Still
+    not releasable: Go's iOS build patches Unicorn for iOS W^X memory and signs with ldid
+    (`tools/build-ios.sh`). Left out of CI.
+  - x86_64-apple-darwin: target std not installed here; not checked (CI builds it).
+  - wasm32-unknown-unknown, wasm32-wasip2: std installed, not a target of the tool (no
+    Go equivalent); not checked.
 - [x] `profilegen` port (branch `phase9-profilegen`): Go `internal/store/profilegen` and its
       `cmd/profilegen` as the `ipatool-profilegen` crate (binary `profilegen`, not built into
       `ipatool`). One module per Go file (`source`, `symbols`, `discover`, `objc`, `vm`,
@@ -599,9 +629,23 @@ Branch `phase9-parity`.
       decoded SHA-256 values (5 min 4 s, 750 MB RSS). Untested: `validate` against a
       native-exported profile (Go has no caller in the repository either), and the Windows
       `seek_read` path of the local cache reader.
-- [ ] Windows and iOS builds — see above.
+- [ ] iOS release build (Unicorn W^X patch, ldid signing) — see above.
 
-Verification: gates (`cargo fmt --all --check`, `cargo clippy --workspace --all-targets --
+Verification of `phase9-platforms`: host gates pass (`cargo fmt --all --check`,
+`cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`: 612
+tests); `scripts/parity.sh` offline: 0 differences. Go's tests ported:
+`mac_address_test.go` (address rules, selection, the once-per-process identity, the
+interface-error prefix, the real machine), `mac_address_linux_test.go`,
+`mac_address_darwin_test.go` (both tables, through the `IoKit` trait),
+`mac_address_windows_test.go` (row classification; `OperStatus` is not read, so that case
+is one check), `keyring_ios_test.go` (compiled for iOS, runs only on a device), and
+`go4/lock`'s portable lock cases. No live Apple calls were made for this work.
+Untested on a real machine: everything macOS, Windows and iOS at run time (IOKit,
+`getifaddrs`, `GetAdaptersAddresses`/`GetIfEntry2Ex`, the Windows console mode, the
+portable lock against a running Go process, the iOS keychain update), and the Windows CI
+jobs have never run (test path assumptions on Windows may still fail there).
+
+Verification of `phase9-parity`: gates (`cargo fmt --all --check`, `cargo clippy --workspace --all-targets --
 -D warnings`, `cargo test --workspace`) pass. Offline suite: 0 differences. First live
 run: 1 difference (visionOS search not ported), fixed; second live run after the fixes: 80 checks, 0 differences (about 40 Apple requests per tool, two downloads of Sony Music Center).
 Untested: the CI workflows have not run on GitHub (runner images, the x86_64 macOS

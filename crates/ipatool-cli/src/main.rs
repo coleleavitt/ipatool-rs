@@ -135,6 +135,13 @@ const KEYCHAIN_SERVICE_NAME: &str = "ipatool-auth.service";
 const COOKIE_JAR_FILE_NAME: &str = "cookies";
 
 fn state_dir() -> Result<PathBuf, BoxError> {
+    // Go's `machine.HomeDirectory`: `%HOMEDRIVE%` joined with `%HOMEPATH%` on Windows.
+    #[cfg(windows)]
+    let home = {
+        let var = |name| std::env::var_os(name).unwrap_or_default();
+        PathBuf::from(var("HOMEDRIVE")).join(var("HOMEPATH"))
+    };
+    #[cfg(not(windows))]
     let home = std::env::home_dir().ok_or("could not find the home directory")?;
     Ok(state::prepare(&home, |name| std::env::var(name).ok())?)
 }

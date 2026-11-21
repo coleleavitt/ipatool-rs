@@ -4,7 +4,6 @@
 #![allow(clippy::unused_async_trait_impl, reason = "test fixtures")]
 
 use std::cell::RefCell;
-use std::os::unix::fs::PermissionsExt as _;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -491,8 +490,10 @@ fn reads_and_writes_the_go_cache_file() {
     assert!(cache.get(7, "10").is_none());
     cache.save(Some(&path)).unwrap();
     assert_eq!(std::fs::read_to_string(&path).unwrap(), GO_CACHE);
+    #[cfg(unix)]
     assert_eq!(
-        std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        std::os::unix::fs::PermissionsExt::mode(&std::fs::metadata(&path).unwrap().permissions())
+            & 0o777,
         0o600
     );
 }

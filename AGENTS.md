@@ -30,7 +30,9 @@ lists the change as a deliberate fork improvement.
 - Clippy `all` + `pedantic` are deny-level. No `unwrap`/`expect`/panics in library code
   except on values that are infallible by construction (constant URLs), with a message.
 - `unsafe` is denied workspace-wide. The SAP crate may allow it in one module for the
-  emulator boundary, with `// SAFETY:` comments.
+  emulator boundary, `ipatool-appstore/src/sys.rs` for the OS calls Go makes through
+  `x/sys` and `purego` (adapters, IOKit, process check), and the CLI's Windows console
+  module in `prompt.rs`; every block has a `// SAFETY:` comment.
 - Typed errors (`thiserror`) in libraries; the CLI turns them into output lines.
 - Async with `tokio` + `reqwest` (rustls).
 - Comments explain why, not what.

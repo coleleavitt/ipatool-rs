@@ -5,10 +5,8 @@ on:
     branches:
       - main
 
-# Windows is not built: the keychain, cookie jar, state and download code use Unix file
-# modes and positioned reads (std::os::unix), and the machine MAC address lookup is
-# ported for Linux only. iOS is not built: the emulator needs the Unicorn iOS W^X patch
-# and ldid signing that Go's tools/build-ios.sh applies. See PLAN.md phase 9.
+# iOS is not built: the emulator needs the Unicorn iOS W^X patch and ldid signing that
+# Go's tools/build-ios.sh applies. See PLAN.md phase 9.
 jobs:
   build:
     name: Build for ${{ matrix.name }}
@@ -29,6 +27,12 @@ jobs:
           - name: macOS amd64
             runner: macos-latest
             target: x86_64-apple-darwin
+          - name: Windows amd64
+            runner: windows-latest
+            target: x86_64-pc-windows-msvc
+          - name: Windows arm64
+            runner: windows-11-arm
+            target: aarch64-pc-windows-msvc
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
