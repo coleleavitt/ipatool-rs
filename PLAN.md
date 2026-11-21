@@ -581,10 +581,10 @@ Branch `phase9-parity`.
     installed; CI builds those natively.
   - aarch64-apple-darwin: clippy clean (clang with zig's macOS headers, no SDK). Not
     linked or run here.
-  - aarch64-apple-ios, aarch64-apple-ios-sim: clippy clean (macOS headers, an empty
-    `SDKROOT` and a declarations-only `CommonCrypto/CommonRandom.h` stub for aws-lc). Still
-    not releasable: Go's iOS build patches Unicorn for iOS W^X memory and signs with ldid
-    (`tools/build-ios.sh`). Left out of CI.
+  - aarch64-apple-ios-sim: clippy clean (macOS headers, an empty `SDKROOT` and a
+    declarations-only `CommonCrypto/CommonRandom.h` stub for aws-lc).
+  - aarch64-apple-ios: release build through `scripts/build-ios.sh` (see the iOS item
+    below); built, linked and signed here with an iPhoneOS 16.5 SDK. In CI.
   - x86_64-apple-darwin: target std not installed here; not checked (CI builds it).
   - wasm32-unknown-unknown, wasm32-wasip2: std installed, not a target of the tool (no
     Go equivalent); not checked.
@@ -629,7 +629,91 @@ Branch `phase9-parity`.
       decoded SHA-256 values (5 min 4 s, 750 MB RSS). Untested: `validate` against a
       native-exported profile (Go has no caller in the repository either), and the Windows
       `seek_read` path of the local cache reader.
-- [ ] iOS release build (Unicorn W^X patch, ldid signing) — see above.
+- [x] iOS release build, branch `ios-release`. Go's `tools/build-ios.sh`,
+      `tools/patches/unicorn-ios.patch` and `resources/ios-entitlements.plist` are
+      `scripts/build-ios.sh`, `scripts/patches/unicorn-ios.patch` and
+      `resources/ios-entitlements.plist` (the entitlements file is Go's, byte for byte).
+      - Patch scope: the patch drops `PROT_EXEC` from Unicorn's translation buffer, so it
+        must reach only this build. The script extracts the locked `unicorn-engine-sys`
+        `.crate` from the cargo cache (checked against the `Cargo.lock` checksum, as Go
+        checks its tarball's SHA-256), patches the copy and builds `ipatool-cli` for
+        `aarch64-apple-ios` with `--config patch.crates-io.unicorn-engine-sys.path=<copy>`
+        and `--config resolver.lockfile-path=<copy of Cargo.lock>`. Nothing in the
+        repository names the patched crate, so other targets and `Cargo.lock` never see
+        it. The patch target is `unicorn-engine-sys` (the C sources and `build.rs`), not
+        `unicorn-engine` (Rust API only). The output is signed with `ldid -S<entitlements>`.
+      - Sources: `unicorn-engine-sys` 2.1.5 bundles Unicorn 2.1.4's C sources. They equal
+        the 2.1.4 tag Go pins, except for an MSVC-only block in `qemu/util/guest-random.c`.
+        So Go's hunks apply unchanged (no offset, no fuzz).
+      - One hunk changed, for a duplicate symbol: Go builds one QEMU target
+        (`UNICORN_ARCH=x86`), while the crate builds `arm` and `aarch64` (`arch_aarch64`
+        implies `arch_arm`). Go's global `ipatool_jit_write_protect` in `translate-all.c` is
+        compiled once per target, so the iOS link failed with a duplicate symbol. The
+        function is now `static` with the same body. Each target's `tcg_exec_init` stores
+        it in a new `uc_struct` field (`include/uc_priv.h`). The header's
+        `jit_write_protect` calls that field, so the target-independent `uc.c` reaches the
+        running target's buffer. It does nothing before `tcg_exec_init`, as Go's null
+        check does. The adapted patch also applies to the 2.1.4 tarball.
+      - Go flags and the crate's `build.rs`: `CMAKE_SYSTEM_NAME=iOS` comes from the cmake
+        crate (cross build). arm64 only comes from `ARCHFLAGS='-arch arm64'`, read by
+        Unicorn's CMakeLists, as in Go. iOS 15.0 comes from `IPHONEOS_DEPLOYMENT_TARGET`
+        (cc-rs puts `--target=arm64-apple-ios15.0` into `CMAKE_C_FLAGS`; rustc uses it for
+        the link). `Release` comes from the cargo profile, and `UNICORN_BUILD_TESTS=OFF` is
+        already set. These Go flags are not taken:
+        - `BUILD_SHARED_LIBS=OFF`: CMake also builds an unused dylib, and the static
+          `libunicorn.a` is linked.
+        - `UNICORN_INSTALL=OFF`: the crate installs to find the library.
+        - `UNICORN_ARCH=x86`: the crate's features decide.
+        - `-force_load`/`-export_dynamic`: Rust links the Unicorn symbols directly; Go
+          needed them for purego's `dlsym`.
+        The script exports Go's `SDKROOT`, sets `CC_aarch64_apple_ios` instead of a global
+        `CC` (host build scripts keep the host compiler), and sets
+        `PKG_CONFIG_ALLOW_CROSS=0`, so a system Unicorn found by pkg-config is never linked
+        instead of the patched one. The version is the crate version, not an ldflag.
+      - Go finding (not ported): Go's script builds Unicorn with `UNICORN_ARCH=x86`, but its
+        engine opens `UC_ARCH_ARM64` (`internal/sap/unicorn/engine.go`, `archARM64 = 2`).
+        So the Go iOS binary's `uc_open` should fail with `UC_ERR_ARCH`. This is from
+        reading the code; it was not run.
+      - Keychain: the Rust iOS backend (`ipatool-keychain/src/macos.rs`) queries, updates
+        and adds with class, service (`ipatool-auth.service`) and account only. It sets no
+        `kSecAttrAccessGroup` and no data-protection key, as keyring v1.9.0's
+        `keychain_ios.go` and Go's `cmd/keyring_ios.go`. Items therefore go to the default
+        access group, the first `keychain-access-groups` entry (`dev.majd.ipatool`, equal
+        to `application-identifier`). Queries search the groups the entitlement grants.
+        This is the same as Go.
+      - CI: `release.yml` has a `build_ios` job on `macos-latest` (`brew install ldid
+        cmake`, then the script). It packages `ipatool-<version>-ios-arm64.tar.gz` with
+        `bin/<file>` and a `.sha256sum`, as the other jobs do, and the release job waits for
+        it. `dry-build.yml` has Go's `build_ios` job. `actionlint` 1.7.12 and `shellcheck`
+        report nothing.
+      - Checked on Linux (no Xcode):
+        - The script ran end to end with a stand-in `xcrun` that returns a real iPhoneOS
+          16.5 SDK (from the `ios-sys` git checkout in `~/.cargo/git`) and a clang 22
+          wrapper with `ld64.lld`. CMake built the patched Unicorn for iOS, cargo linked
+          `ipatool` (Mach-O arm64, `LC_BUILD_VERSION` platform ios, minos 15.0), and `ldid`
+          signed it. Here `ldid` is a wrapper around `rcodesign`. The signature carries the
+          three entitlements.
+        - Disassembly of that binary: the translation buffer is mapped with `PROT_READ |
+          PROT_WRITE` (3) and `MAP_PRIVATE | MAP_ANON`, without `MAP_JIT`. Each target's
+          `ipatool_jit_write_protect` switches between 3 and 5 (`PROT_READ | PROT_EXEC`).
+          Configure set `CONFIG_DARWIN` and not `HAVE_PTHREAD_JIT_PROTECT`.
+        - `cargo clippy --workspace --all-targets --target aarch64-apple-ios -- -D warnings`
+          is clean with the patched sources and the real SDK (no stub `unicorn.pc`).
+          `cargo test --workspace --no-run --target aarch64-apple-ios` links.
+        - Run-time check of the W^X path on the Linux host: the patched sources built with
+          `-D__ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__=150000` turn on the iOS branch.
+          The `ipatool-sap` and `ipatool-store` tests pass (141, Apple code included). The
+          negative control, the same build without the `tcg_exec_init` assignment, crashes
+          `engine::tests::runs_arm64_with_go_configuration` with SIGSEGV.
+        - Host: gates pass (645 tests). Without the `--config` options cargo resolves the
+          registry `unicorn-engine-sys`, the host `alloc_code_gen_buffer` maps with
+          `PROT_EXEC` (7), and the host archive has no `ipatool_jit_write_protect`.
+      - Untested: everything on a device. That covers the W^X toggle under the iOS kernel
+        with `no-container`, the keychain with the entitlement, and any command. Also
+        untested: a build on macOS with Xcode. There, configure checks with the host macOS
+        target and the iPhoneOS sysroot, as in Go; here the wrapper compiled them for iOS.
+        Apple `ar` is also used there; this Linux build warned that `libunicorn.a` is
+        GNU-format. The CI jobs have not run.
 
 Verification of `phase9-platforms`: host gates pass (`cargo fmt --all --check`,
 `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`: 612
