@@ -570,7 +570,7 @@ Branch `phase9-parity`.
   build script found a stub `unicorn.pc` (pkg-config, so no QEMU build; clippy does not
   link) and bindgen read zig's libc headers:
   - x86_64-unknown-linux-gnu: host, full build and tests; the MAC address equals Go's
-    (`machine.New(...).MacAddress()` from `/tmp/ipa-ref`: `00:16:3e:12:34:56`).
+    (`machine.New(...).MacAddress()` from `/tmp/ipa-ref`; same address).
   - aarch64-unknown-linux-gnu, x86_64-unknown-linux-musl, armv7-unknown-linux-musleabihf:
     clippy clean (zig cc as the C compiler).
   - x86_64-pc-windows-gnu: clippy clean, and `cargo build --workspace --all-targets`
