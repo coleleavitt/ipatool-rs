@@ -658,5 +658,6 @@ flags (pflag does it for every flag).
 
 1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and
    keyring entries as Go, so one login works for both.
-2. Repository: publish as `coleleavitt/ipatool-rs`?
-3. Keep the Go tool's exact text output, or improve text mode while keeping JSON identical?
+2. Repository: decided 2026-11-21 — publish as public `coleleavitt/ipatool-rs`.
+3. Text mode: decided 2026-11-21 — keep this port's text format; only JSON output is
+   guaranteed identical to Go.
