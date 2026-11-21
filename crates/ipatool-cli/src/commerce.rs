@@ -80,11 +80,19 @@ pub(crate) trait Store {
     async fn account_info(&self) -> AppResult<Account>;
     /// Go's `Login` with the saved credentials, after an expired password token.
     async fn login(&self, account: &Account) -> AppResult<Account>;
+    /// Go's `Search` in the account's storefront.
+    async fn search(
+        &self,
+        account: &Account,
+        term: &str,
+        limit: i64,
+        platform: Option<Platform>,
+    ) -> AppResult<Vec<App>>;
     /// Go's `Lookup` in the account's storefront.
     async fn lookup(
         &self,
         account: &Account,
-        bundle_id: &str,
+        query: &LookupQuery,
         platform: Option<Platform>,
     ) -> AppResult<App>;
     async fn purchase(
@@ -118,15 +126,22 @@ pub(crate) trait Store {
     ) -> AppResult<Vec<CatalogVersion>>;
 }
 
-/// Go's `countryCodeFromStoreFront` as `Lookup` and `CatalogVersionHistory` wrap it.
-async fn account_country(session: &StoreSession<'_>, account: &Account) -> AppResult<CountryCode> {
+/// Go's `countryCodeFromStoreFront` as `Lookup` and `CatalogVersionHistory` wrap it;
+/// `Search` wraps it as "country code is invalid".
+async fn account_country(
+    session: &StoreSession<'_>,
+    account: &Account,
+    context: &str,
+) -> AppResult<CountryCode> {
     session
         .client
         .country_code_from_store_front(&account.store_front)
         .await
-        .map_err(|error| error.context("failed to resolve the country code"))?
+        .map_err(|error| error.context(context))?
         .parse()
 }
+
+const COUNTRY_CONTEXT: &str = "failed to resolve the country code";
 
 impl Store for StoreSession<'_> {
     async fn account_info(&self) -> AppResult<Account> {
@@ -146,20 +161,27 @@ impl Store for StoreSession<'_> {
             .account)
     }
 
+    async fn search(
+        &self,
+        account: &Account,
+        term: &str,
+        limit: i64,
+        platform: Option<Platform>,
+    ) -> AppResult<Vec<App>> {
+        let country = account_country(self, account, "country code is invalid").await?;
+        // Apple caps the result count far below `u32::MAX`.
+        let limit = u32::try_from(limit).unwrap_or(u32::MAX);
+        self.client.search(term, &country, limit, platform).await
+    }
+
     async fn lookup(
         &self,
         account: &Account,
-        bundle_id: &str,
+        query: &LookupQuery,
         platform: Option<Platform>,
     ) -> AppResult<App> {
-        let country = account_country(self, account).await?;
-        self.client
-            .lookup(
-                &LookupQuery::BundleId(bundle_id.to_owned()),
-                &country,
-                platform,
-            )
-            .await
+        let country = account_country(self, account, COUNTRY_CONTEXT).await?;
+        self.client.lookup(query, &country, platform).await
     }
 
     async fn purchase(
@@ -208,7 +230,7 @@ impl Store for StoreSession<'_> {
         app: &App,
         platform: Option<Platform>,
     ) -> AppResult<Vec<CatalogVersion>> {
-        let country = account_country(self, account).await?;
+        let country = account_country(self, account, COUNTRY_CONTEXT).await?;
         self.client
             .catalog_version_history(app.id, &country, platform)
             .await
@@ -265,7 +287,11 @@ async fn purchase_attempt(
     };
     if !args.bundle_identifier.is_empty() {
         app = store
-            .lookup(account, &args.bundle_identifier, args.platform)
+            .lookup(
+                account,
+                &LookupQuery::BundleId(args.bundle_identifier.clone()),
+                args.platform,
+            )
             .await?;
     }
     match store.purchase(account, &app, args.platform).await {
@@ -322,7 +348,7 @@ pub(crate) async fn list_purchases(
 }
 
 /// Go's `ParsePlatform`, where an empty value means every platform.
-fn parse_platform_filter(value: &str) -> AppResult<Option<Platform>> {
+pub(crate) fn parse_platform_filter(value: &str) -> AppResult<Option<Platform>> {
     if value.is_empty() {
         Ok(None)
     } else {
@@ -397,7 +423,11 @@ async fn download_attempt(
     };
     if !args.bundle_identifier.is_empty() {
         match store
-            .lookup(&state.account, &args.bundle_identifier, args.platform)
+            .lookup(
+                &state.account,
+                &LookupQuery::BundleId(args.bundle_identifier.clone()),
+                args.platform,
+            )
             .await
         {
             Ok(found) => app = found,
@@ -436,7 +466,7 @@ async fn download_attempt(
 }
 
 /// Go's `replicateDownloadSinf`.
-async fn replicate_download_sinf(
+pub(crate) async fn replicate_download_sinf(
     store: &impl Store,
     platform: Option<Platform>,
     output: &DownloadOutput,

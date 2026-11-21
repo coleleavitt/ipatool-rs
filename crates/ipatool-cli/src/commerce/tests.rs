@@ -82,14 +82,27 @@ impl Store for Fake {
             .expect("login scripted"))
     }
 
+    async fn search(
+        &self,
+        _: &Account,
+        _: &str,
+        _: i64,
+        _: Option<Platform>,
+    ) -> AppResult<Vec<App>> {
+        unreachable!("not a commerce command")
+    }
+
     async fn lookup(
         &self,
         account: &Account,
-        bundle_id: &str,
+        query: &LookupQuery,
         platform: Option<Platform>,
     ) -> AppResult<App> {
+        let LookupQuery::BundleId(bundle_id) = query else {
+            unreachable!("commands look up bundle identifiers")
+        };
         self.calls.borrow_mut().push(Call::Lookup(
-            bundle_id.to_owned(),
+            bundle_id.clone(),
             platform,
             account.password_token.clone(),
         ));

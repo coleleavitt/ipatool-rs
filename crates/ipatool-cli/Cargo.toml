@@ -16,11 +16,13 @@ clap.workspace = true
 futures-util = { version = "0.3", default-features = false }
 ipatool-appstore.workspace = true
 ipatool-keychain.workspace = true
+rmcp = { version = "3.11", default-features = false, features = ["server", "transport-io"] }
 rustix = { version = "1", features = ["termios"] }
+schemars = "1.2"
 serde.workspace = true
 serde_json.workspace = true
 time = { workspace = true, features = ["local-offset"] }
-tokio.workspace = true
+tokio = { workspace = true, features = ["io-std", "io-util", "signal", "sync"] }
 
 [dev-dependencies]
 rustix = { version = "1", features = ["fs", "pty", "termios"] }

@@ -16,27 +16,50 @@ pub enum Format {
 pub struct Output {
     format: Format,
     verbose: bool,
+    /// Every line goes to stderr (`mcp`, whose stdout carries the protocol).
+    stderr: bool,
 }
 
 impl Output {
     pub fn new(format: Format, verbose: bool) -> Self {
-        Self { format, verbose }
+        Self {
+            format,
+            verbose,
+            stderr: false,
+        }
+    }
+
+    /// Go's `mcp` logger: JSON lines on stderr whatever `--format` says.
+    pub fn mcp(verbose: bool) -> Self {
+        Self {
+            format: Format::Json,
+            verbose,
+            stderr: true,
+        }
+    }
+
+    fn print(&self, line: &str) {
+        if self.stderr {
+            eprintln!("{line}");
+        } else {
+            println!("{line}");
+        }
     }
 
     /// `Logger.Log()...Send()`.
     pub fn info(&self, fields: Value) {
-        println!("{}", self.render("info", fields, None));
+        self.print(&self.render("info", fields, None));
     }
 
     /// `Logger.Log().Msg(message)`.
     pub fn message(&self, message: &str) {
-        println!("{}", self.render("info", Value::Null, Some(message)));
+        self.print(&self.render("info", Value::Null, Some(message)));
     }
 
     /// `Logger.Verbose()...Msg(message)`: printed only with `--verbose`.
     pub fn verbose(&self, fields: Value, message: &str) {
         if self.verbose {
-            println!("{}", self.render("debug", fields, Some(message)));
+            self.print(&self.render("debug", fields, Some(message)));
         }
     }
 
@@ -47,7 +70,7 @@ impl Output {
             None,
         );
         match self.format {
-            Format::Json => println!("{line}"),
+            Format::Json => self.print(&line),
             Format::Text => eprintln!("{line}"),
         }
     }

@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use clap::Args;
 use futures_util::stream::{self, StreamExt as _};
-use ipatool_appstore::{Account, App, Platform};
+use ipatool_appstore::{Account, App, LookupQuery, Platform};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use time::OffsetDateTime;
@@ -87,7 +87,13 @@ async fn target_app(
             ..App::default()
         });
     }
-    store.lookup(account, bundle_id, platform).await
+    store
+        .lookup(
+            account,
+            &LookupQuery::BundleId(bundle_id.to_owned()),
+            platform,
+        )
+        .await
 }
 
 /// Go's `ListVersionsCmd`.

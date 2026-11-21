@@ -433,7 +433,52 @@ parity check for the commands it touches.
 
 ### Phase 8 — MCP
 
-- [ ] `ipatool mcp` stdio server with the same tools via `rmcp`.
+- [x] `ipatool mcp` (branch `phase8-mcp`): Go `cmd/mcp.go`, `cmd/mcp_tools.go` and
+      `cmd/mcp_app.go` as `crates/ipatool-cli/src/mcp.rs`, `mcp/tools.rs` and `mcp/app.rs`,
+      on `rmcp` 3.11 (stdio, `stdio_pipes`) with `schemars` 1.2 schemas. Same server name,
+      instructions, capabilities (`logging`, `tools.listChanged`), protocol versions (Go SDK
+      v1.8.0's four; an unknown one gets 2025-11-25), the six tools with their descriptions,
+      annotations (`readOnlyHint`, `idempotentHint: false`), input/output field names and
+      schema descriptions, listed in name order with `ttlMs`/`cacheScope`, and the empty
+      prompt/resource lists Go's SDK answers. `mcp/schema.rs` ports what the tools rely on
+      from `go-sdk` and `jsonschema-go`: the schema shape of `jsonschema.For` (inline, no
+      titles or formats, `null` first for pointers and slices), the argument validation
+      (`type`, `properties`, `additionalProperties`, `required`, with Go's error texts and
+      `%v` value formatting; whole floats count as integers), and the result text
+      (`encoding/json` of the result decoded into `any`: sorted keys, `\u0026`-style
+      escapes, whole floats as integers). Tool calls are queued to one runner that owns the
+      Store session (Go's one-at-a-time gate); `withMCPAccount` (one re-login with the saved
+      password, Go's three error texts), the validation errors, `resolveApp` (delisted
+      fallback for downloads), `completeApp` and the `"<tool> failed: ..."` wrapping are
+      Go's. Interactive mode is off under `mcp` (keychain passphrase prompt), the error log
+      line is JSON on stderr whatever `--format` says (Go's `initWithCommand`), an interrupt
+      ends with "MCP server failed: context canceled" (exit 1), EOF before or after
+      `initialize` exits 0. The `Store` seam gained `search`, and `lookup` takes a
+      `LookupQuery` (app ID lookups for `completeApp`).
+      Tests: every case of `cmd/mcp_test.go` and `cmd/mcp_app_test.go` (`mcp/tests.rs`,
+      over an in-memory pipe with a scripted store), plus `tools/list` equal to the Go
+      server's (`tests/fixtures/mcp_tools_list.json`), 21 validation texts recorded from the
+      Go binary, the Go JSON escaping of the result text and Go `%v` float formatting.
+      Live (Go binary vs Rust, `scripts/mcp_parity.py`, run by `scripts/parity.sh`):
+      initialize, `tools/list`, the lists, validation errors, `search_apps` (with and without
+      platform), `list_app_versions` (Perplexity), `get_version_metadata` (Perplexity
+      895516672, by ID and by bundle ID), `list_purchases` (5 per page; page 2 with a
+      platform) are equal JSON-RPC replies, result text included. `download_app` of Sony
+      Music Center (`purchase` false) returns the same result object as Go (paths aside);
+      the IPAs have the same 743 entries and differ only in the sinf and the plist encoding
+      (as in phase 6). `purchase_app` on Perplexity (owned) answers `alreadyOwned: true`
+      (Rust only, one call).
+      Differences: `serverInfo.version` is the crate version (Go prints its build's
+      `version`, "dev" without ldflags); non-object `arguments` are rejected by rmcp as a
+      JSON-RPC error (-32601), where Go returns an `isError` result; numbers outside int64
+      fail with serde's text instead of Go's `encoding/json` text; with several invalid
+      properties Go reports one in map order (random), Rust the first in schema order; an
+      invalid JSON line is skipped (Go's server stops with an error); a request before
+      `initialize`, `resources/read`, `prompts/get` and `completion/complete` get rmcp's
+      error codes and texts. Untested: cancellation (`notifications/cancelled` drops a
+      queued or running call and answers "tool call canceled: context canceled"; Go passes
+      its context into the Store calls instead), `download_app` with `purchase` true and
+      the expired-token refresh (fake store only), macOS packages over MCP.
 
 ### Phase 9 — parity, release
 

@@ -26,4 +26,5 @@ check() {
 check "search perplexity" search perplexity --limit 3
 check "search watch" search weather --limit 3 --platform watchos
 check "search mac" search xcode --limit 2 --platform macos
+scripts/mcp_parity.py "$GO_BIN" "$RS_BIN" || status=1
 exit $status

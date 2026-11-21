@@ -70,18 +70,31 @@ impl Store for Fake {
         })
     }
 
+    async fn search(
+        &self,
+        _: &Account,
+        _: &str,
+        _: i64,
+        _: Option<Platform>,
+    ) -> AppResult<Vec<App>> {
+        unreachable!("not a version command")
+    }
+
     async fn lookup(
         &self,
         _: &Account,
-        bundle_id: &str,
+        query: &LookupQuery,
         platform: Option<Platform>,
     ) -> AppResult<App> {
+        let LookupQuery::BundleId(bundle_id) = query else {
+            unreachable!("commands look up bundle identifiers")
+        };
         self.lookups
             .borrow_mut()
-            .push((bundle_id.to_owned(), platform));
+            .push((bundle_id.clone(), platform));
         Ok(App {
             id: 42,
-            bundle_id: bundle_id.to_owned(),
+            bundle_id: bundle_id.clone(),
             ..App::default()
         })
     }

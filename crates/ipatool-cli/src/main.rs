@@ -2,6 +2,7 @@
 
 mod commerce;
 mod login;
+mod mcp;
 mod output;
 mod prompt;
 mod state;
@@ -75,6 +76,11 @@ enum Command {
     ListVersions(versions::ListVersionsArgs),
     /// Retrieves the metadata for a specific version of an app.
     GetVersionMetadata(versions::GetVersionMetadataArgs),
+    /// Serve App Store tools over MCP using stdio
+    #[command(
+        long_about = "Serve App Store tools over the Model Context Protocol using stdio.\nAuthenticate with 'ipatool auth login' before using the tools.\nRuns non-interactively; authentication tools are not exposed."
+    )]
+    Mcp,
 }
 
 #[derive(Subcommand)]
@@ -148,11 +154,16 @@ async fn country(cli: &Cli, client: &Client, store: &StoreArgs) -> Result<Countr
     Ok(code.parse()?)
 }
 
+/// Go's `interactiveKey`: off with `--non-interactive` and under `mcp`.
+fn interactive(cli: &Cli) -> bool {
+    !cli.non_interactive && !matches!(cli.command, Command::Mcp)
+}
+
 /// The Go keychain setup (`cmd/common.go` `newKeychain`).
 async fn open_keychain(cli: &Cli) -> Result<Keychain, BoxError> {
     let state_dir = state_dir()?;
     let passphrase = cli.keychain_passphrase.clone();
-    let interactive = !cli.non_interactive;
+    let interactive = interactive(cli);
     Ok(Keychain::open(Config {
         service_name: KEYCHAIN_SERVICE_NAME.to_owned(),
         file_dir: state_dir,
@@ -281,6 +292,11 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             versions::get_version_metadata(args, &session, out).await?;
         }
+        Command::Mcp => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            Box::pin(mcp::serve(&session, rmcp::transport::stdio_pipes())).await?;
+        }
     }
     Ok(())
 }
@@ -288,7 +304,11 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
 #[tokio::main]
 async fn main() -> ExitCode {
     let cli = Cli::parse();
-    let out = Output::new(cli.format, cli.verbose);
+    let out = if matches!(cli.command, Command::Mcp) {
+        Output::mcp(cli.verbose)
+    } else {
+        Output::new(cli.format, cli.verbose)
+    };
     match run(&cli, &out).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
