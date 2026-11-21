@@ -61,20 +61,35 @@ Unicorn's C build does not support it.
 ## Offline FairPlay decryption (opt-in, GPL-3)
 
 The non-default `decrypt` feature adds an `ipatool decrypt` command that produces a decrypted
-IPA like `ipadecrypt`: given a bundle ID, an app ID (`--app-id`), or a path to a local `.ipa`,
-it downloads the app with the normal `download` path (same flags and retry/re-login logic) and
-then decrypts it offline using a 16-byte credential.
+IPA like `ipadecrypt`. The app is named by a positional argument (a bundle ID, a numeric App
+Store ID, an App Store URL, or a path to a local `.ipa`) or by `-b`/`--bundle-identifier` and
+`-i`/`--app-id`; a value given both ways must agree. Unless the input is a local file, the app
+is downloaded with the normal `download` path (same flags and retry/re-login logic). Then it
+is decrypted offline with the account's 16-byte credential.
 
 ```sh
 cargo build --release --features ipatool-cli/decrypt
-ipatool decrypt <bundle-id | --app-id N | path/to/app.ipa> -o out.ipa [--credential credential.bin] [--purchase] [--external-version-id ID]
+ipatool decrypt <bundle-id | app-id | url | path/to/app.ipa> [-b ID] [-i N] [-o OUT] \
+    [--credential credential.bin] [--arcade-credential credential.arcade.bin] \
+    [--skip-appex] [--keep-watch] [--purchase] [--external-version-id ID]
 ```
 
-The credential defaults to `credential.bin` in the ipatool state directory, then
-`./credential.bin`. Only offline decryption is implemented (no credential minting, no
-on-device fallback). The decryption lives in the separate crate `ipatool-decrypt`, a Rust port
-of [EthanArbuckle/fairplay-decrypt](https://github.com/EthanArbuckle/fairplay-decrypt). That
-crate and its port are licensed **GPL-3.0-or-later**, so a binary built with the `decrypt`
+- The credential defaults to `credential.bin` in the ipatool state directory, then
+  `./credential.bin`. Apple Arcade apps need the account's second (Arcade) credential:
+  `--arcade-credential`, else `credential.arcade.bin` next to the credential when it exists.
+- Fat binaries are thinned to one slice (arm64, else arm64e, else arm64_32, else 32-bit ARM,
+  armv7 when there are several). Page keys come from `.v5.supf`, `.v4.supp`, `.supf` or
+  `.supp`, newest first.
+- The output leaves out `SC_Info`, `iTunesMetadata.plist`, dSYMs and symbol maps, and the Watch
+  app unless `--keep-watch`. `--skip-appex` leaves app extensions encrypted.
+- Every Mach-O in the output is checked before it is written: one left with `cryptid` != 0 or
+  a zero-filled encrypted region fails the command and lists the binaries.
+
+Only offline decryption is implemented (no credential minting, no on-device fallback). The
+decryption lives in the separate crate `ipatool-decrypt`, a Rust port of ipadecrypt's
+`internal/fairplay` ([londek/ipadecrypt](https://github.com/londek/ipadecrypt), MIT), which
+itself ports [EthanArbuckle/fairplay-decrypt](https://github.com/EthanArbuckle/fairplay-decrypt)
+(GPL-3). That crate is licensed **GPL-3.0-or-later**, so a binary built with the `decrypt`
 feature is GPL-3. The default build does not enable the feature and does not link the GPL
 crate, so it stays MIT. The release workflow builds without the feature.
 

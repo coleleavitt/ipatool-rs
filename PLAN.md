@@ -782,12 +782,101 @@ pages (AES-128-CBC) and clears `cryptid`:
   (owned, no `--purchase`) downloaded 7.7.0/112 from Apple and decrypted it: same 743 entries,
   742 byte-identical to the reference including every Mach-O; only the per-download `.sinf`
   differs (decrypt copies it through unchanged; the sinf differs between any two downloads).
-- Not ported (from `ipadecrypt`'s `internal/fairplay`, read only for comparison, out of scope
-  per the task): SUPF v4 (`supp`) and the older `319`/`322`/`502`/`611` formats, arm64e,
-  arm64_32, armv7, Arcade, on-device decryption and credential minting. Untested: SINF `priv`
-  records other than the 448/440 shapes, SUPF format `612`, and Mach-O inputs with multiple
-  arm64 slices beyond the thin/FAT fixtures (the multi-slice code path is ported from `core.py`
-  but only the synthetic single-slice-per-file fixtures exercise it live).
+- Superseded on branch `decrypt-formats` by the ipadecrypt port below: the output is now thinned
+  and leaves out `SC_Info`, so the decrypt.py comparison above describes the earlier behavior.
+
+### Decryption: ipadecrypt's formats, slices, Arcade and verification (branch `decrypt-formats`)
+
+The offline decryptor now follows ipadecrypt's `internal/fairplay` (londek/ipadecrypt, MIT,
+commit 7c82f86, including the format fixes #67/#68 and issues #34/#56) instead of
+fairplay-decrypt's Python. The crate stays GPL-3.0-or-later; ipadecrypt's MIT notice is in
+`crates/ipatool-decrypt/LICENSE-ipadecrypt`.
+
+- `core.rs` = `fairplay.go`. `arm_encryption_info` picks one slice per binary in ipadecrypt's
+  order (plain arm64, else arm64e, else arm64_32, else 32-bit ARM; armv7 among several 32-bit
+  slices; anything else is "expected one ARM slice to decrypt, found N"). arm64_32 and ARM use
+  the 32-bit header and `LC_ENCRYPTION_INFO`. `decrypt_binary` returns the thin decrypted slice
+  (the other slices are dropped, as on the device) or `None` when it is not encrypted. Page keys
+  come from a SUPF (v3/v5, formats 319, 322, 502, 507, 510, 611, 612, plus 405, see below;
+  arch match ignores capability bits) or a SUPP (`.supp` v01 with its 20-byte SHA-1,
+  `.v4.supp` v04; one table indexed by file-absolute page). `is_arcade_sinf` (`key ` field
+  starts with 4) and `credential_decodes` are ported. Error texts are ipadecrypt's, including
+  Go's `%q` quoting.
+- `ipa.rs` = `ipa.go` + `assemble.go`'s exclusion set. Key-file ranking `.v5.supf` >
+  `.v4.supp` > `.supf` > `.supp` per binary, so the iOS-26-only shape of #34 (0-byte `.supf`,
+  no `.supp`, real keys in `.v5.supf`/`.v4.supp`) uses the new files; `.v4.sinf` is used with
+  the new key files when present; the enclosing-app SINF fallback stays. `Credentials
+  {standard, arcade}`: an Arcade license uses the Arcade credential, and without it the run
+  fails with `NoArcadeCredential`. `Options {skip_appex, keep_watch}` as ipadecrypt's flags.
+  The output drops `SC_Info`, `Watch`/`WatchKitSupport2` (unless `keep_watch`), dSYMs,
+  `BCSymbolMaps`, `Symbols`, `META-INF`, `iTunesMetadata.plist` and `iTunesArtwork`
+  (`isExcludedIPAEntry`). `IpaReader::rewrite` gained a `keep` predicate and
+  `IpaReader::members` was added for this.
+- `verify.rs` = the source-free part of `pipeline/verify.go` + `internal/macho`'s cryptid
+  scan: every Mach-O in the written IPA must have `cryptid` 0 (any slice, either byte order)
+  and no zero-filled encrypted region (#8/#10/#16). A failure is `Error::Verify` listing the
+  binaries, and the output is not created (it is verified as a temp file before the rename;
+  ipadecrypt writes then deletes it).
+- CLI: `ipatool decrypt` takes the target as ipadecrypt does (bundle ID, numeric ID, App Store
+  URL `/id<digits>`, local `.ipa` or any existing file) and also `-b/--bundle-identifier` and
+  `-i/--app-id`; the same value given both ways must agree, a local file cannot be combined
+  with either. New flags `--arcade-credential PATH` (default `credential.arcade.bin` next to
+  the credential, used when it exists; ipadecrypt keeps `<dsid>.arcade.bin` next to
+  `<dsid>.bin`), `--skip-appex`, `--keep-watch`; `-o DIR` puts the default name inside DIR.
+  JSON output adds `pages` and `verified`. The decryption runs through one small `decrypt`
+  function in `crates/ipatool-cli/src/decrypt.rs`, the hook point for an on-device fallback.
+- Deliberate differences from ipadecrypt: SUPF format `405` is accepted (below); the output
+  must not exist (kept from the earlier port; ipadecrypt truncates); member order is the
+  input's (ipadecrypt writes decrypted members first); the default output name is
+  `<input stem>.decrypted.ipa`. Not ported: `--extra-verify` (source byte-compare),
+  `--no-verify`, `--storefront`, `--patch-device-type`, everything on-device and credential
+  minting (another branch).
+- Tests. Synthetic only (random credentials): `tests/fixtures/binaries.json` (19 cases) and
+  `ipas.json` with `app.zip`/`arcade.zip`/`unplanned.zip`, recorded from ipadecrypt itself by
+  `tests/go_fixtures/gen_test.go` (copied into ipadecrypt's `internal/fairplay`): thin arm64e
+  (SUPF v5 612), thin arm64_32 (v3 319), thin armv7 (v3 510), fat armv7s+armv7 (SUPP v01), fat
+  arm64e+arm64 (#56, v5 611), FAT64 arm64_32+arm64e (SUPP v04, 440-byte priv), fat armv7+arm64
+  (v3 502, v3 322, v5 507), Arcade, error texts, `cryptid` 0; at IPA level the #34 shape,
+  enclosing-SINF fallback, appex, Watch with and without `keep_watch`, `skip_appex`, Arcade with
+  and without its credential, and a still-encrypted framework that verification rejects. The
+  Rust output matches ipadecrypt byte for byte on every case (decrypted bytes, page counts,
+  error texts, output member set and contents). The two `core.py` fixtures still pass (fat
+  output compared with the thinned slice). Unit tests cover the parsers, ranking, exclusions,
+  verification and argument handling.
+- Live, against ipadecrypt 7c82f86 built from `~/GolandProjects/forks/ipadecrypt`, offline
+  (`--no-on-device`, config and credential link in the session scratchpad), same inputs and
+  the account's real credential. Every output member (all entries, every Mach-O) is
+  byte-identical; only the member order differs. Counts (binaries / pages / Mach-Os verified):
+  - Sony Music Center 1.0.0 (2014, ext. 83633433): armv7+armv7s fat, `.supp` v01 only:
+    1 / 416 / 1. Real armv7-from-several thinning and SUPP v01.
+  - Sony Music Center 5.15.0 (2020, ext. 835178601): thin arm64, SUPF v3 507 (and `.supp`):
+    7 / 5876 / 20.
+  - Sony Music Center 7.7.0 (`~/Downloads/ipas`): 13 / 7740 / 13; with `--skip-appex`
+    11 / 7732 / 11, also identical to ipadecrypt `--skip-appex`.
+  - Google Home 4.39.23 (`~/Downloads/ipas`): 5 / 65000 / 5.
+  - Google Home 1.25.1215 (2017, ext. 823735994): armv7+arm64 fat, SUPF v3 format `405` plus
+    `.supp` v01. ipadecrypt fails ("unsupported SUPF format"); with 405 added (a one-line patch
+    to a scratch copy) it decrypts 2 / 6384 and passes its own `--extra-verify` (12 Mach-Os
+    source-matched). The Rust output is byte-identical to that patched oracle: 2 / 6384 / 12.
+  Live cost: 3 list-versions, 7 get-version-metadata and 3 downloads (owned apps, no purchase).
+- Exercised by real inputs: plain arm64 thin, armv7 chosen from armv7+armv7s, arm64 chosen from
+  armv7+arm64, SUPP v01 (Sony 1.0.0), SUPF v3 405 (Google Home 1.25) and 507 (Sony 5.15),
+  SUPF v5 612 (the 2026 apps ship all four key files, format 612, and `.v5.supf` wins), the
+  enclosing-app SINF fallback (2026 frameworks have no SINF), app extensions and
+  `--skip-appex`. Synthetic only: arm64e, arm64_32, FAT64, SUPP v04 and `.v4.sinf` (present
+  in no real input or outranked), SUPF 319/322/502/510/611 and v3 612, the 440-byte `priv`,
+  the iOS-26-only 0-byte-`.supf` shape, Arcade (no Arcade credential exists here), Watch apps
+  and `--keep-watch` (none of the owned apps ship one), and verification failures.
+
+### Upstream issues (ipadecrypt)
+
+- SUPF format `405` is rejected. Google Home 1.25.1215 (2017) ships it for both binaries.
+  Evidence that it shares the v3 layout: decrypting with the `.supp` and with the `.supf`
+  relabelled 507 gives identical plaintext (same SHA-256 for both binaries), the zero-byte share
+  of the region goes from 0.4% (ciphertext) to 9.5% (code), and the patched ipadecrypt passes
+  `--extra-verify`. The port accepts 405.
+- Related: a `.supf` ranks ahead of a `.supp`, and a rejected `.supf` fails the binary even when
+  the `.supp` next to it would decrypt it. Not changed in the port (no case left that needs it).
 
 ## Open questions for the user
 
