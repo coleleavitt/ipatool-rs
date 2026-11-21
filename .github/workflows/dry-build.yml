@@ -5,8 +5,6 @@ on:
     branches:
       - main
 
-# iOS is not built: the emulator needs the Unicorn iOS W^X patch and ldid signing that
-# Go's tools/build-ios.sh applies. See PLAN.md phase 9.
 jobs:
   build:
     name: Build for ${{ matrix.name }}
@@ -44,3 +42,13 @@ jobs:
       - run: cargo build --release --locked -p ipatool-cli --target ${{ matrix.target }}
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.15"
+  build_ios:
+    name: Build for iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: aarch64-apple-ios
+      - run: brew install ldid cmake
+      - run: ./scripts/build-ios.sh
