@@ -36,7 +36,9 @@ request, fetches older ones from the store (`--concurrency`, default 4), and cac
 
 The Rust tool uses the same state directory (`$XDG_STATE_HOME/ipatool`, `$XDG_DATA_HOME/ipatool`
 or `~/.ipatool`), the same keyring entries (service `ipatool-auth.service`) and the same cookie
-jar, so one login works for both tools. Sign-in uses the same Store emulator as Go (Apple's
+jar, so one login works for both tools. On Linux the Secret Service collection is found by
+its D-Bus path as Go does, else by its label, which also finds it on oo7-daemon (Fedora 45,
+majd/ipatool#679). Sign-in uses the same Store emulator as Go (Apple's
 binaries run under Unicorn); the Apple framework files it needs are downloaded once from
 Apple's restore image and checked against pinned SHA-256 digests.
 

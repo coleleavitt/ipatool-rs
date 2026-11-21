@@ -789,6 +789,40 @@ pages (AES-128-CBC) and clears `cryptid`:
   arm64 slices beyond the thin/FAT fixtures (the multi-slice code path is ported from `core.py`
   but only the synthetic single-slice-per-file fixtures exercise it live).
 
+### Upstream issues (fork fixes)
+
+Branch `upstream-issues`. Fixes for open majd/ipatool issues, following the design in each
+issue or its linked fork branch where it is sound. Without the new flags, the commands,
+keychain entries and JSON output stay as before.
+
+- [x] majd/ipatool#679, Secret Service collection on oo7-daemon (Fedora 45).
+  - Problem: the spec leaves collection paths to the daemon. GNOME Keyring escapes `-` and
+    `.` (`ipatool_2dauth_2eservice`), but oo7-daemon replaces them with `_`
+    (`ipatool_auth_service`). Go's `byteness/keyring` (and this port) only decoded the path,
+    so on oo7 every `get` failed with "not found" and every `set` created a new collection.
+  - Fix (`secret_service.rs`): match the decoded path first, as Go does. Else match the
+    collection's `Label`, compared without ASCII case. The case rule comes from reading
+    oo7-daemon 0.7.2: after a daemon restart it reloads a collection from
+    `keyrings/v1/<label lowercased>.keyring` and sets the label to the capitalized file name
+    (`Ipatool-auth.service`). An exact label match (the issue's suggestion) would fail after
+    every reboot.
+  - Verified:
+    - oo7-daemon 0.7.2 (`cargo install oo7-daemon`) on a private D-Bus bus
+      (`dbus-run-session --config-file` with one `unix:dir` listen address), with a
+      pre-created `ipatool-rust-test.service` keyring unlocked by `--login`. That is the
+      after-restart state: path `.../ipatool_rust_test_service`, label
+      `Ipatool-rust-test.service`. The old code did not find the collection, tried
+      `CreateCollection` and waited on a prompt nobody answers (killed after 20 s). The
+      fixed `IPATOOL_TEST_SECRET_SERVICE=1` round trip passed twice in a row.
+    - The same live test passes on GNOME Keyring (Cole's session, throwaway collection).
+    - Unit test for the path rule.
+  - Untested: a collection created through oo7's `CreateCollection` (that needs a prompter,
+    which a private bus does not have; oo7 then keeps the exact label), and KWallet's
+    Secret Service.
+  - Warning for local testing: `/etc/dbus-1/session-local.conf` on this machine adds
+    `unix:runtime=yes`, so a plain `dbus-run-session` binds `/run/user/1000/bus` and takes
+    over the real session bus path. Always pass a private `--config-file`.
+
 ## Open questions for the user
 
 1. Shared state: decided in phase 1 — the Rust tool uses the same state directory and

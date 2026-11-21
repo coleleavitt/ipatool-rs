@@ -29,10 +29,26 @@ impl SecretServiceKeyring {
         })
     }
 
+    /// Go matches only the decoded path, which is GNOME Keyring's naming. The spec leaves
+    /// the path to the daemon, and oo7-daemon drops `-` and `.` (`ipatool_auth_service`),
+    /// so a collection no path matches is found by its label, which both tools set to the
+    /// service name when they create it (majd/ipatool#679). The label is compared without
+    /// ASCII case: oo7-daemon 0.7 reloads a collection from its keyring file with the
+    /// file name capitalized as the label (`Ipatool-auth.service`).
     async fn collection(&self) -> Result<Option<Collection<'_>>> {
-        let wanted = format!("{COLLECTION_PREFIX}{}", self.name);
-        for collection in self.service.get_all_collections().await? {
-            if decode_path(collection.collection_path.as_str()) == wanted {
+        let mut collections = self.service.get_all_collections().await?;
+        if let Some(index) = collections
+            .iter()
+            .position(|collection| path_names(collection.collection_path.as_str(), &self.name))
+        {
+            return Ok(Some(collections.swap_remove(index)));
+        }
+        for collection in collections {
+            if collection
+                .get_label()
+                .await?
+                .eq_ignore_ascii_case(&self.name)
+            {
                 return Ok(Some(collection));
             }
         }
@@ -121,6 +137,13 @@ fn without_guid(address: &str) -> String {
     format!("{transport}:{}", params.join(","))
 }
 
+/// Go's `openSecrets` test: the decoded path is the collection prefix and the name.
+fn path_names(path: &str, name: &str) -> bool {
+    decode_path(path)
+        .strip_prefix(COLLECTION_PREFIX)
+        .is_some_and(|rest| rest == name)
+}
+
 /// Go's `decodeKeyringString`: D-Bus object paths escape bytes as `_XX`. Returns the
 /// input unchanged when an escape is malformed.
 fn decode_path(path: &str) -> String {
@@ -148,7 +171,7 @@ fn decode_path(path: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{decode_path, without_guid};
+    use super::{decode_path, path_names, without_guid};
 
     #[test]
     fn drops_guid() {
@@ -165,5 +188,23 @@ mod tests {
             "/org/freedesktop/secrets/collection/ipatool-auth.service"
         );
         assert_eq!(decode_path("/a/b_zz"), "/a/b_zz");
+    }
+
+    #[test]
+    fn only_gnome_keyring_paths_name_the_service() {
+        let name = "ipatool-auth.service";
+        assert!(path_names(
+            "/org/freedesktop/secrets/collection/ipatool_2dauth_2eservice",
+            name
+        ));
+        // oo7-daemon's path for the same collection; the label lookup finds it.
+        assert!(!path_names(
+            "/org/freedesktop/secrets/collection/ipatool_auth_service",
+            name
+        ));
+        assert!(!path_names(
+            "/org/freedesktop/secrets/collection/login",
+            name
+        ));
     }
 }
