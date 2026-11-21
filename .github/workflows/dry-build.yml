@@ -1,0 +1,42 @@
+name: Dry Build
+
+on:
+  pull_request:
+    branches:
+      - main
+
+# Windows is not built: the keychain, cookie jar, state and download code use Unix file
+# modes and positioned reads (std::os::unix), and the machine MAC address lookup is
+# ported for Linux only. iOS is not built: the emulator needs the Unicorn iOS W^X patch
+# and ldid signing that Go's tools/build-ios.sh applies. See PLAN.md phase 9.
+jobs:
+  build:
+    name: Build for ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux amd64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - name: Linux arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+          - name: macOS arm64
+            runner: macos-latest
+            target: aarch64-apple-darwin
+          - name: macOS amd64
+            runner: macos-latest
+            target: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - run: cargo build --release --locked -p ipatool-cli --target ${{ matrix.target }}
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.15"

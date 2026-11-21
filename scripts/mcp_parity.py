@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Compare `ipatool mcp` of the Go and Rust tools over stdio.
 
-Usage: scripts/mcp_parity.py GO_BIN RUST_BIN
+Usage: scripts/mcp_parity.py GO_BIN RUST_BIN [--offline]
 
 Sends the same JSON-RPC session to both servers: initialize, the lists, argument
 validation errors and read-only tool calls (search, versions, version metadata and
-purchases of apps the account owns). Prints one line per call and exits 1 on a
+purchases of apps the account owns). `--offline` leaves out the calls that reach Apple. Prints one line per call and exits 1 on a
 difference. Server versions differ by design ("dev" in a Go build without ldflags).
 """
 
@@ -29,6 +29,9 @@ CALLS = [
     ("negative app", "tools/call", {"name": "purchase_app", "arguments": {"app_id": -1}}),
     ("missing version", "tools/call", {"name": "get_version_metadata", "arguments": {"app_id": 1}}),
     ("page 0", "tools/call", {"name": "list_purchases", "arguments": {"page": 0}}),
+]
+
+LIVE_CALLS = [
     ("search", "tools/call", {"name": "search_apps", "arguments": {"term": "perplexity", "limit": 3}}),
     ("versions", "tools/call", {"name": "list_app_versions", "arguments": {"app_id": PERPLEXITY}}),
     ("metadata", "tools/call", {"name": "get_version_metadata",
@@ -37,7 +40,7 @@ CALLS = [
 ]
 
 
-def session(command):
+def session(command, calls):
     server = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
 
     def request(request_id, method, params):
@@ -53,7 +56,7 @@ def session(command):
         "protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "parity", "version": "1"}})}
     replies["initialize"]["result"]["serverInfo"].pop("version")
     server.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
-    for request_id, (label, method, params) in enumerate(CALLS, 1):
+    for request_id, (label, method, params) in enumerate(calls, 1):
         replies[label] = request(request_id, method, params)
     server.stdin.close()
     server.wait(timeout=30)
@@ -61,7 +64,8 @@ def session(command):
 
 
 def main():
-    go, rust = session([sys.argv[1], "mcp"]), session([sys.argv[2], "mcp"])
+    calls = CALLS if "--offline" in sys.argv[3:] else CALLS + LIVE_CALLS
+    go, rust = session([sys.argv[1], "mcp"], calls), session([sys.argv[2], "mcp"], calls)
     status = 0
     for label in go:
         if go[label] == rust[label]:

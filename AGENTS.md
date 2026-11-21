@@ -41,7 +41,7 @@ lists the change as a deliberate fork improvement.
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
-scripts/parity.sh            # compares output with the Go binary (needs network)
+scripts/parity.sh            # compares output with the Go binary (offline; IPATOOL_PARITY_LIVE=1 adds Apple calls)
 ```
 
 Default tests are offline and use fixtures. Live tests are `#[ignore]` and run only when

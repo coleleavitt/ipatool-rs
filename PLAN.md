@@ -482,8 +482,92 @@ parity check for the commands it touches.
 
 ### Phase 9 — parity, release
 
-- [ ] Parity suite over all commands (offline fixtures + opt-in live).
-- [ ] `profilegen` port, CI (Linux, macOS, Windows), release builds, iOS build.
+Branch `phase9-parity`.
+
+- [x] Parity suite over every command (`scripts/parity.sh` runs `scripts/parity.py` and
+      `scripts/mcp_parity.py`). Offline by default: 43 command lines (usage and validation
+      errors of every command, `auth info`, help of the command groups) and the 14 `mcp`
+      calls that never reach Apple. `IPATOOL_PARITY_LIVE=1` adds read-only calls on owned
+      apps: `search` (iPhone, watchOS, macOS, visionOS), `auth info`, `list-versions` by ID
+      and bundle ID, `get-version-metadata`, `list-versions --with-metadata` from the shared
+      cache, `list-purchases` (two pages), `purchase` of Perplexity and Sony Music Center
+      (already owned), `catalog-versions` checked against Go's `--with-metadata` versions
+      (no Go command), a download of Sony Music Center, and the 4 live `mcp` calls. JSON
+      lines are compared without `time`; where Go prints a text line (pflag stopped before
+      `--format`, unknown command) the exit status and the error text are compared, since
+      text mode differs (open question 3); help text is compared by exit status and first
+      line only. Downloads are compared by the IPA entry list (names and order) and the
+      parsed `Info.plist` and `iTunesMetadata.plist`, not bytes. Exit status 1 on any
+      difference. Error probes use owned app IDs, so a regression that skips a check cannot
+      buy anything. The suite never runs `auth login`, `auth revoke` or a purchase of an
+      app the account does not own.
+- [x] Port differences the suite found, fixed on this branch:
+      - usage errors: clap's own messages (exit 2) became cobra/pflag's error line with
+        exit 1 — `accepts 1 arg(s), received N`, `required flag(s) "…" not set`,
+        `unknown command "x" for "ipatool"` with cobra's suggestions, `unknown flag`,
+        `unknown shorthand flag`, `flag needs an argument`, `invalid argument "v" for
+        "-l, --limit" flag: strconv.ParseInt: …`, and `NoArgs` for `list-purchases` and
+        `mcp`. The line is JSON only when pflag had parsed `--format json` before it
+        stopped, as in Go. `auth`, `auth <unknown>` and no arguments print help, exit 0;
+      - integer flags parse like `strconv.ParseInt(v, 0, 64)` (`0x10`, `010`, `1_000`,
+        negative values, a value that starts with `-`); bool flags take `=value` like
+        pflag (`--purchase=false`); leaf commands without an `Args` check ignore extra
+        arguments (`auth info extra`), as cobra does;
+      - `--platform` is parsed where Go parses it (after the app check, before the
+        account), not by clap; `search` takes a negative `--limit`; `get-version-metadata`
+        checks its required flag before the app;
+      - keychain errors carry Go's `failed to get item: …` / `failed to set item: …` /
+        `failed to remove item: …` (`pkg/keychain`);
+      - visionOS search was not ported; now it is (`vision_search.rs`: Go's
+        `searchVisionOS` and `storefrontVisionApps`, with their tests);
+      - iTunes search and lookup URLs now use Go's sorted query order (`url.Values.Encode`);
+      - `--version` prints `ipatool version <crate version>` (Go prints `dev` without
+        release ldflags).
+- [x] CI: `.github/workflows/` `lint.yml` (fmt, clippy on Linux and macOS), `unit-tests.yml`
+      (Linux x86_64 and arm64, macOS), `dry-build.yml` (release builds for the four
+      targets on pull requests), `release.yml` (on `v*` tags: the tag must match the
+      workspace version, tests, then `ipatool-<version>-<os>-<arch>.tar.gz` with `bin/<file>`
+      and a `.sha256sum`, as the Go release, uploaded to the GitHub release). The Go
+      workflow's Homebrew tap update is left out. CI uses the nightly toolchain, since the
+      port builds with rustc-master. `actionlint` 1.7.12 (with shellcheck) reports nothing.
+      Nothing is pushed and no repository is created (open question 2).
+- Targets, checked locally with `cargo clippy --workspace --all-targets -- -D warnings`
+  per target (rustc-master std installed for these). The C dependencies (Unicorn/QEMU,
+  aws-lc, lzfse) were compiled with zig as the cross C compiler where it could; this
+  machine has no macOS SDK or aarch64 sysroot, so Unicorn's C build was skipped with a
+  `links` override and its bindgen output, and iOS C code was compiled against macOS
+  headers. So this proves the Rust code, not the C cross-builds; CI builds on native
+  runners.
+  - x86_64-unknown-linux-gnu: host, full build and tests.
+  - aarch64-unknown-linux-gnu: clippy clean.
+  - aarch64-apple-darwin: clippy clean after three fixes on this branch (dead code in
+    `machine.rs` off Linux, `tokio::fs` in a test needed the `fs` feature, the keychain's
+    async API without an await off Secret Service). Runtime gap: the MAC address lookup is
+    ported for Linux only (`machine.rs` returns "not ported" elsewhere), so `auth login`
+    and every Store command fail on macOS until Go's `mac_address_darwin.go` is ported.
+  - x86_64-apple-darwin: target std not installed here; not checked (CI cross-builds it
+    on the arm64 runner, as Go does).
+  - x86_64-pc-windows-gnu: does not build. rustc stops in `ipatool-keychain/src/file.rs`
+    (`std::os::unix` at lines 5 and 132, `mode()` at 33 and 78); the same Unix-only calls
+    are in `cookies.rs`, `download_file.rs`, `download_macos.rs`, `xar.rs`
+    (`FileExt::read_at`), `ipatool-cli` `state.rs` and `versions.rs`, and
+    `ipatool-sap/src/assets/mod.rs`. The MAC address lookup is also Linux-only. Windows is
+    left out of CI. MSVC and aarch64 Windows std are not installed here.
+  - aarch64-apple-ios: clippy clean (with the header workaround above). Not releasable:
+    Go's iOS build patches Unicorn for iOS W^X memory and signs with ldid
+    (`tools/build-ios.sh`), uses an iOS keyring wrapper (`cmd/keyring_ios.go`; the port
+    would pick Secret Service there), and the MAC lookup is Linux-only. Left out of CI.
+- [ ] `profilegen` port (dev tool) — not done.
+- [ ] Windows and iOS builds — see above.
+
+Verification: gates (`cargo fmt --all --check`, `cargo clippy --workspace --all-targets --
+-D warnings`, `cargo test --workspace`) pass. Offline suite: 0 differences. First live
+run: 1 difference (visionOS search not ported), fixed; second live run after the fixes: 80 checks, 0 differences (about 40 Apple requests per tool, two downloads of Sony Music Center).
+Untested: the CI workflows have not run on GitHub (runner images, the x86_64 macOS
+cross-build of Unicorn, bindgen's libclang on the runners); text-mode output still differs
+from Go (field quoting, time, colors; open question 3); the cobra `completion` command is
+not ported; a flag whose value starts with `-` is taken as the value only for integer
+flags (pflag does it for every flag).
 
 ## Open questions for the user
 
