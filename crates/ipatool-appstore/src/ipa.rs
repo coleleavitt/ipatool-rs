@@ -46,9 +46,18 @@ impl IpaReader {
         self.archive.read(header).map(Some)
     }
 
-    /// Writes the IPA to `out`, copying every member with its compressed bytes except the
-    /// ones in `replacements`, whose decompressed contents are written in their place
-    /// (deflated). Member order is preserved.
+    /// The decompressed contents of every member with its name, in central-directory
+    /// order. Each member is read when the iterator reaches it.
+    pub fn members(&self) -> impl Iterator<Item = (&str, io::Result<Vec<u8>>)> {
+        self.archive
+            .files
+            .iter()
+            .map(|file| (file.name.as_str(), self.archive.read(file)))
+    }
+
+    /// Writes the IPA to `out`, copying every member for which `keep` is true with its
+    /// compressed bytes, except the ones in `replacements`, whose decompressed contents
+    /// are written in their place (deflated). Member order is preserved.
     ///
     /// # Errors
     /// If a source member cannot be read or the output cannot be written.
@@ -56,9 +65,13 @@ impl IpaReader {
         &self,
         out: W,
         replacements: &BTreeMap<String, Vec<u8>>,
+        keep: impl Fn(&str) -> bool,
     ) -> io::Result<()> {
         let mut writer = Writer::new(out);
         for file in &self.archive.files {
+            if !keep(&file.name) {
+                continue;
+            }
             if let Some(data) = replacements.get(&file.name) {
                 writer.create(&file.name)?;
                 writer.write_all(data)?;

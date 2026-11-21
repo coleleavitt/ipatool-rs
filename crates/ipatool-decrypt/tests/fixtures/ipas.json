@@ -1,0 +1,110 @@
+{
+ "arcade_credential": "6d1aadc9e5031e4b99bf11ae0a796ebc",
+ "credential": "f3ff4d451e429e182215aaee06a2d64b",
+ "runs": [
+  {
+   "name": "app_default",
+   "input": "app.zip",
+   "arcade": false,
+   "skip_appex": false,
+   "keep_watch": false,
+   "binaries": 3,
+   "pages": 5,
+   "members": {
+    "Payload/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Payload/App.app/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Payload/App.app/App": "6f5bf86e1c6d814f34d3a374dd5a19b18749f7b2947e16f5a69ab5e47b2ad2e0",
+    "Payload/App.app/Frameworks/F.framework/F": "e5c3237efbb3679f808a43d99101c04c1c10329116e6ae4beb993e857cecf548",
+    "Payload/App.app/Frameworks/P.framework/P": "515469bd12a0badf077cc397b8250d2988e1900974c727a624792f4011fc7b75",
+    "Payload/App.app/Info.plist": "8942a67bef4c6a856241f32c1000bd9c8acfb6951fdd2da2f33714b2fd7570cb",
+    "Payload/App.app/PlugIns/E.appex/E": "e815274a7d35905dae006e888ea1752a50772fac3d58971e8fa27d1dd5837f91"
+   },
+   "still_encrypted": null,
+   "scanned": 4
+  },
+  {
+   "name": "app_keep_watch",
+   "input": "app.zip",
+   "arcade": false,
+   "skip_appex": false,
+   "keep_watch": true,
+   "binaries": 4,
+   "pages": 6,
+   "members": {
+    "Payload/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Payload/App.app/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Payload/App.app/App": "6f5bf86e1c6d814f34d3a374dd5a19b18749f7b2947e16f5a69ab5e47b2ad2e0",
+    "Payload/App.app/Frameworks/F.framework/F": "e5c3237efbb3679f808a43d99101c04c1c10329116e6ae4beb993e857cecf548",
+    "Payload/App.app/Frameworks/P.framework/P": "515469bd12a0badf077cc397b8250d2988e1900974c727a624792f4011fc7b75",
+    "Payload/App.app/Info.plist": "8942a67bef4c6a856241f32c1000bd9c8acfb6951fdd2da2f33714b2fd7570cb",
+    "Payload/App.app/PlugIns/E.appex/E": "e815274a7d35905dae006e888ea1752a50772fac3d58971e8fa27d1dd5837f91",
+    "Payload/App.app/Watch/W.app/W": "15a876093baa40a6b033b938ee3c51db900448a4db5ccd72c5a8e59cba6f2099"
+   },
+   "still_encrypted": null,
+   "scanned": 5
+  },
+  {
+   "name": "app_skip_appex",
+   "input": "app.zip",
+   "arcade": false,
+   "skip_appex": true,
+   "keep_watch": false,
+   "binaries": 2,
+   "pages": 4,
+   "members": {
+    "Payload/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Payload/App.app/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Payload/App.app/App": "6f5bf86e1c6d814f34d3a374dd5a19b18749f7b2947e16f5a69ab5e47b2ad2e0",
+    "Payload/App.app/Frameworks/F.framework/F": "e5c3237efbb3679f808a43d99101c04c1c10329116e6ae4beb993e857cecf548",
+    "Payload/App.app/Frameworks/P.framework/P": "515469bd12a0badf077cc397b8250d2988e1900974c727a624792f4011fc7b75",
+    "Payload/App.app/Info.plist": "8942a67bef4c6a856241f32c1000bd9c8acfb6951fdd2da2f33714b2fd7570cb",
+    "Payload/App.app/PlugIns/E.appex/E": "472176bd952d5ee27812900029177606222b87daed37391d82223f89216eb4f2"
+   },
+   "still_encrypted": null,
+   "scanned": 3
+  },
+  {
+   "name": "arcade_with_credential",
+   "input": "arcade.zip",
+   "arcade": true,
+   "skip_appex": false,
+   "keep_watch": false,
+   "binaries": 1,
+   "pages": 2,
+   "members": {
+    "Payload/G.app/G": "c44fcb4e924dec8653fc3ff404bd7d72bde7911d7bf0e07352087df95ef493ef"
+   },
+   "still_encrypted": null,
+   "scanned": 1
+  },
+  {
+   "name": "arcade_without_credential",
+   "input": "arcade.zip",
+   "arcade": false,
+   "skip_appex": false,
+   "keep_watch": false,
+   "error": "this Apple Arcade app needs the account's Arcade credential",
+   "binaries": 0,
+   "pages": 0,
+   "still_encrypted": null,
+   "scanned": 0
+  },
+  {
+   "name": "unplanned_framework",
+   "input": "unplanned.zip",
+   "arcade": false,
+   "skip_appex": false,
+   "keep_watch": false,
+   "binaries": 1,
+   "pages": 1,
+   "members": {
+    "Payload/U.app/Frameworks/L.framework/L": "a15c9f62a63c4760ee0a32dc8e04bb5a88543654a781d1accf3448e35e83369a",
+    "Payload/U.app/U": "4053c48e8b0fb5c4e553e1318765a9ebdb2954fc21a53878df2b2d297cf916bd"
+   },
+   "still_encrypted": [
+    "Payload/U.app/Frameworks/L.framework/L"
+   ],
+   "scanned": 2
+  }
+ ]
+}

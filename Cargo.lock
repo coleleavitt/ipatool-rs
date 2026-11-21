@@ -1350,6 +1350,7 @@ dependencies = [
  "md-5",
  "plist",
  "serde_json",
+ "sha2",
  "tempfile",
  "thiserror",
 ]

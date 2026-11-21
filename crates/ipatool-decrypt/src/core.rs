@@ -1,6 +1,7 @@
-//! `FairPlay` page-key derivation and page decryption.
+//! `FairPlay` page-key derivation and page decryption of one Mach-O.
 //!
-//! A port of `core.py` from EthanArbuckle/fairplay-decrypt (GPL-3). Its behavior and
+//! A port of ipadecrypt's `internal/fairplay/fairplay.go` (MIT, itself a Go port of
+//! `core.py` from EthanArbuckle/fairplay-decrypt, GPL-3). Its slice choice, formats and
 //! error texts are reproduced.
 
 use aes::Aes128;
@@ -8,12 +9,32 @@ use aes::cipher::block_padding::NoPadding;
 use aes::cipher::{BlockCipherEncrypt, BlockModeDecrypt, KeyInit, KeyIvInit};
 use cbc::Decryptor;
 use md5::{Digest, Md5};
-use std::fmt::Write as _;
 
-use crate::error::{Result, format_err};
+use crate::error::{Result, format_err, go_quote};
 
-const ARM64: u32 = 0x0100_000C;
+pub(crate) const CPU_TYPE_ARM: u32 = 0x0000_000C;
+pub(crate) const CPU_TYPE_ARM64: u32 = 0x0100_000C;
+pub(crate) const CPU_TYPE_ARM64_32: u32 = 0x0200_000C;
+const CPU_SUBTYPE_ARMV7: u32 = 9;
+const CPU_SUBTYPE_ARM64E: u32 = 2;
+/// Masks the capability bits out of a cpusubtype (`CPU_SUBTYPE_MASK` is their complement).
+const CPU_SUBTYPE_MASK: u32 = 0x00FF_FFFF;
 const PAGE_SIZE: usize = 4096;
+
+const LC_ENCRYPTION_INFO: u32 = 0x21;
+const LC_ENCRYPTION_INFO_64: u32 = 0x2C;
+const MACHO_MAGIC_LE: u32 = 0xFEED_FACE;
+const MACHO_MAGIC_64_LE: u32 = 0xFEED_FACF;
+
+/// The 16-byte length of a `FairPlay` account credential.
+pub const CREDENTIAL_SIZE: usize = 16;
+
+/// The SUPF format tags (bytes 1..4) ipadecrypt accepts; all share one layout. `405` is a
+/// fork addition: ipadecrypt 7c82f86 rejects it, but Google Home 1.25.1215 (2017) ships it
+/// and decrypts with it to the same bytes as with its `.supp` (see `PLAN.md`).
+const SUPF_FORMATS: [&[u8; 3]; 8] = [
+    b"319", b"322", b"405", b"502", b"507", b"510", b"611", b"612",
+];
 
 type Array16 = cipher::Array<u8, cipher::consts::U16>;
 
@@ -27,122 +48,176 @@ const ROUND_CONSTANTS: [u32; 4] = [0x6854_7C2E, 0x7E05_E1DE, 0xD495_038B, 0x0AB2
 const FINAL_SELECTORS: [[usize; 4]; 4] = [[0, 1, 2, 3], [0, 2, 4, 6], [0, 3, 5, 7], [4, 5, 6, 7]];
 const FINAL_CONSTANTS: [u32; 4] = [0x5B71_98C7, 0xEB5D_E22C, 0x0F8A_A8FA, 0xF6E1_BB3F];
 
-/// The encrypted region of one arm64 Mach-O slice (`core.py`'s `MachoInfo`).
+/// The slice a Mach-O is thinned to and its encrypted region (`fairplay.go`'s
+/// `machoInfo`). Offsets are file offsets except `cryptoff`, which is slice-relative.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MachoInfo {
-    base: usize,
-    cryptoff: usize,
-    cryptsize: usize,
-    cryptid_offset: usize,
-    subtype: u32,
+    /// The slice's file offset (0 for a thin Mach-O).
+    pub base: usize,
+    /// The slice's size.
+    pub size: usize,
+    /// The slice's cputype.
+    pub cpu: u32,
+    /// The slice's cpusubtype, capability bits included.
+    pub subtype: u32,
+    /// The encrypted region's offset within the slice.
+    pub cryptoff: usize,
+    /// The encrypted region's size, a multiple of 4096.
+    pub cryptsize: usize,
+    /// The file offset of the `cryptid` word.
+    pub cryptid_offset: usize,
 }
 
-fn be32(data: &[u8], at: usize) -> Result<u32> {
+pub(crate) fn be32(data: &[u8], at: usize) -> Result<u32> {
     let bytes = data
-        .get(at..at + 4)
+        .get(at..at.saturating_add(4))
         .ok_or_else(|| format_err("unexpected end of data"))?;
     Ok(u32::from_be_bytes(bytes.try_into().expect("four bytes")))
 }
 
-fn le32(data: &[u8], at: usize) -> Result<u32> {
+pub(crate) fn be64(data: &[u8], at: usize) -> Result<u64> {
     let bytes = data
-        .get(at..at + 4)
+        .get(at..at.saturating_add(8))
+        .ok_or_else(|| format_err("unexpected end of data"))?;
+    Ok(u64::from_be_bytes(bytes.try_into().expect("eight bytes")))
+}
+
+pub(crate) fn le32(data: &[u8], at: usize) -> Result<u32> {
+    let bytes = data
+        .get(at..at.saturating_add(4))
         .ok_or_else(|| format_err("unexpected end of data"))?;
     Ok(u32::from_le_bytes(bytes.try_into().expect("four bytes")))
 }
 
-/// `core.py`'s `arm64_encryption_infos`.
-///
-/// # Errors
-/// If the data is not a supported arm64 Mach-O or a slice is malformed.
-pub fn arm64_encryption_infos(data: &[u8]) -> Result<Vec<MachoInfo>> {
-    let magic = data.get(..4).unwrap_or_default();
-    let arm: Vec<(usize, usize, u32)> = match magic {
+fn to_usize(value: u64) -> usize {
+    // A value past usize::MAX cannot fit in memory either; the bounds checks reject it.
+    usize::try_from(value).unwrap_or(usize::MAX)
+}
+
+#[derive(Clone, Copy)]
+struct ArmSlice {
+    base: usize,
+    size: usize,
+    cpu: u32,
+    subtype: u32,
+}
+
+/// The ARM slices of a thin or fat Mach-O, grouped in thinning order: plain arm64,
+/// arm64e, `arm64_32`, 32-bit ARM.
+fn arm_slices(data: &[u8]) -> Result<[Vec<ArmSlice>; 4]> {
+    let mut groups: [Vec<ArmSlice>; 4] = Default::default();
+    let mut add = |cpu: u32, subtype: u32, base: usize, size: usize| {
+        let slice = ArmSlice {
+            base,
+            size,
+            cpu,
+            subtype,
+        };
+        let group = match cpu {
+            CPU_TYPE_ARM64 if subtype & CPU_SUBTYPE_MASK == CPU_SUBTYPE_ARM64E => 1,
+            CPU_TYPE_ARM64 => 0,
+            CPU_TYPE_ARM64_32 => 2,
+            CPU_TYPE_ARM => 3,
+            _ => return,
+        };
+        groups[group].push(slice);
+    };
+    match data.get(..4).unwrap_or_default() {
         b"\xca\xfe\xba\xbe" => {
             let count = be32(data, 4)? as usize;
             if !(1..=16).contains(&count) || 8 + count * 20 > data.len() {
                 return Err(format_err("invalid FAT32 architecture table"));
             }
-            let mut arm = Vec::new();
             for i in 0..count {
                 let off = 8 + i * 20;
-                let cpu = be32(data, off)?;
-                let sub = be32(data, off + 4)?;
-                let slice_off = be32(data, off + 8)? as usize;
-                let size = be32(data, off + 12)? as usize;
-                if cpu == ARM64 {
-                    arm.push((slice_off, size, sub));
-                }
+                add(
+                    be32(data, off)?,
+                    be32(data, off + 4)?,
+                    be32(data, off + 8)? as usize,
+                    be32(data, off + 12)? as usize,
+                );
             }
-            arm
         }
         b"\xca\xfe\xba\xbf" => {
             let count = be32(data, 4)? as usize;
             if !(1..=16).contains(&count) || 8 + count * 32 > data.len() {
                 return Err(format_err("invalid FAT64 architecture table"));
             }
-            let mut arm = Vec::new();
             for i in 0..count {
                 let off = 8 + i * 32;
-                let cpu = be32(data, off)?;
-                let sub = be32(data, off + 4)?;
-                let slice_off = usize::try_from(be64(data, off + 8)?)
-                    .map_err(|_| format_err("slice offset too large"))?;
-                let size = usize::try_from(be64(data, off + 16)?)
-                    .map_err(|_| format_err("slice size too large"))?;
-                if cpu == ARM64 {
-                    arm.push((slice_off, size, sub));
-                }
+                add(
+                    be32(data, off)?,
+                    be32(data, off + 4)?,
+                    to_usize(be64(data, off + 8)?),
+                    to_usize(be64(data, off + 16)?),
+                );
             }
-            arm
         }
-        b"\xcf\xfa\xed\xfe" => {
-            let subtype = le32(data, 8)?;
-            vec![(0, data.len(), subtype)]
+        [0xce | 0xcf, 0xfa, 0xed, 0xfe] if data.len() >= 28 => {
+            add(le32(data, 4)?, le32(data, 8)?, 0, data.len());
         }
-        _ => return Err(format_err("not a supported arm64 Mach-O")),
+        _ => return Err(format_err("not a supported ARM Mach-O")),
+    }
+    Ok(groups)
+}
+
+/// `fairplay.go`'s `armEncryptionInfo`: the encrypted region of the slice the output is
+/// thinned to: the plain arm64 slice, else arm64e, else `arm64_32`, else 32-bit ARM (armv7
+/// when there are several). `None` when that slice has no active encryption command.
+///
+/// # Errors
+/// If the data is not an ARM Mach-O, the slice choice is ambiguous, or the chosen slice
+/// is malformed.
+pub fn arm_encryption_info(data: &[u8]) -> Result<Option<MachoInfo>> {
+    let groups = arm_slices(data)?;
+    let mut slices: Vec<ArmSlice> = groups
+        .into_iter()
+        .find(|group| !group.is_empty())
+        .unwrap_or_default();
+    // Fat 32-bit apps pair armv7 with armv7s or armv6; armv7 runs on every device that
+    // runs either.
+    if slices.len() > 1 && slices[0].cpu == CPU_TYPE_ARM {
+        slices.retain(|slice| slice.subtype & CPU_SUBTYPE_MASK == CPU_SUBTYPE_ARMV7);
+    }
+    let [chosen] = slices[..] else {
+        return Err(format_err(format!(
+            "expected one ARM slice to decrypt, found {}",
+            slices.len()
+        )));
     };
-    if arm.is_empty() {
-        return Err(format_err("no arm64 slices found"));
-    }
-    let mut infos = Vec::new();
-    for (base, size, subtype) in arm {
-        if let Some(info) = arm64_slice_info(data, base, size, subtype)? {
-            infos.push(info);
-        }
-    }
-    Ok(infos)
+    slice_encryption_info(data, chosen)
 }
 
-fn be64(data: &[u8], at: usize) -> Result<u64> {
-    let bytes = data
-        .get(at..at + 8)
-        .ok_or_else(|| format_err("unexpected end of data"))?;
-    Ok(u64::from_be_bytes(bytes.try_into().expect("eight bytes")))
-}
-
-fn arm64_slice_info(
-    data: &[u8],
-    base: usize,
-    slice_size: usize,
-    subtype: u32,
-) -> Result<Option<MachoInfo>> {
-    if base + slice_size > data.len() || base + 32 > data.len() {
-        return Err(format_err("arm64 slice exceeds file"));
+fn slice_encryption_info(data: &[u8], chosen: ArmSlice) -> Result<Option<MachoInfo>> {
+    let ArmSlice {
+        base,
+        size: slice_size,
+        ..
+    } = chosen;
+    // arm64_32 uses the 32-bit header and load command, like 32-bit ARM.
+    let (header_size, enc_cmd, want_magic) = if chosen.cpu == CPU_TYPE_ARM64 {
+        (32, LC_ENCRYPTION_INFO_64, MACHO_MAGIC_64_LE)
+    } else {
+        (28, LC_ENCRYPTION_INFO, MACHO_MAGIC_LE)
+    };
+    if base.saturating_add(slice_size) > data.len() || base.saturating_add(header_size) > data.len()
+    {
+        return Err(format_err("Mach-O slice exceeds file"));
     }
     let magic = le32(data, base)?;
     let cpu = le32(data, base + 4)?;
     let ncmds = le32(data, base + 16)? as usize;
     let sizeofcmds = le32(data, base + 20)? as usize;
-    if magic != 0xFEED_FACF || cpu != ARM64 || ncmds > 1000 {
-        return Err(format_err("invalid arm64 Mach-O header"));
+    if magic != want_magic || cpu != chosen.cpu || ncmds > 1000 {
+        return Err(format_err("invalid Mach-O slice header"));
     }
-    let mut pos = base + 32;
+    let mut pos = base + header_size;
     let commands_end = pos + sizeofcmds;
     if commands_end > base + slice_size {
-        return Err(format_err("load commands exceed arm64 slice"));
+        return Err(format_err("load commands exceed Mach-O slice"));
     }
-    let mut found: Vec<(usize, usize, u32, usize)> = Vec::new();
+    let (mut cryptoff, mut cryptsize, mut cryptid, mut cryptid_offset) = (0, 0, 0, 0);
+    let mut found = 0;
     for _ in 0..ncmds {
         if pos + 8 > commands_end {
             return Err(format_err("truncated load command"));
@@ -152,31 +227,28 @@ fn arm64_slice_info(
         if size < 8 || pos + size > commands_end {
             return Err(format_err("invalid load command"));
         }
-        if cmd == 0x2C {
-            if size < 24 {
+        if cmd == enc_cmd {
+            if size < 20 {
                 return Err(format_err("short encryption info command"));
             }
-            let cryptoff = le32(data, pos + 8)? as usize;
-            let cryptsize = le32(data, pos + 12)? as usize;
-            let cryptid = le32(data, pos + 16)?;
-            found.push((cryptoff, cryptsize, cryptid, pos + 16));
+            cryptoff = le32(data, pos + 8)? as usize;
+            cryptsize = le32(data, pos + 12)? as usize;
+            cryptid = le32(data, pos + 16)?;
+            cryptid_offset = pos + 16;
+            found += 1;
         }
         pos += size;
     }
     if pos != commands_end {
         return Err(format_err("load command sizes do not match Mach-O header"));
     }
-    let Some(&(cryptoff, cryptsize, cryptid, cryptid_offset)) = found.first() else {
+    if found == 0 || (found == 1 && cryptid == 0) {
         return Ok(None);
-    };
-    if found.len() != 1 {
-        return Err(format_err(format!(
-            "expected one encryption command, found {}",
-            found.len()
-        )));
     }
-    if cryptid == 0 {
-        return Ok(None);
+    if found != 1 {
+        return Err(format_err(format!(
+            "expected one encryption command, found {found}"
+        )));
     }
     if cryptid != 1 || cryptsize == 0 || !cryptsize.is_multiple_of(PAGE_SIZE) {
         return Err(format_err(format!(
@@ -188,10 +260,12 @@ fn arm64_slice_info(
     }
     Ok(Some(MachoInfo {
         base,
+        size: slice_size,
+        cpu: chosen.cpu,
+        subtype: chosen.subtype,
         cryptoff,
         cryptsize,
         cryptid_offset,
-        subtype,
     }))
 }
 
@@ -202,7 +276,7 @@ struct Atom {
     end: usize,
 }
 
-/// `core.py`'s `_children`: the atoms between `start` and `end`.
+/// `fairplay.go`'s `atomChildren`: the atoms between `start` and `end`.
 fn children(data: &[u8], start: usize, end: usize) -> Result<Vec<Atom>> {
     let mut atoms = Vec::new();
     let mut offset = start;
@@ -225,7 +299,7 @@ fn children(data: &[u8], start: usize, end: usize) -> Result<Vec<Atom>> {
     Ok(atoms)
 }
 
-/// `core.py`'s `_sinf_field`.
+/// `fairplay.go`'s `sinfField`: the one `wanted` field in the SINF's `schi` container.
 fn sinf_field(sinf: &[u8], wanted: [u8; 4]) -> Result<&[u8]> {
     let roots = children(sinf, 0, sinf.len())?;
     if roots.len() != 1 || &roots[0].kind != b"sinf" {
@@ -245,32 +319,17 @@ fn sinf_field(sinf: &[u8], wanted: [u8; 4]) -> Result<&[u8]> {
     if fields.len() != 1 {
         return Err(format_err(format!(
             "expected one {} field",
-            escape_fourcc(wanted)
+            go_quote(std::str::from_utf8(&wanted).unwrap_or_default())
         )));
     }
     Ok(&sinf[fields[0].start..fields[0].end])
 }
 
-/// Python's `repr(bytes)` for a four-byte field name, e.g. `b'priv'`.
-fn escape_fourcc(value: [u8; 4]) -> String {
-    let mut out = String::from("b'");
-    for byte in value {
-        match byte {
-            b'\\' => out.push_str("\\\\"),
-            b'\'' => out.push_str("\\'"),
-            0x20..=0x7E => out.push(byte as char),
-            _ => write!(out, "\\x{byte:02x}").expect("writing to a String"),
-        }
-    }
-    out.push('\'');
-    out
-}
-
-/// `core.py`'s `derive_work16`: the 16-byte page-key work value from the credential and
-/// the SINF `priv` record.
+/// `fairplay.go`'s `deriveWork16`: the 16-byte page-key work value from the credential
+/// and the SINF `priv` record.
 ///
 /// # Panics
-/// Never; the `expect`s are on fixed-size conversions that always succeed.
+/// Never; the `expect` is on a fixed-size conversion that always succeeds.
 ///
 /// # Errors
 /// If the SINF is malformed or the credential does not decode its `priv` record.
@@ -282,18 +341,17 @@ pub fn derive_work16(credential: &[u8], sinf: &[u8]) -> Result<[u8; 16]> {
         .unwrap_or_default();
     let iviv = sinf_field(sinf, *b"iviv")?;
     let raw_priv = sinf_field(sinf, *b"priv")?;
-    if raw_priv.len() != 440 && raw_priv.len() != 448 {
-        return Err(format_err("unsupported SINF priv-record length"));
-    }
-    let raw_priv = if raw_priv.len() == 440 {
-        if raw_priv[432..] != [0u8; 8] {
-            return Err(format_err("invalid SINF priv-record trailer"));
+    let raw_priv = match raw_priv.len() {
+        448 => raw_priv,
+        440 => {
+            if raw_priv[432..] != [0u8; 8] {
+                return Err(format_err("invalid SINF priv-record trailer"));
+            }
+            &raw_priv[..432]
         }
-        &raw_priv[..432]
-    } else {
-        raw_priv
+        _ => return Err(format_err("unsupported SINF priv-record length")),
     };
-    if credential.len() != 16 || iviv.len() != 16 {
+    if credential.len() != CREDENTIAL_SIZE || iviv.len() != 16 {
         return Err(format_err("invalid SINF priv-record dimensions"));
     }
     let mut hasher = Md5::new();
@@ -305,10 +363,7 @@ pub fn derive_work16(credential: &[u8], sinf: &[u8]) -> Result<[u8; 16]> {
         *dst = byte ^ b'0';
     }
     let mut clear = raw_priv.to_vec();
-    let key_arr = Array16::from(key);
-    let iv_arr = Array16::from(iv);
-    let decryptor = Decryptor::<Aes128>::new(&key_arr, &iv_arr);
-    decryptor
+    Decryptor::<Aes128>::new(&Array16::from(key), &Array16::from(iv))
         .decrypt_padded::<NoPadding>(&mut clear)
         .map_err(|_| format_err("credential does not decode this SINF priv record"))?;
     if clear.get(..4) != Some(b"itun")
@@ -322,18 +377,59 @@ pub fn derive_work16(credential: &[u8], sinf: &[u8]) -> Result<[u8; 16]> {
     Ok(clear[24..40].try_into().expect("sixteen bytes"))
 }
 
-/// `core.py`'s `arm64_supf_record_offset`.
+/// `fairplay.go`'s `isArcadeSinf`: whether `sinf` is an Apple Arcade license, which only
+/// the account's Arcade credential decodes (its `key ` field starts with 4).
+#[must_use]
+pub fn is_arcade_sinf(sinf: &[u8]) -> bool {
+    sinf_field(sinf, *b"key ").is_ok_and(|key| key.len() == 4 && key[0] == 4)
+}
+
+/// `fairplay.go`'s `CredentialDecodes`: whether `credential` unwraps the SINF's `priv`
+/// record, i.e. belongs to that license's account and kind.
+#[must_use]
+pub fn credential_decodes(credential: &[u8], sinf: &[u8]) -> bool {
+    derive_work16(credential, sinf).is_ok()
+}
+
+/// `fairplay.go`'s `pclassPageKeyOffset`: the offset of the 32-byte record for
+/// `absolute_page` in a SUPP (`.supp` v01 / `.v4.supp` v04). One table indexes every 4 KiB
+/// page of the file from offset 0; the v01 header carries a 20-byte code-signature SHA-1
+/// that v04 omits.
 ///
 /// # Errors
-/// If the SUPF format is unsupported or the arm64 record is missing or incomplete.
-pub fn arm64_supf_record_offset(
+/// If the SUPP format is unsupported, its table is malformed, or the page is missing.
+pub fn pclass_page_key_offset(supp: &[u8], absolute_page: usize) -> Result<usize> {
+    if supp.len() < 8 || !matches!(supp[0], 1 | 4) {
+        return Err(format_err("unsupported SUPP format"));
+    }
+    let pos = if supp[0] == 1 { 24 } else { 4 };
+    if pos + 4 > supp.len() {
+        return Err(format_err("truncated SUPP header"));
+    }
+    let count = be32(supp, pos)? as usize;
+    if count == 0 || count > 1 << 20 || pos + 4 + count * 32 > supp.len() {
+        return Err(format_err("invalid SUPP page count"));
+    }
+    if absolute_page >= count {
+        return Err(format_err("SUPP page key missing"));
+    }
+    Ok(pos + 4 + 32 * absolute_page)
+}
+
+/// `fairplay.go`'s `armSupfRecordOffset`: the per-page record block of the slice with
+/// `wanted_cpu` and `wanted_subtype` (capability bits ignored) in a SUPF.
+///
+/// # Errors
+/// If the SUPF format is unsupported or the slice's records are missing or incomplete.
+pub fn arm_supf_record_offset(
     supf: &[u8],
     required_pages: usize,
+    wanted_cpu: u32,
     wanted_subtype: u32,
 ) -> Result<usize> {
     if supf.len() < 12
         || !matches!(supf[0], 3 | 5)
-        || !matches!(&supf[1..4], b"507" | b"510" | b"612")
+        || !SUPF_FORMATS.iter().any(|format| supf[1..4] == format[..])
     {
         return Err(format_err("unsupported SUPF format"));
     }
@@ -354,18 +450,20 @@ pub fn arm64_supf_record_offset(
             return Err(format_err("invalid SUPF architecture length"));
         }
         let pages = be32(supf, pos + header_size)? as usize;
-        if cpu == ARM64 && subtype == wanted_subtype {
+        if cpu == wanted_cpu && subtype & CPU_SUBTYPE_MASK == wanted_subtype & CPU_SUBTYPE_MASK {
             if pages < required_pages || length < header_size + pages * 32 {
-                return Err(format_err("SUPF arm64 page records are incomplete"));
+                return Err(format_err("SUPF page records are incomplete"));
             }
             return Ok(pos + 4 + header_size);
         }
         pos += length + 4;
     }
-    Err(format_err("arm64 SUPF record missing"))
+    Err(format_err(format!(
+        "SUPF record missing for cputype={wanted_cpu:#x} cpusubtype={wanted_subtype:#x}"
+    )))
 }
 
-/// `core.py`'s `source_blocks`.
+/// `fairplay.go`'s `sourceBlocks`.
 fn source_blocks(wrapped: [u8; 16], absolute_index: u32) -> ([u8; 16], [u8; 16], [u8; 16]) {
     let page_offset = (u64::from(absolute_index) << 12).to_be_bytes();
     let mut first = [0u8; 16];
@@ -378,7 +476,7 @@ fn source_blocks(wrapped: [u8; 16], absolute_index: u32) -> ([u8; 16], [u8; 16],
     (first, second, third)
 }
 
-/// `core.py`'s `finish`: the nonlinear mixing over eight 16-bit words.
+/// `fairplay.go`'s `finish`: the nonlinear mixing over eight 16-bit words.
 fn finish(state: [u32; 8]) -> [u32; 8] {
     let mut src = state;
     for selectors in &ROUND_SELECTORS {
@@ -411,10 +509,8 @@ fn finish(state: [u32; 8]) -> [u32; 8] {
     out
 }
 
-/// `core.py`'s `block_transform`: AES-128-ECB encrypt of `source` under `work`.
-fn block_transform(source: [u8; 16], work: [u8; 16]) -> [u8; 16] {
-    let key = Array16::from(work);
-    let cipher = Aes128::new(&key);
+/// `fairplay.go`'s `blockTransform`: AES-128-ECB encrypt of `source` under the work key.
+fn block_transform(cipher: &Aes128, source: [u8; 16]) -> [u8; 16] {
     let mut block = Array16::from(source);
     cipher.encrypt_block(&mut block);
     block.into()
@@ -445,109 +541,72 @@ fn xor8(a: [u32; 8], b: [u32; 8]) -> [u32; 8] {
     out
 }
 
-/// `core.py`'s `derive_page_key`.
-fn derive_page_key(wrapped: [u8; 16], absolute_index: u32, work: [u8; 16]) -> [u8; 16] {
+/// `fairplay.go`'s `derivePageKey`.
+fn derive_page_key(cipher: &Aes128, wrapped: [u8; 16], absolute_index: u32) -> [u8; 16] {
     let (first, second, third) = source_blocks(wrapped, absolute_index);
-    let a = unpack_be16(block_transform(first, work));
-    let b = unpack_be16(block_transform(second, work));
-    let c = unpack_be16(block_transform(third, work));
+    let a = unpack_be16(block_transform(cipher, first));
+    let b = unpack_be16(block_transform(cipher, second));
+    let c = unpack_be16(block_transform(cipher, third));
     pack_be16(finish(xor8(finish(xor8(finish(a), b)), c)))
 }
 
-/// `core.py`'s `decrypt_binary`: decrypts every encrypted arm64 page and clears `cryptid`.
+/// `fairplay.go`'s `decryptBinary`: decrypts every encrypted page of the slice
+/// [`arm_encryption_info`] picks and clears `cryptid`. `key_file` is a SUPF
+/// (`.supf`/`.v5.supf`) or a SUPP (`.supp`/`.v4.supp`). A fat binary is thinned to that
+/// slice; the others are dropped, as on the device.
 ///
-/// Returns the rewritten Mach-O and the total number of decrypted pages.
+/// Returns the decrypted thin Mach-O and its page count, or `None` when the slice is not
+/// encrypted.
 ///
 /// # Panics
 /// Never; the `expect`s are on fixed-size conversions that always succeed.
 ///
 /// # Errors
-/// If the Mach-O, SINF or SUPF records are malformed.
+/// If the Mach-O, SINF or key-file records are malformed or the credential does not
+/// decode the SINF.
 pub fn decrypt_binary(
     source: &[u8],
     sinf: &[u8],
-    supf: &[u8],
+    key_file: &[u8],
     credential: &[u8],
-) -> Result<(Vec<u8>, usize)> {
-    let infos = arm64_encryption_infos(source)?;
-    let work = derive_work16(credential, sinf)?;
-    let mut result = source.to_vec();
-    let mut total_pages = 0;
-    for info in infos {
-        let page_count = info.cryptsize / PAGE_SIZE;
-        let record_start = arm64_supf_record_offset(supf, page_count, info.subtype)?;
-        total_pages += page_count;
-        for local_page in 0..page_count {
-            let record = supf
-                .get(record_start + 32 * local_page..record_start + 32 * (local_page + 1))
-                .filter(|slice| slice.len() == 32)
-                .ok_or_else(|| format_err("truncated SUPF page record"))?;
-            let absolute_index =
-                u32::try_from((info.base + info.cryptoff) / PAGE_SIZE + local_page)
-                    .map_err(|_| format_err("page index out of range"))?;
-            let wrapped: [u8; 16] = record[..16].try_into().expect("sixteen bytes");
-            let key = derive_page_key(wrapped, absolute_index, work);
-            let start = info.base + info.cryptoff + PAGE_SIZE * local_page;
-            let iv: &[u8; 16] = record[16..32].try_into().expect("sixteen bytes");
-            let key_arr = Array16::from(key);
-            let iv_arr = Array16::from(*iv);
-            let decryptor = Decryptor::<Aes128>::new(&key_arr, &iv_arr);
-            decryptor
-                .decrypt_padded::<NoPadding>(&mut result[start..start + PAGE_SIZE])
-                .map_err(|_| format_err("failed to decrypt page"))?;
-        }
-        result[info.cryptid_offset..info.cryptid_offset + 4].copy_from_slice(&0u32.to_le_bytes());
+) -> Result<Option<(Vec<u8>, usize)>> {
+    let Some(info) = arm_encryption_info(source)? else {
+        return Ok(None);
+    };
+    let page_count = info.cryptsize / PAGE_SIZE;
+    let first_page = (info.base + info.cryptoff) / PAGE_SIZE;
+    let pclass = matches!(key_file.first(), Some(1 | 4));
+    let mut record_start = 0;
+    if !pclass {
+        record_start = arm_supf_record_offset(key_file, page_count, info.cpu, info.subtype)?;
     }
-    Ok((result, total_pages))
+    let work = derive_work16(credential, sinf)?;
+    let key_cipher = Aes128::new(&Array16::from(work));
+
+    let mut result = source[info.base..info.base + info.size].to_vec();
+    for local_page in 0..page_count {
+        let absolute_index = first_page + local_page;
+        if pclass {
+            record_start = pclass_page_key_offset(key_file, absolute_index)?;
+        }
+        let record = key_file
+            .get(record_start..record_start + 32)
+            .ok_or_else(|| format_err("truncated SUPF/SUPP page record"))?;
+        record_start += 32;
+        let index =
+            u32::try_from(absolute_index).map_err(|_| format_err("page index out of range"))?;
+        let wrapped: [u8; 16] = record[..16].try_into().expect("sixteen bytes");
+        let iv: [u8; 16] = record[16..].try_into().expect("sixteen bytes");
+        let key = derive_page_key(&key_cipher, wrapped, index);
+        let start = info.cryptoff + PAGE_SIZE * local_page;
+        Decryptor::<Aes128>::new(&Array16::from(key), &Array16::from(iv))
+            .decrypt_padded::<NoPadding>(&mut result[start..start + PAGE_SIZE])
+            .map_err(|_| format_err("failed to decrypt page"))?;
+    }
+    let cryptid = info.cryptid_offset - info.base;
+    result[cryptid..cryptid + 4].copy_from_slice(&0u32.to_le_bytes());
+    Ok(Some((result, page_count)))
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn rejects_non_arm64_macho() {
-        let err = arm64_encryption_infos(b"\x7fELF\0\0\0\0").unwrap_err();
-        assert_eq!(err.to_string(), "not a supported arm64 Mach-O");
-    }
-
-    #[test]
-    fn rejects_empty_input() {
-        let err = arm64_encryption_infos(&[]).unwrap_err();
-        assert_eq!(err.to_string(), "not a supported arm64 Mach-O");
-    }
-
-    #[test]
-    fn rejects_bad_supf_format() {
-        let err = arm64_supf_record_offset(b"\x05999\0\0\0\0\0\0\0\x01", 1, 0).unwrap_err();
-        assert_eq!(err.to_string(), "unsupported SUPF format");
-    }
-
-    #[test]
-    fn rejects_short_supf() {
-        let err = arm64_supf_record_offset(b"\x05510", 1, 0).unwrap_err();
-        assert_eq!(err.to_string(), "unsupported SUPF format");
-    }
-
-    #[test]
-    fn source_blocks_layout() {
-        let wrapped: [u8; 16] = core::array::from_fn(|i| u8::try_from(i).expect("0..16"));
-        let (first, second, third) = source_blocks(wrapped, 1);
-        // page_offset = (1 << 12) big-endian over 8 bytes.
-        let page_offset = [0, 0, 0, 0, 0, 0, 0x10, 0];
-        assert_eq!(&first[..8], &wrapped[8..16]);
-        assert_eq!(&first[8..], &page_offset);
-        assert_eq!(second, wrapped);
-        assert_eq!(&third[..8], &page_offset);
-        assert_eq!(&third[8..], &wrapped[..8]);
-    }
-
-    #[test]
-    fn escape_fourcc_matches_python_repr() {
-        assert_eq!(escape_fourcc(*b"priv"), "b'priv'");
-        assert_eq!(
-            escape_fourcc([0x00, b'a', 0x7f, b'\\']),
-            "b'\\x00a\\x7f\\\\'"
-        );
-    }
-}
+mod tests;
