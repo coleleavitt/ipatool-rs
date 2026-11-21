@@ -520,8 +520,11 @@ parity check for the commands it touches.
       `version()` equal to `PINNED_INPUTS`.
       Differences: no `context` cancellation (Go checks it every 4096 guest steps; each guest
       call keeps Go's 30 s and 20 M-instruction bounds); the output is the three `.zst` files,
-      not Go source. Untested: `--cache`-less remote generation end to end (see below),
-      `validate` against a native-exported profile (Go has no caller in the repository either).
+      not Go source. Remote mode (no `--cache`: cache members and feature plists read from
+      Apple's restore image over HTTP ranges, no account traffic) produced the same three
+      decoded SHA-256 values (5 min 4 s, 750 MB RSS). Untested: `validate` against a
+      native-exported profile (Go has no caller in the repository either), and the Windows
+      `seek_read` path of the local cache reader.
 - [ ] CI (Linux, macOS, Windows), release builds, iOS build.
 
 ## Open questions for the user
