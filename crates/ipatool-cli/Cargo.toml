@@ -11,14 +11,21 @@ version.workspace = true
 name = "ipatool"
 path = "src/main.rs"
 
+[features]
+# GPL-3.0-or-later: a binary built with this feature links the GPL `ipatool-decrypt`
+# crate and is therefore GPL-3. The default build does not.
+decrypt = ["dep:ipatool-decrypt", "dep:tempfile"]
+
 [dependencies]
 clap.workspace = true
 futures-util = { version = "0.3", default-features = false }
 ipatool-appstore.workspace = true
+ipatool-decrypt = { workspace = true, optional = true }
 ipatool-keychain.workspace = true
 ipatool-store.workspace = true
 rmcp = { version = "3.11", default-features = false, features = ["server", "transport-io"] }
 schemars = "1.2"
+tempfile = { version = "3", optional = true }
 serde.workspace = true
 serde_json.workspace = true
 time = { workspace = true, features = ["local-offset"] }

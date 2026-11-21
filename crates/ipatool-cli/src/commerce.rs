@@ -62,6 +62,28 @@ pub struct DownloadArgs {
     _ignored: crate::cobra::IgnoredArgs,
 }
 
+#[cfg(feature = "decrypt")]
+impl DownloadArgs {
+    /// A download request built by the `decrypt` command (iOS platform, no extra args).
+    pub(crate) fn for_decrypt(
+        app_id: i64,
+        bundle_identifier: String,
+        output: String,
+        external_version_id: String,
+        purchase: bool,
+    ) -> Self {
+        Self {
+            app_id,
+            bundle_identifier,
+            output,
+            external_version_id,
+            platform: String::new(),
+            purchase,
+            _ignored: crate::cobra::IgnoredArgs::default(),
+        }
+    }
+}
+
 #[derive(Args, Clone)]
 pub struct ListPurchasesArgs {
     /// maximum number of apps to return per page
@@ -376,6 +398,24 @@ pub(crate) async fn download(
     interactive: bool,
     out: &Output,
 ) -> Result<(), BoxError> {
+    let (output, purchased) = download_run(args, store, interactive, out).await?;
+    out.info(json!({
+        "output": output.destination_path.display().to_string(),
+        "purchased": purchased,
+        "success": true,
+    }));
+    Ok(())
+}
+
+/// The `download` retry loop without the final JSON line: returns the downloaded package
+/// path and whether a license was obtained. `decrypt` reuses it so the download path,
+/// flags and retry/re-login logic are shared.
+pub(crate) async fn download_run(
+    args: &DownloadArgs,
+    store: &impl Store,
+    interactive: bool,
+    out: &Output,
+) -> Result<(DownloadOutput, bool), BoxError> {
     if args.app_id == 0 && args.bundle_identifier.is_empty() {
         return Err(MISSING_APP.into());
     }
@@ -389,14 +429,7 @@ pub(crate) async fn download(
     for attempt in 0..3 {
         let error =
             match download_attempt(args, platform, store, interactive, out, &mut state).await {
-                Ok(output) => {
-                    out.info(json!({
-                        "output": output.destination_path.display().to_string(),
-                        "purchased": state.purchased,
-                        "success": true,
-                    }));
-                    return Ok(());
-                }
+                Ok(output) => return Ok((output, state.purchased)),
                 Err(error) => error,
             };
         state.token_expired = error.is_password_token_expired();

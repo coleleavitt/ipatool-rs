@@ -2,6 +2,8 @@
 
 mod cobra;
 mod commerce;
+#[cfg(feature = "decrypt")]
+mod decrypt;
 mod login;
 mod mcp;
 mod output;
@@ -85,6 +87,10 @@ enum Command {
         long_about = "Serve App Store tools over the Model Context Protocol using stdio.\nAuthenticate with 'ipatool auth login' before using the tools.\nRuns non-interactively; authentication tools are not exposed."
     )]
     Mcp,
+    /// Download (or read a local .ipa) and decrypt an app offline using a 16-byte
+    /// credential.
+    #[cfg(feature = "decrypt")]
+    Decrypt(decrypt::DecryptArgs),
 }
 
 #[derive(Subcommand)]
@@ -134,7 +140,7 @@ const KEYCHAIN_SERVICE_NAME: &str = "ipatool-auth.service";
 
 const COOKIE_JAR_FILE_NAME: &str = "cookies";
 
-fn state_dir() -> Result<PathBuf, BoxError> {
+pub(crate) fn state_dir() -> Result<PathBuf, BoxError> {
     // Go's `machine.HomeDirectory`: `%HOMEDRIVE%` joined with `%HOMEPATH%` on Windows.
     #[cfg(windows)]
     let home = {
@@ -309,6 +315,12 @@ async fn run(cli: &Cli, out: &Output) -> Result<(), BoxError> {
             let (client, keychain) = (store_client()?, open_keychain(cli).await?);
             let session = client.store_session(&keychain, &EmulatorStoreAmd);
             Box::pin(mcp::serve(&session, rmcp::transport::stdio_pipes())).await?;
+        }
+        #[cfg(feature = "decrypt")]
+        Command::Decrypt(args) => {
+            let (client, keychain) = (store_client()?, open_keychain(cli).await?);
+            let session = client.store_session(&keychain, &EmulatorStoreAmd);
+            decrypt::run(args, &session, !cli.non_interactive, out).await?;
         }
     }
     Ok(())
